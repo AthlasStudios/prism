@@ -12,7 +12,9 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
 }
 
-rootProject.name = "AthlasDevTemplate"
+rootProject.name = "prism"
 
-include(":plugin")
-include(":api")
+include(":core")
+include(":platform:spigot")
+include("platform:brigadier")
+include("reflection")
