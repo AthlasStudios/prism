@@ -54,7 +54,7 @@ public final class SpigotPlatformConfiguration {
         }
 
         public SpigotPlatform init() {
-            if (!disableLegacyRegistrar && (disableBrigadier || !PrismBrigadier.isCompatible())) throw new IllegalStateException("Cannot disable both legacy registrar and brigadier");
+            if (disableLegacyRegistrar && (disableBrigadier || !PrismBrigadier.isCompatible())) throw new IllegalStateException("Cannot disable both legacy registrar and brigadier");
             return new SpigotPlatform(plugin, new SpigotPlatformConfiguration(this));
         }
 

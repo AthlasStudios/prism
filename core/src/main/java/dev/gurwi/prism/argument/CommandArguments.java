@@ -1,4 +1,4 @@
 package dev.gurwi.prism.argument;
 
-public class CommandArguments {
+public class CommandArguments<T extends AbstractArgument<?>> {
 }

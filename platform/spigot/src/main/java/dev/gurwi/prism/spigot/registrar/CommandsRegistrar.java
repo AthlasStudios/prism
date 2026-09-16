@@ -1,17 +1,19 @@
 package dev.gurwi.prism.spigot.registrar;
 
-import org.bukkit.plugin.java.JavaPlugin;
+import dev.gurwi.prism.executable.CommandDefinition;
+import dev.gurwi.prism.spigot.SpigotPlatform;
+import dev.gurwi.prism.spigot.executor.SpigotCommandExecutor;
+import org.jetbrains.annotations.Unmodifiable;
 
-public abstract class CommandsRegistrar<E> {
+import java.util.List;
 
-    protected final JavaPlugin plugin;
+public interface CommandsRegistrar {
 
-    protected CommandsRegistrar(JavaPlugin plugin) {
-        this.plugin = plugin;
-    }
+    void register(CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>> definition);
 
-    public abstract void register(E executableCommand);
+    void unregister(CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>> definition);
 
-    public abstract void unregister(E executableCommand);
+    @Unmodifiable
+    List<CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>>> getRegisteredCommands();
 
 }

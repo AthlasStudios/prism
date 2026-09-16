@@ -29,12 +29,19 @@ public abstract class AbstractCommand<Impl extends AbstractCommand<Impl, P, E>, 
         return instance();
     }
 
-    public void register(CommandsRegistry<?, P, E> registry) {
-        new CommandDefinition<>(this).register(registry);
+    public CommandDefinition<P, E> build() {
+        return new CommandDefinition<>(name, aliases, executors);
     }
 
-    public <R extends CommandsRegistry<?, P, E>> void register(@NotNull Platform<R> platform) {
-        new CommandDefinition<>(this).register(platform.getRegistry());
+    public CommandDefinition<P, E> register(CommandsRegistry<?, P, E> registry) {
+        CommandDefinition<P, E> definition = build();
+        definition.register(registry);
+
+        return definition;
+    }
+
+    public <R extends CommandsRegistry<?, P, E>> CommandDefinition<P, E> register(@NotNull Platform<R> platform) {
+        return register(platform.getRegistry());
     }
 
 }

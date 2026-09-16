@@ -11,7 +11,7 @@ public class BrigadierCommandDispatcher<P extends Platform<? extends CommandsReg
     private final BrigadierCommandMapper<S> commandMapper = new BrigadierCommandMapper<>();
 
     public void register(CommandDefinition<P, E> commandDefinition) {
-        return super.register(commandMapper.map(commandDefinition));
+
     }
 
     public void unregister() {

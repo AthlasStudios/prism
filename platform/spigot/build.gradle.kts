@@ -1,5 +1,3 @@
-import jdk.jfr.internal.JVM.include
-
 plugins {
     id("maven-publish")
     id("com.gradleup.shadow")
@@ -11,11 +9,13 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     implementation(project(":reflection"))
     implementation(project(":platform:brigadier"))
 
-    compileOnly("org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT") {
+        exclude(group = "net.md-5", module = "bungeecord-chat")
+    }
 }
 
 tasks {

@@ -3,6 +3,7 @@ package dev.gurwi.prism;
 import dev.gurwi.prism.builder.AbstractCommand;
 import dev.gurwi.prism.executable.CommandDefinition;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Collection;
 import java.util.List;
@@ -16,7 +17,7 @@ public interface CommandsRegistry<Impl extends CommandsRegistry<Impl, P, E>, P e
     }
 
     default Impl registerBuilders(@NotNull Collection<AbstractCommand<?, P, E>> builders) {
-        builders.forEach(builder -> register(new CommandDefinition<>(builder)));
+        builders.forEach(builder -> register(builder.build()));
         return instance();
     }
 
@@ -30,6 +31,7 @@ public interface CommandsRegistry<Impl extends CommandsRegistry<Impl, P, E>, P e
         return unregister(List.of(commands));
     }
 
+    @Unmodifiable
     List<CommandDefinition<P, E>> getRegisteredCommands();
 
     P getPlatform();

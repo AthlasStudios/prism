@@ -8,8 +8,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class SpigotPlatform implements Platform<SpigotCommandsRegistry> {
 
-    private final SpigotCommandsRegistry commandsRegistry;
     private final JavaPlugin plugin;
+    private final SpigotCommandsRegistry commandsRegistry;
     private final SpigotPlatformConfiguration configuration;
 
     SpigotPlatform(JavaPlugin plugin, SpigotPlatformConfiguration configuration) {
@@ -31,6 +31,10 @@ public final class SpigotPlatform implements Platform<SpigotCommandsRegistry> {
     @Override
     public @NotNull SpigotCommandsRegistry getRegistry() {
         return commandsRegistry;
+    }
+
+    public @NotNull SpigotPlatformConfiguration getConfiguration() {
+        return configuration;
     }
 
     public JavaPlugin getOwningPlugin() {

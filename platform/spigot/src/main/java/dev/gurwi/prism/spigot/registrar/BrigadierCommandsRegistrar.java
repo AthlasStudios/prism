@@ -1,17 +1,27 @@
 package dev.gurwi.prism.spigot.registrar;
 
-import dev.gurwi.prism.brigadier.BrigadierCommandDispatcher;
-import dev.gurwi.prism.reflection.ReflectionUtil;
-import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.java.JavaPlugin;
+import dev.gurwi.prism.executable.CommandDefinition;
+import dev.gurwi.prism.spigot.SpigotPlatform;
+import dev.gurwi.prism.spigot.executor.SpigotCommandExecutor;
+import org.jetbrains.annotations.Unmodifiable;
 
-public class BrigadierCommandsRegistrar extends CommandsRegistrar<CommandDefinition<?, ?>> {
+import java.util.List;
 
-    private final BrigadierCommandDispatcher<CommandSender> dispatcher;
+public class BrigadierCommandsRegistrar implements CommandsRegistrar {
 
-    public BrigadierCommandsRegistrar(JavaPlugin plugin) throws NoSuchFieldException, IllegalAccessException {
-        super(plugin);
-        this.dispatcher = ReflectionUtil.accessField(plugin.getServer(), "brigadierCommandDispatcher");
+    @Override
+    public void register(CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>> definition) {
+
+    }
+
+    @Override
+    public void unregister(CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>> definition) {
+
+    }
+
+    @Override
+    public @Unmodifiable List<CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>>> getRegisteredCommands() {
+        return List.of();
     }
 
 }

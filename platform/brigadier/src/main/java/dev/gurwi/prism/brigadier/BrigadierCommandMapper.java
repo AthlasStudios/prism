@@ -22,7 +22,7 @@ public class BrigadierCommandMapper<S> {
         return nodes;
     }
 
-    private LiteralCommandNode<S> mapLiteral(@NotNull CommandDefinition<?, ?> definition, @NotNull String namesd) {
+    private LiteralCommandNode<S> mapLiteral(@NotNull CommandDefinition<?, ?> definition, @NotNull String name) {
         LiteralArgumentBuilder<S> builder = LiteralArgumentBuilder.literal(name);
 
         for (CommandDefinition<?, ?> child : definition.getChildren()) {
