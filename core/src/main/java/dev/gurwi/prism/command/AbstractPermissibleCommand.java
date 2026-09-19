@@ -1,14 +1,15 @@
-package dev.gurwi.prism.builder;
+package dev.gurwi.prism.command;
 
 import dev.gurwi.prism.CommandExecutor;
 import dev.gurwi.prism.CommandsRegistry;
 import dev.gurwi.prism.Platform;
+import dev.gurwi.prism.argument.AbstractArgument;
 import dev.gurwi.prism.permission.PermissionNode;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class AbstractPermissibleCommand<Impl extends AbstractPermissibleCommand<Impl, P, E, Node>, P extends Platform<? extends CommandsRegistry<?, P, E>>, E extends CommandExecutor<?>, Node extends PermissionNode<?, ?>> extends AbstractCommand<Impl, P, E> {
+public abstract class AbstractPermissibleCommand<Impl extends AbstractPermissibleCommand<Impl, P, E, A, Node>, P extends Platform<? extends CommandsRegistry<?, P, E, A>>, E extends CommandExecutor<?>, A extends AbstractArgument<?, ?, ?>, Node extends PermissionNode<?, ?>> extends AbstractCommand<Impl, P, E, A> {
 
     private final Set<Node> permissionNodes = new HashSet<>();
 

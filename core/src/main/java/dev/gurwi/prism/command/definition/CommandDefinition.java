@@ -1,28 +1,30 @@
-package dev.gurwi.prism.executable;
+package dev.gurwi.prism.command.definition;
 
 import dev.gurwi.prism.CommandExecutor;
 import dev.gurwi.prism.CommandsRegistry;
 import dev.gurwi.prism.Platform;
+import dev.gurwi.prism.argument.AbstractArgument;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-public class CommandDefinition<P extends Platform<? extends CommandsRegistry<?, P, E>>, E extends CommandExecutor<?>> {
+public class CommandDefinition<P extends Platform<? extends CommandsRegistry<?, P, E, A>>, E extends CommandExecutor<?>, A extends AbstractArgument<?, ?, ?>> {
 
+    private final List<A> requiredArguments = new ArrayList<>();
+    private final List<A> optionalArguments = new ArrayList<>();
     private final Map<Class<? extends E>, E> executors = new HashMap<>();
-    private final Map<String, SubCommandDefinition<P, E>> children = new HashMap<>();
+    private final Map<String, SubCommandDefinition<P, E, A>> children = new HashMap<>();
 
     private final String name;
     private final String[] aliases;
 
-    public CommandDefinition(String name, String[] aliases, Map<Class<? extends E>, E> executors) {
+    public CommandDefinition(String name, String[] aliases, List<A> requiredArguments, List<A> optionalArguments, Map<Class<? extends E>, E> executors) {
         this.name = name;
         this.aliases = aliases;
 
+        this.requiredArguments.addAll(requiredArguments);
+        this.optionalArguments.addAll(optionalArguments);
         this.executors.putAll(executors);
     }
 
@@ -36,6 +38,16 @@ public class CommandDefinition<P extends Platform<? extends CommandsRegistry<?, 
     }
 
     @Unmodifiable
+    public List<A> getRequiredArguments() {
+        return List.copyOf(requiredArguments);
+    }
+
+    @Unmodifiable
+    public List<A> getOptionalArguments() {
+        return List.copyOf(optionalArguments);
+    }
+
+    @Unmodifiable
     public @NotNull Map<Class<? extends E>, E> getExecutors() {
         return Map.copyOf(executors);
     }
@@ -46,11 +58,11 @@ public class CommandDefinition<P extends Platform<? extends CommandsRegistry<?, 
     }
 
     @Unmodifiable
-    public List<SubCommandDefinition<P, E>> getChildren() {
+    public List<SubCommandDefinition<P, E, A>> getChildren() {
         return List.copyOf(children.values());
     }
 
-    public void register(@NotNull CommandsRegistry<?, P, E> registry) {
+    public void register(@NotNull CommandsRegistry<?, P, E, A> registry) {
         registry.register(this);
     }
 
@@ -58,7 +70,7 @@ public class CommandDefinition<P extends Platform<? extends CommandsRegistry<?, 
         register(platform.getRegistry());
     }
 
-    public void unregister(@NotNull CommandsRegistry<?, P, E> registry) {
+    public void unregister(@NotNull CommandsRegistry<?, P, E, A> registry) {
         registry.unregister(this);
     }
 

@@ -10,6 +10,7 @@ repositories {
 
 dependencies {
     api(project(":core"))
+    api(project(":platform:bukkit"))
     implementation(project(":reflection"))
     implementation(project(":platform:brigadier"))
 

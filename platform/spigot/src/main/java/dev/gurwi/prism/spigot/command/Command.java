@@ -1,11 +1,9 @@
 package dev.gurwi.prism.spigot.command;
 
-import dev.gurwi.prism.builder.AbstractPermissibleCommand;
+import dev.gurwi.prism.bukkit.argument.Argument;
+import dev.gurwi.prism.command.AbstractPermissibleCommand;
 import dev.gurwi.prism.spigot.SpigotPlatform;
-import dev.gurwi.prism.spigot.executor.ConsoleCommandExecutor;
-import dev.gurwi.prism.spigot.executor.GenericCommandExecutor;
-import dev.gurwi.prism.spigot.executor.PlayerCommandExecutor;
-import dev.gurwi.prism.spigot.executor.SpigotCommandExecutor;
+import dev.gurwi.prism.spigot.executor.*;
 import dev.gurwi.prism.spigot.permission.SpigotPermissionNode;
 import dev.gurwi.prism.spigot.requirement.ConsoleExecutionRequirement;
 import dev.gurwi.prism.spigot.requirement.PlayerExecutionRequirement;
@@ -15,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 
-public class Command extends AbstractPermissibleCommand<Command, SpigotPlatform, SpigotCommandExecutor<?>, SpigotPermissionNode> {
+public class Command extends AbstractPermissibleCommand<Command, SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>, SpigotPermissionNode> {
 
     public Command(String name, String... aliases) {
         super(name, aliases);
@@ -44,17 +42,22 @@ public class Command extends AbstractPermissibleCommand<Command, SpigotPlatform,
     }
 
     public Command executes(GenericCommandExecutor executor) {
-        executors.put(GenericCommandExecutor.class, executor);
+        executes(GenericCommandExecutor.class, executor);
         return this;
     }
 
     public Command executesPlayer(PlayerCommandExecutor executor) {
-        executors.put(PlayerCommandExecutor.class, executor);
+        executes(PlayerCommandExecutor.class, executor);
         return this;
     }
 
     public Command executesConsole(ConsoleCommandExecutor executor) {
-        executors.put(ConsoleCommandExecutor.class, executor);
+        executes(ConsoleCommandExecutor.class, executor);
+        return this;
+    }
+
+    public Command executesProxy(ProxiedCommandExecutor executor) {
+        executes(ProxiedCommandExecutor.class, executor);
         return this;
     }
 

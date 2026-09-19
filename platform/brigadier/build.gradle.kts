@@ -7,7 +7,9 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
+    api(project(":platform:bukkit"))
+
     compileOnly("com.mojang:brigadier:1.0.18")
 
     testImplementation(platform("org.junit:junit-bom:6.0.0"))

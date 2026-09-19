@@ -6,4 +6,6 @@ public interface CommandExecutor<S> {
 
     void run(S source, CommandArguments args);
 
+    Class<S> getSourceType();
+
 }

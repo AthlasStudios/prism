@@ -9,4 +9,8 @@ public interface GenericCommandExecutor extends SpigotCommandExecutor<CommandSen
     @Override
     void run(CommandSender sender, CommandArguments args);
 
+    default Class<CommandSender> getSourceType() {
+        return CommandSender.class;
+    }
+
 }
