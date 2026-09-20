@@ -2,9 +2,8 @@ package dev.gurwi.prism.spigot.executable;
 
 import dev.gurwi.prism.argument.CommandArguments;
 import dev.gurwi.prism.bukkit.argument.Argument;
-import dev.gurwi.prism.command.definition.CommandDefinition;
-import dev.gurwi.prism.spigot.SpigotPlatform;
-import dev.gurwi.prism.spigot.executor.*;
+import dev.gurwi.prism.spigot.executor.SpigotCommandExecutor;
+import dev.gurwi.prism.spigot.command.SpigotCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.Contract;
@@ -19,9 +18,9 @@ import java.util.concurrent.CompletableFuture;
 
 public class SpigotExecutableCommand extends Command  {
 
-    private final CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>> commandDefinition;
+    private final SpigotCommand commandDefinition;
 
-    public SpigotExecutableCommand(@NotNull CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>> commandDefinition) {
+    public SpigotExecutableCommand(@NotNull SpigotCommand commandDefinition) {
         super(commandDefinition.getName());
         this.commandDefinition = commandDefinition;
 
@@ -39,12 +38,12 @@ public class SpigotExecutableCommand extends Command  {
     @Override
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
         commandDefinition.getRequiredArguments().forEach(argument -> {
-            getArgumentSuggestions(argument, sender);
+            //getArgumentSuggestions(argument, sender);
         });
         return List.of();
     }
 
-    public CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>> getCommandDefinition() {
+    public SpigotCommand getCommandDefinition() {
         return commandDefinition;
     }
 
@@ -53,11 +52,11 @@ public class SpigotExecutableCommand extends Command  {
         executor.run(executor.cast(sender), args);
     }
 
-    private <S extends CommandSender> @Unmodifiable @NotNull List<String> getArgumentSuggestions0(@NotNull Argument<?, S> argument, @NotNull CommandSender sender) {
-        CompletableFuture<? extends Collection<?>> suggestions = argument.getSuggestionsSupplier().get(sender);
-        if (!suggestions.isDone()) throw new IllegalStateException("Spigot doesn't support async tab completions!");
-        return suggestions.join().stream().map(Object::toString).toList();
-    }
+//    private <S extends CommandSender> @Unmodifiable @NotNull List<String> getArgumentSuggestions(@NotNull Argument<?, S> argument, @NotNull CommandSender sender) {
+//        CompletableFuture<? extends Collection<?>> suggestions = argument.getSuggestionsSupplier().get(sender);
+//        if (!suggestions.isDone()) throw new IllegalStateException("Spigot doesn't support async tab completions!");
+//        return suggestions.join().stream().map(Object::toString).toList();
+//    }
 
     @Contract("_ -> new")
     private @NotNull CommandArguments parseArgs(String[] args) {

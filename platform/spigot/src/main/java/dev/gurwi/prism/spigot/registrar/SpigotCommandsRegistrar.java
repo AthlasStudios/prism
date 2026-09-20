@@ -1,11 +1,8 @@
 package dev.gurwi.prism.spigot.registrar;
 
-import dev.gurwi.prism.bukkit.argument.Argument;
-import dev.gurwi.prism.command.definition.CommandDefinition;
 import dev.gurwi.prism.reflection.ReflectionUtil;
-import dev.gurwi.prism.spigot.SpigotPlatform;
+import dev.gurwi.prism.spigot.command.SpigotCommand;
 import dev.gurwi.prism.spigot.executable.SpigotExecutableCommand;
-import dev.gurwi.prism.spigot.executor.SpigotCommandExecutor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.SimpleCommandMap;
@@ -19,7 +16,7 @@ import java.util.Map;
 
 public class SpigotCommandsRegistrar implements CommandsRegistrar {
 
-    private final Map<CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>>, SpigotExecutableCommand> registeredCommands = new HashMap<>();
+    private final Map<SpigotCommand, SpigotExecutableCommand> registeredCommands = new HashMap<>();
 
     private final JavaPlugin plugin;
     private final CommandMap commandMap;
@@ -32,21 +29,21 @@ public class SpigotCommandsRegistrar implements CommandsRegistrar {
     }
 
     @Override
-    public void register(@NotNull CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>> definition) {
+    public void register(@NotNull SpigotCommand definition) {
         SpigotExecutableCommand command = new SpigotExecutableCommand(definition);
         commandMap.register(plugin.getName(), command);
         registeredCommands.put(definition, command);
     }
 
     @Override
-    public void unregister(@NotNull CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>> definition) {
+    public void unregister(@NotNull SpigotCommand definition) {
         registeredCommands.get(definition).unregister(commandMap);
         knownCommands.entrySet().removeIf(entry -> entry.getValue().equals(registeredCommands.get(definition)));
         registeredCommands.remove(definition);
     }
 
     @Override
-    public @Unmodifiable List<CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>>> getRegisteredCommands() {
+    public @Unmodifiable List<SpigotCommand> getRegisteredCommands() {
         return registeredCommands.values().stream().map(SpigotExecutableCommand::getCommandDefinition).toList();
     }
 

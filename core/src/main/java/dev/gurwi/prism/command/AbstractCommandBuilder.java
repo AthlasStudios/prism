@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public abstract class AbstractCommand<Impl extends AbstractCommand<Impl, P, E, A>, P extends Platform<? extends CommandsRegistry<?, P, E, A>>, E extends CommandExecutor<?>, A extends AbstractArgument<?, ?, ?>> implements ChainableBuilder<Impl> {
+public abstract class AbstractCommandBuilder<Impl extends AbstractCommandBuilder<Impl, P, R, D, E, A>, P extends Platform<R>, R extends CommandsRegistry<R, P, D, Impl>, D extends CommandDefinition<D, P, R, E, A>, E extends CommandExecutor<?>, A extends AbstractArgument<?, ?, ?>> implements ChainableBuilder<Impl> {
 
     protected final Map<Class<? extends E>, E> executors = new HashMap<>();
     protected final Set<ExecutionRequirement<?>> requirements = new HashSet<>();
@@ -18,7 +18,7 @@ public abstract class AbstractCommand<Impl extends AbstractCommand<Impl, P, E, A
     protected final String name;
     protected final String[] aliases;
 
-    protected AbstractCommand(String name, String... aliases) {
+    protected AbstractCommandBuilder(String name, String... aliases) {
         this.name = name;
         this.aliases = aliases;
     }
@@ -41,18 +41,16 @@ public abstract class AbstractCommand<Impl extends AbstractCommand<Impl, P, E, A
         return instance();
     }
 
-    public CommandDefinition<P, E, A> build() {
-        return new CommandDefinition<>(name, aliases, requiredArguments, optionalArguments, executors);
-    }
+    public abstract D build();
 
-    public CommandDefinition<P, E, A> register(CommandsRegistry<?, P, E, A> registry) {
-        CommandDefinition<P, E, A> definition = build();
+    public D register(R registry) {
+        D definition = build();
         definition.register(registry);
 
         return definition;
     }
 
-    public <R extends CommandsRegistry<?, P, E, A>> CommandDefinition<P, E, A> register(@NotNull Platform<R> platform) {
+    public D register(@NotNull P platform) {
         return register(platform.getRegistry());
     }
 

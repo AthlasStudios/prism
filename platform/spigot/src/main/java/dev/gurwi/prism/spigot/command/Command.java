@@ -1,10 +1,10 @@
 package dev.gurwi.prism.spigot.command;
 
 import dev.gurwi.prism.bukkit.argument.Argument;
-import dev.gurwi.prism.command.AbstractPermissibleCommand;
+import dev.gurwi.prism.command.AbstractCommandBuilder;
+import dev.gurwi.prism.spigot.SpigotCommandsRegistry;
 import dev.gurwi.prism.spigot.SpigotPlatform;
 import dev.gurwi.prism.spigot.executor.*;
-import dev.gurwi.prism.spigot.permission.SpigotPermissionNode;
 import dev.gurwi.prism.spigot.requirement.ConsoleExecutionRequirement;
 import dev.gurwi.prism.spigot.requirement.PlayerExecutionRequirement;
 import dev.gurwi.prism.spigot.requirement.SpigotExecutionRequirement;
@@ -13,16 +13,21 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 
-public class Command extends AbstractPermissibleCommand<Command, SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>, SpigotPermissionNode> {
+public class Command extends AbstractCommandBuilder<Command, SpigotPlatform, SpigotCommandsRegistry, SpigotCommand, SpigotCommandExecutor<?>, Argument<?, ?>> {
 
     public Command(String name, String... aliases) {
         super(name, aliases);
     }
 
+    @Override
+    public SpigotCommand build() {
+        return new SpigotCommand(name, aliases, requiredArguments, optionalArguments, executors);
+    }
+
     public Command withPermission(String @NotNull ... permissions) {
-        for (String permission : permissions) {
-            withPermission(SpigotPermissionNode.of(permission));
-        }
+//        for (String permission : permissions) {
+//            withPermission(SpigotPermissionNode.of(permission));
+//        }
 
         return this;
     }

@@ -9,17 +9,17 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 
-public class CommandDefinition<P extends Platform<? extends CommandsRegistry<?, P, E, A>>, E extends CommandExecutor<?>, A extends AbstractArgument<?, ?, ?>> {
+public abstract class CommandDefinition<Impl extends CommandDefinition<Impl, PlatformType, Registry, Executor, Argument>, PlatformType extends Platform<Registry>, Registry extends CommandsRegistry<Registry, PlatformType, Impl, ?>, Executor extends CommandExecutor<?>, Argument extends AbstractArgument<?, ?, ?>> {
 
-    private final List<A> requiredArguments = new ArrayList<>();
-    private final List<A> optionalArguments = new ArrayList<>();
-    private final Map<Class<? extends E>, E> executors = new HashMap<>();
-    private final Map<String, SubCommandDefinition<P, E, A>> children = new HashMap<>();
+    private final List<Argument> requiredArguments = new ArrayList<>();
+    private final List<Argument> optionalArguments = new ArrayList<>();
+    private final Map<Class<? extends Executor>, Executor> executors = new HashMap<>();
+    private final Map<String, Impl> children = new HashMap<>();
 
     private final String name;
     private final String[] aliases;
 
-    public CommandDefinition(String name, String[] aliases, List<A> requiredArguments, List<A> optionalArguments, Map<Class<? extends E>, E> executors) {
+    public CommandDefinition(String name, String[] aliases, List<Argument> requiredArguments, List<Argument> optionalArguments, Map<Class<? extends Executor>, Executor> executors) {
         this.name = name;
         this.aliases = aliases;
 
@@ -38,44 +38,46 @@ public class CommandDefinition<P extends Platform<? extends CommandsRegistry<?, 
     }
 
     @Unmodifiable
-    public List<A> getRequiredArguments() {
+    public List<Argument> getRequiredArguments() {
         return List.copyOf(requiredArguments);
     }
 
     @Unmodifiable
-    public List<A> getOptionalArguments() {
+    public List<Argument> getOptionalArguments() {
         return List.copyOf(optionalArguments);
     }
 
     @Unmodifiable
-    public @NotNull Map<Class<? extends E>, E> getExecutors() {
+    public @NotNull Map<Class<? extends Executor>, Executor> getExecutors() {
         return Map.copyOf(executors);
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends E> T getExecutor(Class<T> type) {
+    public <T extends Executor> T getExecutor(Class<T> type) {
         return (T) executors.get(type);
     }
 
     @Unmodifiable
-    public List<SubCommandDefinition<P, E, A>> getChildren() {
+    public List<Impl> getChildren() {
         return List.copyOf(children.values());
     }
 
-    public void register(@NotNull CommandsRegistry<?, P, E, A> registry) {
-        registry.register(this);
+    public void register(@NotNull Registry registry) {
+        registry.register(instance());
     }
 
-    public void register(@NotNull P platform) {
+    public void register(@NotNull PlatformType platform) {
         register(platform.getRegistry());
     }
 
-    public void unregister(@NotNull CommandsRegistry<?, P, E, A> registry) {
-        registry.unregister(this);
+    public void unregister(@NotNull Registry registry) {
+        registry.unregister(instance());
     }
 
-    public void unregister(@NotNull P platform) {
+    public void unregister(@NotNull PlatformType platform) {
         unregister(platform.getRegistry());
     }
+
+    public abstract Impl instance();
 
 }

@@ -1,11 +1,9 @@
 package dev.gurwi.prism.spigot;
 
-import dev.gurwi.prism.argument.AbstractArgument;
 import dev.gurwi.prism.brigadier.PrismBrigadier;
-import dev.gurwi.prism.bukkit.argument.Argument;
-import dev.gurwi.prism.command.definition.CommandDefinition;
 import dev.gurwi.prism.CommandsRegistry;
-import dev.gurwi.prism.spigot.executor.SpigotCommandExecutor;
+import dev.gurwi.prism.spigot.command.Command;
+import dev.gurwi.prism.spigot.command.SpigotCommand;
 import dev.gurwi.prism.spigot.registrar.BrigadierCommandsRegistrar;
 import dev.gurwi.prism.spigot.registrar.CommandsRegistrar;
 import dev.gurwi.prism.spigot.registrar.SpigotCommandsRegistrar;
@@ -16,7 +14,7 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.util.Collection;
 import java.util.List;
 
-public class SpigotCommandsRegistry implements CommandsRegistry<SpigotCommandsRegistry, SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>> {
+public class SpigotCommandsRegistry implements CommandsRegistry<SpigotCommandsRegistry, SpigotPlatform, SpigotCommand, Command> {
 
     private final SpigotPlatform platform;
     private final CommandsRegistrar registrar;
@@ -27,20 +25,20 @@ public class SpigotCommandsRegistry implements CommandsRegistry<SpigotCommandsRe
     }
 
     @Override
-    public SpigotCommandsRegistry register(@NotNull Collection<CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>>> commandDefinitions) {
+    public SpigotCommandsRegistry register(@NotNull Collection<SpigotCommand> commandDefinitions) {
         commandDefinitions.forEach(registrar::register);
         return this;
     }
 
     @Override
-    public SpigotCommandsRegistry unregister(@NotNull Collection<CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>>> commandDefinitions) {
+    public SpigotCommandsRegistry unregister(@NotNull Collection<SpigotCommand> commandDefinitions) {
         commandDefinitions.forEach(registrar::unregister);
         return this;
     }
 
     @Override
     @Unmodifiable
-    public List<CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>>> getRegisteredCommands() {
+    public List<SpigotCommand> getRegisteredCommands() {
         return registrar.getRegisteredCommands();
     }
 

@@ -1,12 +1,11 @@
 package dev.gurwi.prism.test.plugin;
 
-import dev.gurwi.prism.bukkit.argument.Argument;
 import dev.gurwi.prism.bukkit.argument.IntegerArgument;
 import dev.gurwi.prism.bukkit.argument.StringArgument;
 import dev.gurwi.prism.command.definition.CommandDefinition;
 import dev.gurwi.prism.spigot.SpigotPlatform;
 import dev.gurwi.prism.spigot.command.Command;
-import dev.gurwi.prism.spigot.executor.SpigotCommandExecutor;
+import dev.gurwi.prism.spigot.command.SpigotCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -22,8 +21,8 @@ public class TestPlugin extends JavaPlugin {
                 .disableBrigadier()
                 .init();
 
-        CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>> prismCommand = new Command("prism", "pr")
-                .withArguments(new StringArgument("arg1"), new IntegerArgument("arg2"))
+        SpigotCommand prismCommand = new Command("prism", "pr")
+                .withArguments(new StringArgument("arg1"), new IntegerArgument("arg2").replaceSuggestions(1, 2))
                 .executes(((sender, args) -> {
                     String arg1 = args.get("arg1");
                     Integer arg2 = args.get("arg2");
@@ -47,7 +46,7 @@ public class TestPlugin extends JavaPlugin {
 
         new Command("unregisterAll")
                 .executes((sender, args) -> {
-                    Set<CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>>> unregisteredCommands = new HashSet<>();
+                    Set<SpigotCommand> unregisteredCommands = new HashSet<>();
                     platform.getRegistry().getRegisteredCommands().forEach(def -> {
                         def.unregister(platform);
                         unregisteredCommands.add(def);
