@@ -26,9 +26,7 @@ public class LegacyCommandRegistrar implements BukkitCommandRegistrar {
     private final Map<String, Command> knownCommands;
     private final Map<String, Map<String, Object>> pluginCommands;
 
-    public LegacyCommandRegistrar(@NotNull JavaPlugin plugin)
-            throws NoSuchFieldException, IllegalAccessException {
-
+    public LegacyCommandRegistrar(@NotNull JavaPlugin plugin) throws NoSuchFieldException, IllegalAccessException {
         this.plugin = plugin;
 
         this.commandMap = ReflectionUtil.accessField(
@@ -47,8 +45,7 @@ public class LegacyCommandRegistrar implements BukkitCommandRegistrar {
 
     @Override
     public void register(BukkitCommandDefinition definition) {
-        BukkitExecutableCommand executableCommand =
-                new BukkitExecutableCommand(definition);
+        BukkitExecutableCommand executableCommand = new BukkitExecutableCommand(definition);
 
         PluginCommand command = createPluginCommand(
                 definition,
@@ -87,9 +84,7 @@ public class LegacyCommandRegistrar implements BukkitCommandRegistrar {
         );
     }
 
-    private void addPluginCommand(
-            @NotNull BukkitCommandDefinition definition
-    ) {
+    private void addPluginCommand(@NotNull BukkitCommandDefinition definition) {
         Map<String, Object> metadata = new HashMap<>();
 
         metadata.put(
@@ -110,9 +105,7 @@ public class LegacyCommandRegistrar implements BukkitCommandRegistrar {
         );
     }
 
-    private @NotNull Map<String, Map<String, Object>> getPluginCommands()
-            throws NoSuchFieldException, IllegalAccessException {
-
+    private @NotNull Map<String, Map<String, Object>> getPluginCommands() throws NoSuchFieldException, IllegalAccessException {
         Map<String, Map<String, Object>> commands = new HashMap<>(
                 ReflectionUtil.accessFieldFromType(
                         PluginDescriptionFile.class,
@@ -130,10 +123,7 @@ public class LegacyCommandRegistrar implements BukkitCommandRegistrar {
         return commands;
     }
 
-    private @NotNull PluginCommand createPluginCommand(
-            @NotNull BukkitCommandDefinition definition,
-            @NotNull BukkitExecutableCommand executableCommand
-    ) {
+    private @NotNull PluginCommand createPluginCommand(@NotNull BukkitCommandDefinition definition, @NotNull BukkitExecutableCommand executableCommand) {
         try {
             PluginCommand command = ReflectionUtil.instantiate(
                     PluginCommand.class,
@@ -169,9 +159,7 @@ public class LegacyCommandRegistrar implements BukkitCommandRegistrar {
 
     @Override
     public @Unmodifiable Set<BukkitCommandDefinition> getRegisteredCommands() {
-        return Set.copyOf(
-                registeredCommands.keySet()
-        );
+        return Set.copyOf(registeredCommands.keySet());
     }
 
 }

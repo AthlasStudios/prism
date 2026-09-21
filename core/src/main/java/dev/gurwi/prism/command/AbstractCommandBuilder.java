@@ -1,6 +1,8 @@
 package dev.gurwi.prism.command;
 
 import dev.gurwi.prism.argument.AbstractArgument;
+import dev.gurwi.prism.platform.CommandsRegistry;
+import dev.gurwi.prism.platform.Platform;
 import dev.gurwi.prism.requirement.ExecutionRequirement;
 import org.jetbrains.annotations.NotNull;
 
@@ -56,6 +58,14 @@ public abstract class AbstractCommandBuilder<
     public <E extends Executor> Impl executes(Class<E> type, E executor) {
         executors.put(type, executor);
         return self();
+    }
+
+    public void register(@NotNull CommandsRegistry<?, Definition> registry) {
+        registry.register(build());
+    }
+
+    public void register(@NotNull Platform<? extends CommandsRegistry<?, Definition>> platform) {
+        register(platform.getCommandsRegistry());
     }
 
     @SuppressWarnings("unchecked")

@@ -2,6 +2,7 @@ package dev.gurwi.prism.bukkit.command;
 
 import dev.gurwi.prism.argument.CommandArguments;
 import dev.gurwi.prism.bukkit.argument.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.GreedyArgument;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
