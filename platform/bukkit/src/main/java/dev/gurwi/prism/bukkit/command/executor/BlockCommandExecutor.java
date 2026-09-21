@@ -5,4 +5,9 @@ import org.bukkit.command.BlockCommandSender;
 @FunctionalInterface
 public interface BlockCommandExecutor extends BukkitCommandExecutor<BlockCommandSender> {
 
+    @Override
+    default Class<BlockCommandSender> getSourceType() {
+        return BlockCommandSender.class;
+    }
+
 }

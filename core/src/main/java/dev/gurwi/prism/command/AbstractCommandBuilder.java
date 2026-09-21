@@ -2,19 +2,20 @@ package dev.gurwi.prism.command;
 
 import dev.gurwi.prism.argument.AbstractArgument;
 import dev.gurwi.prism.requirement.ExecutionRequirement;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class AbstractCommandBuilder<
         Impl extends AbstractCommandBuilder<Impl, Definition, Source, Executor, Argument>,
         Definition extends AbstractCommandDefinition<Source, Executor, Argument>,
         Source,
         Executor extends CommandExecutor<?>,
-        Argument extends AbstractArgument<?, ?>
+        Argument extends AbstractArgument<?, ?, ?>
 > {
 
+    protected final List<Argument> requiredArguments = new ArrayList<>();
+    protected final List<Argument> optionalArguments = new ArrayList<>();
     protected final Map<Class<? extends Executor>, Executor> executors = new HashMap<>();
 
     protected final String name;
@@ -37,13 +38,23 @@ public abstract class AbstractCommandBuilder<
         this(name, List.of(aliases), "");
     }
 
-    public <E extends Executor> Impl executes(Class<E> type, E executor) {
-        executors.put(type, executor);
+    public Impl withArguments(Argument @NotNull ... args) {
+        requiredArguments.addAll(Arrays.asList(args));
+        return self();
+    }
+
+    public Impl withOptionalArguments(Argument @NotNull ... args) {
+        optionalArguments.addAll(Arrays.asList(args));
         return self();
     }
 
     public Impl withRequirement(ExecutionRequirement<Source> requirement) {
         this.requirement = requirement;
+        return self();
+    }
+
+    public <E extends Executor> Impl executes(Class<E> type, E executor) {
+        executors.put(type, executor);
         return self();
     }
 

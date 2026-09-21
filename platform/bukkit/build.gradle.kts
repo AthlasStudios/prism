@@ -16,5 +16,6 @@
             exclude(group = "net.md-5", module = "bungeecord-chat")
         }
 
-        testFixturesImplementation("com.github.seeseemelk:MockBukkit-v1.13:0.2.0")
+        testFixturesApi(project(":reflection"))
+        testFixturesApi("com.github.seeseemelk:MockBukkit-v1.13:0.2.0")
     }

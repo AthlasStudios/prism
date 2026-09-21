@@ -13,6 +13,14 @@ public abstract class BukkitCommandBuilder<Impl extends BukkitCommandBuilder<Imp
         super(name, aliases, description);
     }
 
+    public BukkitCommandBuilder(String name, String description, String... aliases) {
+        super(name, description, aliases);
+    }
+
+    public BukkitCommandBuilder(String name, String... aliases) {
+        super(name, aliases);
+    }
+
     public Impl executes(GenericCommandExecutor executor) {
         return executes(GenericCommandExecutor.class, executor);
     }
@@ -35,7 +43,7 @@ public abstract class BukkitCommandBuilder<Impl extends BukkitCommandBuilder<Imp
 
     @Override
     public BukkitCommandDefinition build() {
-        return new BukkitCommandDefinition(name, aliases, description, requirement, executors);
+        return new BukkitCommandDefinition(name, aliases, description, requirement, requiredArguments, optionalArguments, executors);
     }
 
 }

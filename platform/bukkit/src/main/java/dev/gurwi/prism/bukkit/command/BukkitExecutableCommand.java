@@ -1,5 +1,7 @@
 package dev.gurwi.prism.bukkit.command;
 
+import dev.gurwi.prism.argument.CommandArguments;
+import dev.gurwi.prism.bukkit.argument.BukkitArgument;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -19,12 +21,17 @@ public class BukkitExecutableCommand extends Command {
     }
 
     @Override
-    public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args) {
-        return false;
+    public boolean execute(@NotNull CommandSender sender, @NotNull String label, @NotNull String[] args) {
+        definition.getExecutors().forEach(executor -> executor.tryInvoke(sender, new CommandArguments()));
+        return true;
     }
 
     @Override
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
+        for (BukkitArgument<?, ?> requiredArgument : definition.getRequiredArguments()) {
+            requiredArgument.getSuggestionsSupplier().getSuggestions(sender);
+        }
+
         return super.tabComplete(sender, alias, args);
     }
 

@@ -11,8 +11,8 @@ import java.util.Map;
 
 public class BukkitCommandDefinition extends AbstractCommandDefinition<CommandSender, BukkitCommandExecutor<? extends CommandSender>, BukkitArgument<?, ?>> {
 
-    protected BukkitCommandDefinition(String name, List<String> aliases, String description, ExecutionRequirement<CommandSender> requirement, Map<Class<? extends BukkitCommandExecutor<? extends CommandSender>>, BukkitCommandExecutor<? extends CommandSender>> executors) {
-        super(name, aliases, description, requirement, executors);
+    protected BukkitCommandDefinition(String name, List<String> aliases, String description, ExecutionRequirement<CommandSender> requirement, List<BukkitArgument<?, ?>> requiredArguments, List<BukkitArgument<?, ?>> optionalArguments, Map<Class<? extends BukkitCommandExecutor<? extends CommandSender>>, BukkitCommandExecutor<? extends CommandSender>> executors) {
+        super(name, aliases, description, requirement, requiredArguments, optionalArguments, executors);
     }
 
 }

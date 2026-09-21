@@ -11,8 +11,8 @@ import java.util.concurrent.CompletableFuture;
 public interface SuggestionsSupplier {
 
     @Contract(pure = true)
-    static @NotNull SuggestionsSupplier empty() {
-        return (Sync<Object, Object>) o -> Collections.emptyList();
+    static <T, Source> @NotNull SuggestionsSupplier.Sync<T, Source> empty() {
+        return source -> Collections.emptyList();
     }
 
     @Contract(pure = true)
@@ -26,14 +26,16 @@ public interface SuggestionsSupplier {
         return of(List.of(suggestions));
     }
 
-    default boolean isAsync() {
-        return this instanceof Async;
-    }
+    boolean isAsync();
 
     @FunctionalInterface
     interface Sync<T, Source> extends SuggestionsSupplier {
 
         Collection<T> getSuggestions(Source source);
+
+        default boolean isAsync() {
+            return false;
+        }
 
     }
 
@@ -41,6 +43,11 @@ public interface SuggestionsSupplier {
     interface Async<T, Source> extends SuggestionsSupplier {
 
         CompletableFuture<Collection<T>> getSuggestions(Source source);
+
+        @Override
+        default boolean isAsync() {
+            return true;
+        }
 
     }
 
