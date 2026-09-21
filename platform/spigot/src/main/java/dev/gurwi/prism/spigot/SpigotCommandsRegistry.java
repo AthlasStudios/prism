@@ -6,6 +6,9 @@ import dev.gurwi.prism.bukkit.registrar.BukkitCommandRegistrar;
 import dev.gurwi.prism.bukkit.registrar.LegacyCommandRegistrar;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
+
+import java.util.Set;
 
 public class SpigotCommandsRegistry implements BukkitCommandsRegistry<SpigotPlatform> {
 
@@ -25,6 +28,11 @@ public class SpigotCommandsRegistry implements BukkitCommandsRegistry<SpigotPlat
     @Override
     public void unregister(BukkitCommandDefinition definition) {
         registrar.unregister(definition);
+    }
+
+    @Override
+    public @Unmodifiable Set<BukkitCommandDefinition> getRegisteredCommands() {
+        return registrar.getRegisteredCommands();
     }
 
     @Contract(" -> new")

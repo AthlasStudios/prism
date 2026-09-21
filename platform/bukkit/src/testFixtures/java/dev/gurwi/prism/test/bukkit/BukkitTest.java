@@ -1,26 +1,25 @@
 package dev.gurwi.prism.test.bukkit;
 
-import be.seeseemelk.mockbukkit.MockBukkit;
-import be.seeseemelk.mockbukkit.ServerMock;
-import dev.gurwi.prism.Prism;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.mockbukkit.mockbukkit.MockBukkit;
+import org.mockbukkit.mockbukkit.ServerMock;
 
 public abstract class BukkitTest {
 
-    protected PrismMockServer server;
+    protected ServerMock server;
     protected JavaPlugin plugin;
 
     @BeforeEach
     public void setup() {
-        server = PrismMockServer.mock();
+        server = MockBukkit.mock();
         plugin = MockBukkit.createMockPlugin();
     }
 
     @AfterEach
     public void teardown() {
-        MockBukkit.unload();
+        MockBukkit.unmock();
 
         server = null;
         plugin = null;

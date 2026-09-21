@@ -1,21 +1,50 @@
-    plugins {
-        id("java")
-        id("java-test-fixtures")
+plugins {
+    id("java")
+    id("java-test-fixtures")
+}
+
+val testJavaVersion = rootProject.extra["testJavaVersion"] as Int
+
+dependencies {
+    api(project(":core"))
+    implementation(project(":reflection"))
+
+    compileOnlyApi("org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT") {
+        exclude(group = "net.md-5", module = "bungeecord-chat")
     }
 
-    repositories {
-        maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
-        maven("https://oss.sonatype.org/content/repositories/snapshots/")
-    }
+    testFixturesApi("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
+    testFixturesApi("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.0.0")
+}
 
-    dependencies {
-        api(project(":core"))
-        implementation(project(":reflection"))
-
-        api("org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT") {
-            exclude(group = "net.md-5", module = "bungeecord-chat")
+plugins.withId("java-test-fixtures") {
+    configurations {
+        named("testFixturesCompileClasspath") {
+            attributes {
+                attribute(
+                    TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE,
+                    testJavaVersion
+                )
+            }
         }
 
-        testFixturesApi(project(":reflection"))
-        testFixturesApi("com.github.seeseemelk:MockBukkit-v1.13:0.2.0")
+        named("testFixturesRuntimeClasspath") {
+            attributes {
+                attribute(
+                    TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE,
+                    testJavaVersion
+                )
+            }
+        }
     }
+
+    tasks.withType<JavaCompile>().configureEach {
+        if (name.contains("TestFixtures")) {
+            javaCompiler.set(
+                javaToolchains.compilerFor {
+                    languageVersion.set(JavaLanguageVersion.of(testJavaVersion))
+                }
+            )
+        }
+    }
+}

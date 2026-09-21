@@ -2,10 +2,6 @@ plugins {
     id("java")
 }
 
-repositories {
-    maven("https://libraries.minecraft.net")
-}
-
 dependencies {
     api(project(":core"))
     api(project(":platform:bukkit"))

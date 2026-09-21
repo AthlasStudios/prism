@@ -3,6 +3,12 @@ plugins {
     id("com.gradleup.shadow") version "9.4.1" apply false
 }
 
+val targetJavaVersion = 17
+val testJavaVersion = 21
+
+rootProject.extra["targetJavaVersion"] = targetJavaVersion
+rootProject.extra["testJavaVersion"] = testJavaVersion
+
 allprojects {
     group = "dev.gurwi"
     version = project.rootProject.version
@@ -10,7 +16,9 @@ allprojects {
     plugins.apply("java-library")
 
     java {
-        toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+        toolchain.languageVersion.set(
+            JavaLanguageVersion.of(targetJavaVersion)
+        )
     }
 }
 
@@ -18,6 +26,11 @@ subprojects {
     repositories {
         mavenCentral()
         mavenLocal()
+
+        maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+        maven("https://oss.sonatype.org/content/repositories/snapshots/")
+        maven("https://repo.papermc.io/repository/maven-public/")
+        maven("https://libraries.minecraft.net")
     }
 
     dependencies {
@@ -28,14 +41,58 @@ subprojects {
         testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     }
 
-    plugins.withId("java-test-fixtures") {
-        dependencies {
-            "testFixturesImplementation"(platform("org.junit:junit-bom:6.0.0"))
-            "testFixturesImplementation"("org.junit.jupiter:junit-jupiter")
+    tasks.withType<JavaCompile>().configureEach {
+        if (name.contains("Test")) {
+            javaCompiler.set(
+                javaToolchains.compilerFor {
+                    languageVersion.set(
+                        JavaLanguageVersion.of(testJavaVersion)
+                    )
+                }
+            )
         }
     }
 
-    tasks.test {
+    tasks.withType<Test>().configureEach {
         useJUnitPlatform()
+
+        javaLauncher.set(
+            javaToolchains.launcherFor {
+                languageVersion.set(
+                    JavaLanguageVersion.of(testJavaVersion)
+                )
+            }
+        )
+    }
+
+    plugins.withId("java-test-fixtures") {
+        dependencies {
+            "testFixturesImplementation"(
+                platform("org.junit:junit-bom:6.0.0")
+            )
+            "testFixturesImplementation"(
+                "org.junit.jupiter:junit-jupiter"
+            )
+        }
+
+        configurations {
+            named("testFixturesCompileClasspath") {
+                attributes {
+                    attribute(
+                        TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE,
+                        testJavaVersion
+                    )
+                }
+            }
+
+            named("testFixturesRuntimeClasspath") {
+                attributes {
+                    attribute(
+                        TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE,
+                        testJavaVersion
+                    )
+                }
+            }
+        }
     }
 }
