@@ -21,8 +21,8 @@ public interface BukkitPermission extends PermissionNode<String, CommandSender> 
     }
 
     @Contract(value = "_ -> new", pure = true)
-    static @NotNull BukkitPermission startWith(@NotNull String regex) {
-        return new Plain(regex);
+    static @NotNull BukkitPermission startsWith(@NotNull String regex) {
+        return new StartsWith(regex);
     }
 
     class Plain implements BukkitPermission {
@@ -40,7 +40,7 @@ public interface BukkitPermission extends PermissionNode<String, CommandSender> 
 
         @Override
         public boolean hasPermission(@NotNull CommandSender sender) {
-            return sender.hasPermission(permission);
+            return sender.isOp() || sender.hasPermission(permission);
         }
 
     }

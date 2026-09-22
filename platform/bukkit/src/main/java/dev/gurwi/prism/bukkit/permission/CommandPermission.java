@@ -1,6 +1,7 @@
 package dev.gurwi.prism.bukkit.permission;
 
 import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
 
 public enum CommandPermission implements BukkitPermission {
 
@@ -19,7 +20,7 @@ public enum CommandPermission implements BukkitPermission {
     }
 
     @Override
-    public boolean hasPermission(CommandSender sender) {
+    public boolean hasPermission(@NotNull CommandSender sender) {
         return BukkitPermission.of(permission).hasPermission(sender);
     }
 
