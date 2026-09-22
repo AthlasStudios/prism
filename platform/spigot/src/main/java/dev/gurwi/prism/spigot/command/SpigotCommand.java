@@ -4,13 +4,13 @@ import dev.gurwi.prism.bukkit.command.BukkitCommandBuilder;
 
 import java.util.List;
 
-public class Command extends BukkitCommandBuilder<Command> {
+public class SpigotCommand extends BukkitCommandBuilder<SpigotCommand> {
 
-    public Command(String name, List<String> aliases, String description) {
+    public SpigotCommand(String name, List<String> aliases, String description) {
         super(name, aliases, description);
     }
 
-    public Command(String name, String... aliases) {
+    public SpigotCommand(String name, String... aliases) {
         super(name, aliases);
     }
 

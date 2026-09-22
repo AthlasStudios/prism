@@ -1,8 +1,9 @@
 package dev.gurwi.prism.spigot.command;
 
+import dev.gurwi.prism.bukkit.command.BukkitExecutableCommand;
 import dev.gurwi.prism.spigot.SpigotPlatform;
 import dev.gurwi.prism.test.bukkit.BukkitTest;
-import org.bukkit.command.PluginCommand;
+import org.bukkit.command.Command;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -12,26 +13,27 @@ import static org.junit.jupiter.api.Assertions.*;
 class LegacyCommandRegistrarTest extends BukkitTest {
 
     @Test
-    void testPluginCommandLookup() {
+    void testCommandMapLookup() {
         SpigotPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new Command(
+                        new SpigotCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"
                         ).build()
                 );
 
-        PluginCommand command = plugin.getCommand("prism");
-        PluginCommand alias = plugin.getCommand("pr");
+        Command command = server.getCommandMap().getCommand("prism");
+        Command alias = server.getCommandMap().getCommand("pr");
 
         assertNotNull(command);
         assertNotNull(alias);
 
         assertSame(command, alias);
+        assertInstanceOf(BukkitExecutableCommand.class, command);
     }
 
     @Test
@@ -41,20 +43,19 @@ class LegacyCommandRegistrarTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new Command(
+                        new SpigotCommand(
                                 "prism",
                                 List.of("pr"),
                                 "Prism command"
                         ).build()
                 );
 
-        PluginCommand command = plugin.getCommand("prism");
+        Command command = server.getCommandMap().getCommand("prism");
 
         assertNotNull(command);
 
         assertEquals("prism", command.getName());
         assertEquals("Prism command", command.getDescription());
-        assertEquals(plugin, command.getPlugin());
         assertEquals("prism", command.getLabel());
 
         assertEquals(1, command.getAliases().size());
@@ -68,14 +69,14 @@ class LegacyCommandRegistrarTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new Command(
+                        new SpigotCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"
                         ).build()
                 );
 
-        PluginCommand command = plugin.getCommand("prism");
+        Command command = server.getCommandMap().getCommand("prism");
 
         assertNotNull(command);
 
@@ -88,16 +89,6 @@ class LegacyCommandRegistrarTest extends BukkitTest {
                 command,
                 server.getCommandMap().getCommand("pr")
         );
-
-        assertSame(
-                command,
-                server.getPluginCommand("prism")
-        );
-
-        assertSame(
-                command,
-                server.getPluginCommand("pr")
-        );
     }
 
     @Test
@@ -107,7 +98,7 @@ class LegacyCommandRegistrarTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry();
 
-        var definition = new Command(
+        var definition = new SpigotCommand(
                 "prism",
                 "Prism command",
                 "pr"
@@ -128,7 +119,7 @@ class LegacyCommandRegistrarTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry();
 
-        var definition = new Command(
+        var definition = new SpigotCommand(
                 "prism",
                 "Prism command",
                 "pr"
@@ -136,13 +127,17 @@ class LegacyCommandRegistrarTest extends BukkitTest {
 
         registry.register(definition);
 
-        assertNotNull(plugin.getCommand("prism"));
-        assertNotNull(plugin.getCommand("pr"));
+        assertNotNull(
+                server.getCommandMap()
+                        .getCommand("prism")
+        );
+
+        assertNotNull(
+                server.getCommandMap()
+                        .getCommand("pr")
+        );
 
         registry.unregister(definition);
-
-        assertNull(plugin.getCommand("prism"));
-        assertNull(plugin.getCommand("pr"));
 
         assertNull(
                 server.getCommandMap()

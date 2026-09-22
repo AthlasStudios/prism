@@ -1,6 +1,7 @@
 package dev.gurwi.prism.command;
 
 import dev.gurwi.prism.argument.AbstractArgument;
+import dev.gurwi.prism.permission.PermissionNode;
 import dev.gurwi.prism.platform.CommandsRegistry;
 import dev.gurwi.prism.platform.Platform;
 import dev.gurwi.prism.requirement.ExecutionRequirement;
@@ -9,11 +10,12 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 public abstract class AbstractCommandBuilder<
-        Impl extends AbstractCommandBuilder<Impl, Definition, Source, Executor, Argument>,
-        Definition extends AbstractCommandDefinition<Source, Executor, Argument>,
+        Impl extends AbstractCommandBuilder<Impl, Definition, Source, Executor, Argument, Permission>,
+        Definition extends AbstractCommandDefinition<Source, Executor, Argument, Permission>,
         Source,
         Executor extends CommandExecutor<?>,
-        Argument extends AbstractArgument<?, ?, ?>
+        Argument extends AbstractArgument<?, ?, ?>,
+        Permission extends PermissionNode<?, Source>
 > {
 
     protected final List<Argument> requiredArguments = new ArrayList<>();
@@ -25,6 +27,7 @@ public abstract class AbstractCommandBuilder<
     protected final String description;
 
     protected ExecutionRequirement<Source> requirement = ExecutionRequirement.none();
+    protected Set<Permission> permissions = new HashSet<>();
 
     public AbstractCommandBuilder(String name, List<String> aliases, String description) {
         this.name = name;
@@ -50,8 +53,13 @@ public abstract class AbstractCommandBuilder<
         return self();
     }
 
-    public Impl withRequirement(ExecutionRequirement<Source> requirement) {
-        this.requirement = requirement;
+    public Impl withRequirement(@NotNull ExecutionRequirement<Source> requirement) {
+        this.requirement = this.requirement.and(requirement);
+        return self();
+    }
+
+    public Impl withPermissions(Permission... permissions) {
+        this.permissions.addAll(Arrays.asList(permissions));
         return self();
     }
 
@@ -60,12 +68,15 @@ public abstract class AbstractCommandBuilder<
         return self();
     }
 
-    public void register(@NotNull CommandsRegistry<?, Definition> registry) {
-        registry.register(build());
+    public Definition register(@NotNull CommandsRegistry<?, Definition> registry) {
+        Definition definition = build();
+        registry.register(definition);
+
+        return definition;
     }
 
-    public void register(@NotNull Platform<? extends CommandsRegistry<?, Definition>> platform) {
-        register(platform.getCommandsRegistry());
+    public Definition register(@NotNull Platform<? extends CommandsRegistry<?, Definition>> platform) {
+        return register(platform.getCommandsRegistry());
     }
 
     @SuppressWarnings("unchecked")

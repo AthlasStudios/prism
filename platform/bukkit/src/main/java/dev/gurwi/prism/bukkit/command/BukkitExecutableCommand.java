@@ -2,30 +2,36 @@ package dev.gurwi.prism.bukkit.command;
 
 import dev.gurwi.prism.argument.CommandArguments;
 import dev.gurwi.prism.bukkit.argument.BukkitArgument;
-import dev.gurwi.prism.bukkit.argument.GreedyArgument;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
+import dev.gurwi.prism.exception.NoExecutorException;
+import org.bukkit.command.*;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class BukkitExecutableCommand extends Command implements CommandExecutor, TabCompleter {
+public class BukkitExecutableCommand extends Command implements CommandExecutor, TabCompleter, PluginIdentifiableCommand {
 
+    private final JavaPlugin plugin;
     private final BukkitCommandDefinition definition;
 
-    public BukkitExecutableCommand(@NotNull BukkitCommandDefinition definition) {
+    public BukkitExecutableCommand(JavaPlugin plugin, @NotNull BukkitCommandDefinition definition) {
         super(definition.getName());
+
+        this.plugin = plugin;
+        this.definition = definition;
+
         setAliases(definition.getAliases());
         setDescription(definition.getDescription());
-
-        this.definition = definition;
     }
 
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String label, @NotNull String[] args) {
+        if (!hasExecutor(sender)) {
+            throw new NoExecutorException(sender.getClass());
+        }
+
         definition.getExecutors().forEach(executor -> executor.tryInvoke(sender, new CommandArguments()));
         return true;
     }
@@ -49,8 +55,32 @@ public class BukkitExecutableCommand extends Command implements CommandExecutor,
         return tabComplete(sender, alias, args);
     }
 
+    @Override
+    public boolean testPermission(@NotNull CommandSender target) {
+        return hasExecutor(target) && definition.getRequirement().canExecute(target)
+                && definition.getPermissions().stream()
+                .allMatch(permission -> permission.hasPermission(target));
+    }
+
+    @Override
+    public boolean testPermissionSilent(@NotNull CommandSender target) {
+        return testPermission(target);
+    }
+
+    @Override
+    public @NotNull Plugin getPlugin() {
+        return plugin;
+    }
+
     public BukkitCommandDefinition getDefinition() {
         return definition;
+    }
+
+    private boolean hasExecutor(CommandSender sender) {
+        return definition.getExecutors().stream()
+                .anyMatch(executor ->
+                        executor.getSourceType().isInstance(sender)
+                );
     }
 
 }

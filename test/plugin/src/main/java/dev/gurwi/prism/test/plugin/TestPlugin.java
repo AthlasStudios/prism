@@ -3,8 +3,9 @@ package dev.gurwi.prism.test.plugin;
 import dev.gurwi.prism.bukkit.argument.GreedyStringArgument;
 import dev.gurwi.prism.bukkit.argument.IntegerArgument;
 import dev.gurwi.prism.bukkit.argument.StringArgument;
+import dev.gurwi.prism.bukkit.permission.CommandPermission;
 import dev.gurwi.prism.spigot.SpigotPlatform;
-import dev.gurwi.prism.spigot.command.Command;
+import dev.gurwi.prism.spigot.command.SpigotCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class TestPlugin extends JavaPlugin {
@@ -14,16 +15,18 @@ public class TestPlugin extends JavaPlugin {
         SpigotPlatform platform = SpigotPlatform.configure(this)
                 .init();
 
-        new Command("test")
+        new SpigotCommand("test")
                 .withArguments(
                         new StringArgument("str"),
                         new IntegerArgument("int"),
                         new GreedyStringArgument("greedy")
                 )
-                .executes((sender, args) -> {
+                .withPermissions(CommandPermission.OP)
+                .executesPlayer((sender, args) -> {
                     sender.sendMessage("Command executed!");
                 })
                 .register(platform);
+
     }
 
 }

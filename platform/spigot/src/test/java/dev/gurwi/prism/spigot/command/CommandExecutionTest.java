@@ -1,8 +1,9 @@
 package dev.gurwi.prism.spigot.command;
 
+import dev.gurwi.prism.bukkit.command.BukkitExecutableCommand;
 import dev.gurwi.prism.spigot.SpigotPlatform;
 import dev.gurwi.prism.test.bukkit.BukkitTest;
-import org.bukkit.command.PluginCommand;
+import org.bukkit.command.Command;
 import org.junit.jupiter.api.Test;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
@@ -11,13 +12,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class CommandExecutionTest extends BukkitTest {
 
     @Test
-    void testCommandExecutorIsRegistered() {
+    void testCommandIsRegistered() {
         SpigotPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new Command(
+                        new SpigotCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"
@@ -27,10 +28,15 @@ class CommandExecutionTest extends BukkitTest {
                                 .build()
                 );
 
-        PluginCommand command = plugin.getCommand("prism");
+        Command command = server.getCommandMap().getCommand("prism");
 
         assertNotNull(command);
-        assertNotNull(command.getExecutor());
+        assertInstanceOf(BukkitExecutableCommand.class, command);
+
+        BukkitExecutableCommand executableCommand = (BukkitExecutableCommand) command;
+
+        assertNotNull(executableCommand.getDefinition());
+        assertFalse(executableCommand.getDefinition().getExecutors().isEmpty());
     }
 
     @Test
@@ -42,7 +48,7 @@ class CommandExecutionTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new Command(
+                        new SpigotCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"
@@ -73,7 +79,7 @@ class CommandExecutionTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new Command(
+                        new SpigotCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"

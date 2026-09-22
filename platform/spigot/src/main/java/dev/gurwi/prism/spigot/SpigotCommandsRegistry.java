@@ -22,6 +22,7 @@ public class SpigotCommandsRegistry implements BukkitCommandsRegistry<SpigotPlat
 
     @Override
     public void register(BukkitCommandDefinition definition) {
+        if (getRegisteredCommands().contains(definition)) throw new IllegalStateException("Command " + definition.getName() + " is already registered!");
         registrar.register(definition);
     }
 
