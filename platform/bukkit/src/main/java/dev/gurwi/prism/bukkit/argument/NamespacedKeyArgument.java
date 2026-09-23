@@ -1,0 +1,18 @@
+package dev.gurwi.prism.bukkit.argument;
+
+import dev.gurwi.prism.exception.ArgumentParseException;
+import org.bukkit.NamespacedKey;
+import org.jetbrains.annotations.NotNull;
+
+public class NamespacedKeyArgument extends BukkitArgument<NamespacedKeyArgument, NamespacedKey> {
+
+    public NamespacedKeyArgument(String name) {
+        super(name);
+    }
+
+    @Override
+    public NamespacedKey parse(@NotNull String value) throws ArgumentParseException {
+        return NamespacedKey.minecraft(value);
+    }
+
+}

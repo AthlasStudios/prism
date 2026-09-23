@@ -2,7 +2,7 @@ package dev.gurwi.prism.command;
 
 import dev.gurwi.prism.argument.AbstractArgument;
 import dev.gurwi.prism.permission.PermissionNode;
-import dev.gurwi.prism.requirement.ExecutionRequirement;
+import dev.gurwi.prism.requirement.UsageRequirement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -11,7 +11,7 @@ import java.util.*;
 public abstract class AbstractCommandDefinition<
         Source,
         Executor extends CommandExecutor<?>,
-        Argument extends AbstractArgument<?, ?, ?>,
+        Argument extends AbstractArgument<?, ?, Source, ?>,
         Permission extends PermissionNode<?, Source>
 > {
 
@@ -24,9 +24,9 @@ public abstract class AbstractCommandDefinition<
     private final String name;
     private final List<String> aliases;
     private final String description;
-    private final ExecutionRequirement<Source> requirement;
+    private final UsageRequirement<Source> requirement;
 
-    protected AbstractCommandDefinition(String name, List<String> aliases, String description, ExecutionRequirement<Source> requirement, Set<Permission> permissions, List<Argument> requiredArguments, List<Argument> optionalArguments, Map<Class<? extends Executor>, Executor> executors) {
+    protected AbstractCommandDefinition(String name, List<String> aliases, String description, UsageRequirement<Source> requirement, Set<Permission> permissions, List<Argument> requiredArguments, List<Argument> optionalArguments, Map<Class<? extends Executor>, Executor> executors) {
         this.name = name;
         this.aliases = aliases;
         this.description = description;
@@ -50,7 +50,7 @@ public abstract class AbstractCommandDefinition<
         return description;
     }
 
-    public ExecutionRequirement<Source> getRequirement() {
+    public UsageRequirement<Source> getRequirement() {
         return requirement;
     }
 

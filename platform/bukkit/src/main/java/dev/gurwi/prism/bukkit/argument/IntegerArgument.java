@@ -1,6 +1,7 @@
 package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.exception.ArgumentParseException;
+import org.jetbrains.annotations.NotNull;
 
 public class IntegerArgument extends BukkitArgument<IntegerArgument, Integer> {
 
@@ -9,11 +10,11 @@ public class IntegerArgument extends BukkitArgument<IntegerArgument, Integer> {
     }
 
     @Override
-    public Integer parse(String value) throws ArgumentParseException {
+    public Integer parse(@NotNull String value) throws ArgumentParseException {
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            throw new ArgumentParseException(this, value, e.getMessage());
+            throw new ArgumentParseException(this, value, "Expected an integer got " + value);
         }
     }
 

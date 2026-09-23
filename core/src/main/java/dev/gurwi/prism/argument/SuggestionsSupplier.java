@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture;
 public interface SuggestionsSupplier {
 
     @Contract(pure = true)
-    static <T, Source> @NotNull SuggestionsSupplier.Sync<T, Source> empty() {
+    static SuggestionsSupplier.@NotNull Sync<?, ?> empty() {
         return source -> Collections.emptyList();
     }
 

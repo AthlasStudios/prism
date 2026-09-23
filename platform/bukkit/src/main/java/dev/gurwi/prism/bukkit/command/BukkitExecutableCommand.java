@@ -2,6 +2,8 @@ package dev.gurwi.prism.bukkit.command;
 
 import dev.gurwi.prism.argument.CommandArguments;
 import dev.gurwi.prism.bukkit.argument.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.parser.LegacyArgumentsParser;
+import dev.gurwi.prism.bukkit.exception.BukkitArgumentsParseException;
 import dev.gurwi.prism.exception.NoExecutorException;
 import org.bukkit.command.*;
 import org.bukkit.plugin.Plugin;
@@ -9,6 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.List;
 
 public class BukkitExecutableCommand extends Command implements CommandExecutor, TabCompleter, PluginIdentifiableCommand {
@@ -32,8 +35,19 @@ public class BukkitExecutableCommand extends Command implements CommandExecutor,
             throw new NoExecutorException(sender.getClass());
         }
 
-        definition.getExecutors().forEach(executor -> executor.tryInvoke(sender, new CommandArguments()));
-        return true;
+        try {
+            CommandArguments parsedArgs = LegacyArgumentsParser.parse(
+                    definition,
+                    args
+            );
+
+            definition.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsedArgs));
+
+            return true;
+        } catch (BukkitArgumentsParseException e) {
+            definition.getLegacyCommandErrorHandler().onArgumentsParseError(definition, sender, e);
+            return false;
+        }
     }
 
     @Override
@@ -42,12 +56,22 @@ public class BukkitExecutableCommand extends Command implements CommandExecutor,
     }
 
     @Override
-    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
-        for (BukkitArgument<?, ?> requiredArgument : definition.getRequiredArguments()) {
-            requiredArgument.getSuggestionsSupplier().getSuggestions(sender);
+    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String @NotNull [] args) throws IllegalArgumentException {
+        int argIndex = args.length == 0 ? 0 : args.length - 1;
+
+        if (args.length <= definition.getRequiredArguments().size()) {
+            BukkitArgument<?, ?> argument = definition.getRequiredArguments().get(argIndex);
+            if (!argument.getRequirement().canExecute(sender)) return Collections.emptyList();
+            return List.copyOf(argument.getSuggestionsSupplier().getSuggestions(sender));
         }
 
-        return super.tabComplete(sender, alias, args);
+        if ((args.length - definition.getRequiredArguments().size()) <= definition.getOptionalArguments().size()) {
+            BukkitArgument<?, ?> argument = definition.getOptionalArguments().get(argIndex - definition.getRequiredArguments().size());
+            if (!argument.getRequirement().canExecute(sender)) return Collections.emptyList();
+            return List.copyOf(argument.getSuggestionsSupplier().getSuggestions(sender));
+        }
+
+        return Collections.emptyList();
     }
 
     @Override

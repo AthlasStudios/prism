@@ -1,6 +1,7 @@
 package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.exception.ArgumentParseException;
+import org.jetbrains.annotations.NotNull;
 
 public class StringArgument extends BukkitArgument<StringArgument, String> {
 
@@ -9,7 +10,7 @@ public class StringArgument extends BukkitArgument<StringArgument, String> {
     }
 
     @Override
-    public String parse(String value) throws ArgumentParseException {
+    public String parse(@NotNull String value) throws ArgumentParseException {
         return value;
     }
 

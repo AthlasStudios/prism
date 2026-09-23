@@ -4,7 +4,7 @@ import dev.gurwi.prism.argument.AbstractArgument;
 import dev.gurwi.prism.permission.PermissionNode;
 import dev.gurwi.prism.platform.CommandsRegistry;
 import dev.gurwi.prism.platform.Platform;
-import dev.gurwi.prism.requirement.ExecutionRequirement;
+import dev.gurwi.prism.requirement.UsageRequirement;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -14,7 +14,7 @@ public abstract class AbstractCommandBuilder<
         Definition extends AbstractCommandDefinition<Source, Executor, Argument, Permission>,
         Source,
         Executor extends CommandExecutor<?>,
-        Argument extends AbstractArgument<?, ?, ?>,
+        Argument extends AbstractArgument<?, ?, Source, ?>,
         Permission extends PermissionNode<?, Source>
 > {
 
@@ -26,7 +26,7 @@ public abstract class AbstractCommandBuilder<
     protected final List<String> aliases;
     protected final String description;
 
-    protected ExecutionRequirement<Source> requirement = ExecutionRequirement.none();
+    protected UsageRequirement<Source> requirement = UsageRequirement.none();
     protected Set<Permission> permissions = new HashSet<>();
 
     public AbstractCommandBuilder(String name, List<String> aliases, String description) {
@@ -53,7 +53,7 @@ public abstract class AbstractCommandBuilder<
         return self();
     }
 
-    public Impl withRequirement(@NotNull ExecutionRequirement<Source> requirement) {
+    public Impl withRequirement(@NotNull UsageRequirement<Source> requirement) {
         this.requirement = this.requirement.and(requirement);
         return self();
     }

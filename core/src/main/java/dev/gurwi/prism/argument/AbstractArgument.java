@@ -1,18 +1,20 @@
 package dev.gurwi.prism.argument;
 
 import dev.gurwi.prism.exception.ArgumentParseException;
-
-import java.util.Collection;
+import dev.gurwi.prism.requirement.UsageRequirement;
+import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unchecked")
-public abstract class AbstractArgument<Impl, T, Suggestions extends SuggestionsSupplier> {
+public abstract class AbstractArgument<Impl, T, Source, Suggestions extends SuggestionsSupplier> {
 
     private final String name;
 
-    private Suggestions suggestionsSupplier = (Suggestions) SuggestionsSupplier.empty();
+    private Suggestions suggestionsSupplier;
+    private UsageRequirement<Source> requirement = UsageRequirement.none();
 
-    public AbstractArgument(String name) {
+    public AbstractArgument(String name, Suggestions defaultSuggestions) {
         this.name = name;
+        this.suggestionsSupplier = defaultSuggestions;
     }
 
     public Impl replaceSuggestions(Suggestions suggestionsSupplier) {
@@ -20,12 +22,9 @@ public abstract class AbstractArgument<Impl, T, Suggestions extends SuggestionsS
         return self();
     }
 
-    public Impl replaceSuggestions(Collection<T> suggestions) {
-        return replaceSuggestions((Suggestions) SuggestionsSupplier.of(suggestions));
-    }
-
-    public Impl replaceSuggestions(T... suggestions) {
-        return replaceSuggestions((Suggestions) SuggestionsSupplier.of(suggestions));
+    public Impl withRequirement(UsageRequirement<Source> requirement) {
+        this.requirement = this.requirement.and(requirement);
+        return self();
     }
 
     public String getName() {
@@ -36,7 +35,11 @@ public abstract class AbstractArgument<Impl, T, Suggestions extends SuggestionsS
         return suggestionsSupplier;
     }
 
-    public abstract T parse(String value) throws ArgumentParseException;
+    public UsageRequirement<Source> getRequirement() {
+        return requirement;
+    }
+
+    public abstract T parse(@NotNull String value) throws ArgumentParseException;
 
     @SuppressWarnings("unchecked")
     public Impl self() {

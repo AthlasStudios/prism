@@ -4,16 +4,16 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 @FunctionalInterface
-public interface ExecutionRequirement<Source> {
+public interface UsageRequirement<Source> {
 
     boolean canExecute(Source source);
 
-    default ExecutionRequirement<Source> and(ExecutionRequirement<Source> requirement) {
+    default UsageRequirement<Source> and(UsageRequirement<Source> requirement) {
         return source -> this.canExecute(source) && requirement.canExecute(source);
     }
 
     @Contract(pure = true)
-    static <S> @NotNull ExecutionRequirement<S> none() {
+    static <S> @NotNull UsageRequirement<S> none() {
         return source -> true;
     }
 
