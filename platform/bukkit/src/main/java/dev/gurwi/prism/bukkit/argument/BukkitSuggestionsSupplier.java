@@ -14,12 +14,12 @@ public interface BukkitSuggestionsSupplier extends SuggestionsSupplier.Sync<Stri
 
     @Contract(pure = true)
     static @NotNull BukkitSuggestionsSupplier empty() {
-        return source -> Collections.emptyList();
+        return (source, input) -> Collections.emptyList();
     }
 
     @Contract(pure = true)
     static @NotNull BukkitSuggestionsSupplier of(Collection<String> suggestions) {
-        return source -> suggestions;
+        return (source, input) -> suggestions;
     }
 
     @Contract(pure = true)

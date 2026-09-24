@@ -7,6 +7,7 @@ import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.exception.BukkitArgumentsParseException;
 import dev.gurwi.prism.bukkit.exception.GreedyArgumentException;
 import dev.gurwi.prism.exception.ArgumentParseException;
+import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -20,10 +21,11 @@ public final class LegacyArgumentsParser {
     private LegacyArgumentsParser() {
     }
 
-    public static @NotNull CommandArguments parse(@NotNull BukkitCommandDefinition definition, @NotNull String[] rawArgs) throws BukkitArgumentsParseException {
+    public static @NotNull CommandArguments parse(@NotNull CommandSender sender, @NotNull BukkitCommandDefinition definition, @NotNull String[] rawArgs) throws BukkitArgumentsParseException {
         validateArguments(definition);
 
         Map<String, Object> required = parseArguments(
+                sender,
                 definition,
                 definition.getRequiredArguments(),
                 rawArgs,
@@ -39,6 +41,7 @@ public final class LegacyArgumentsParser {
         );
 
         Map<String, Object> optional = parseArguments(
+                sender,
                 definition,
                 definition.getOptionalArguments(),
                 remainingArgs,
@@ -64,13 +67,7 @@ public final class LegacyArgumentsParser {
         return new CommandArguments(required, optional);
     }
 
-    private static @NotNull Map<String, Object> parseArguments(
-            @NotNull BukkitCommandDefinition definition,
-            @NotNull List<BukkitArgument<?, ?>> arguments,
-            @NotNull String[] rawArgs,
-            boolean required
-    ) throws BukkitArgumentsParseException {
-
+    private static @NotNull Map<String, Object> parseArguments(@NotNull CommandSender sender, @NotNull BukkitCommandDefinition definition, @NotNull List<BukkitArgument<?, ?>> arguments, @NotNull String[] rawArgs, boolean required) throws BukkitArgumentsParseException {
         Map<String, Object> parsed = new HashMap<>();
 
         for (int i = 0; i < arguments.size(); i++) {
@@ -108,7 +105,7 @@ public final class LegacyArgumentsParser {
                 try {
                     parsed.put(
                             argument.getName(),
-                            argument.parse(input)
+                            argument.parse(sender, input)
                     );
                 } catch (ArgumentParseException e) {
                     int start = inputStart(rawArgs, i);
@@ -127,7 +124,7 @@ public final class LegacyArgumentsParser {
             try {
                 parsed.put(
                         argument.getName(),
-                        argument.parse(rawArgs[i])
+                        argument.parse(sender, rawArgs[i])
                 );
             } catch (ArgumentParseException e) {
                 int start = inputStart(rawArgs, i);
@@ -191,4 +188,5 @@ public final class LegacyArgumentsParser {
     private static @NotNull String argumentToken(@NotNull BukkitArgument<?, ?> argument) {
         return "<" + argument.getName() + ">";
     }
+
 }

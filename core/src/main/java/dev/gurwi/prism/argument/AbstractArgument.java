@@ -39,7 +39,7 @@ public abstract class AbstractArgument<Impl, T, Source, Suggestions extends Sugg
         return requirement;
     }
 
-    public abstract T parse(@NotNull String value) throws ArgumentParseException;
+    public abstract T parse(@NotNull Source source, @NotNull String value) throws ArgumentParseException;
 
     @SuppressWarnings("unchecked")
     public Impl self() {

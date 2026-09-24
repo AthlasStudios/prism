@@ -4,6 +4,7 @@ import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 public class LocationArgument extends BukkitArgument<LocationArgument, Location> {
@@ -13,7 +14,7 @@ public class LocationArgument extends BukkitArgument<LocationArgument, Location>
     }
 
     @Override
-    public Location parse(@NotNull String value) throws ArgumentParseException {
+    public Location parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
         String[] parts = value.split(",");
 
         if (parts.length != 4) {

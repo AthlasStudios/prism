@@ -1,6 +1,7 @@
 package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.exception.ArgumentParseException;
+import org.bukkit.command.CommandSender;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
@@ -11,7 +12,7 @@ public class VectorArgument extends BukkitArgument<VectorArgument, Vector> {
     }
 
     @Override
-    public Vector parse(@NotNull String value) throws ArgumentParseException {
+    public Vector parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
         String[] parts = value.split(",");
 
         if (parts.length != 3) {

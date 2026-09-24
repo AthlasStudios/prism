@@ -31,12 +31,15 @@ public class BukkitExecutableCommand extends Command implements CommandExecutor,
 
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String label, @NotNull String[] args) {
-        if (!hasExecutor(sender)) {
+        if (!testPermission(sender)) return false;
+
+        if (!definition.hasExecutor(sender)) {
             throw new NoExecutorException(sender.getClass());
         }
 
         try {
             CommandArguments parsedArgs = LegacyArgumentsParser.parse(
+                    sender,
                     definition,
                     args
             );
@@ -62,13 +65,13 @@ public class BukkitExecutableCommand extends Command implements CommandExecutor,
         if (args.length <= definition.getRequiredArguments().size()) {
             BukkitArgument<?, ?> argument = definition.getRequiredArguments().get(argIndex);
             if (!argument.getRequirement().canExecute(sender)) return Collections.emptyList();
-            return List.copyOf(argument.getSuggestionsSupplier().getSuggestions(sender));
+            return List.copyOf(argument.getSuggestionsSupplier().getSuggestions(sender, args[argIndex]));
         }
 
         if ((args.length - definition.getRequiredArguments().size()) <= definition.getOptionalArguments().size()) {
             BukkitArgument<?, ?> argument = definition.getOptionalArguments().get(argIndex - definition.getRequiredArguments().size());
             if (!argument.getRequirement().canExecute(sender)) return Collections.emptyList();
-            return List.copyOf(argument.getSuggestionsSupplier().getSuggestions(sender));
+            return List.copyOf(argument.getSuggestionsSupplier().getSuggestions(sender, args[argIndex]));
         }
 
         return Collections.emptyList();
@@ -81,7 +84,7 @@ public class BukkitExecutableCommand extends Command implements CommandExecutor,
 
     @Override
     public boolean testPermission(@NotNull CommandSender target) {
-        return hasExecutor(target) && definition.getRequirement().canExecute(target)
+        return definition.hasExecutor(target) && definition.getRequirement().canExecute(target)
                 && definition.getPermissions().stream()
                 .allMatch(permission -> permission.hasPermission(target));
     }
@@ -98,13 +101,6 @@ public class BukkitExecutableCommand extends Command implements CommandExecutor,
 
     public BukkitCommandDefinition getDefinition() {
         return definition;
-    }
-
-    private boolean hasExecutor(CommandSender sender) {
-        return definition.getExecutors().stream()
-                .anyMatch(executor ->
-                        executor.getSourceType().isInstance(sender)
-                );
     }
 
 }

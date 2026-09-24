@@ -1,6 +1,7 @@
 package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.exception.ArgumentParseException;
+import org.bukkit.command.CommandSender;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,8 +24,7 @@ public class PotionEffectTypeArgument extends BukkitArgument<PotionEffectTypeArg
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public PotionEffectType parse(@NotNull String value) throws ArgumentParseException {
+    public PotionEffectType parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
         PotionEffectType type = PotionEffectType.getByName(value.toUpperCase());
 
         if (type == null) {

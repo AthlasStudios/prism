@@ -12,12 +12,12 @@ public interface SuggestionsSupplier {
 
     @Contract(pure = true)
     static SuggestionsSupplier.@NotNull Sync<?, ?> empty() {
-        return source -> Collections.emptyList();
+        return (source, input) -> Collections.emptyList();
     }
 
     @Contract(pure = true)
     static <T, Source> @NotNull SuggestionsSupplier.Sync<T, Source> of(Collection<T> suggestions) {
-        return source -> suggestions;
+        return (source, input) -> suggestions;
     }
 
     @SafeVarargs
@@ -31,7 +31,7 @@ public interface SuggestionsSupplier {
     @FunctionalInterface
     interface Sync<T, Source> extends SuggestionsSupplier {
 
-        Collection<T> getSuggestions(Source source);
+        Collection<T> getSuggestions(Source source, T input);
 
         default boolean isAsync() {
             return false;
@@ -42,7 +42,7 @@ public interface SuggestionsSupplier {
     @FunctionalInterface
     interface Async<T, Source> extends SuggestionsSupplier {
 
-        CompletableFuture<Collection<T>> getSuggestions(Source source);
+        CompletableFuture<Collection<T>> getSuggestions(Source source, T input);
 
         @Override
         default boolean isAsync() {

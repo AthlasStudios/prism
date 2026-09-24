@@ -1,6 +1,7 @@
 package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.exception.ArgumentParseException;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,7 +22,7 @@ public class EntityTypeArgument extends BukkitArgument<EntityTypeArgument, Entit
     }
 
     @Override
-    public EntityType parse(@NotNull String value) throws ArgumentParseException {
+    public EntityType parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
         try {
             return EntityType.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {

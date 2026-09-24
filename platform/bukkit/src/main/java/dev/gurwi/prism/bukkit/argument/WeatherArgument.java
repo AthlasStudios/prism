@@ -2,6 +2,7 @@ package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.WeatherType;
+import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -21,7 +22,7 @@ public class WeatherArgument extends BukkitArgument<WeatherArgument, WeatherType
     }
 
     @Override
-    public WeatherType parse(@NotNull String value) throws ArgumentParseException {
+    public WeatherType parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
         try {
             return WeatherType.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {

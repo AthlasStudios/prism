@@ -1,18 +1,38 @@
 package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.exception.ArgumentParseException;
+import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 public class ByteArgument extends BukkitArgument<ByteArgument, Byte> {
 
-    public ByteArgument(String name) {
+    private final byte min;
+    private final byte max;
+
+    public ByteArgument(String name, byte min, byte max) {
         super(name);
+
+        this.min = min;
+        this.max = max;
+    }
+
+    public ByteArgument(String name, byte min) {
+        this(name, min, Byte.MAX_VALUE);
+    }
+
+    public ByteArgument(String name) {
+        this(name, Byte.MIN_VALUE);
     }
 
     @Override
-    public Byte parse(@NotNull String value) throws ArgumentParseException {
+    public Byte parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
         try {
-            return Byte.parseByte(value);
+            byte parsedValue = Byte.parseByte(value);
+            if (parsedValue < min || parsedValue > max) {
+                throw new ArgumentParseException(this, value, "Expected a byte between " + min + " and " + max + " got " + value);
+            }
+
+            return parsedValue;
         } catch (NumberFormatException e) {
             throw new ArgumentParseException(this, value, "Expected a byte got " + value);
         }

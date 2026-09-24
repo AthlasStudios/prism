@@ -1,39 +1,38 @@
- package dev.gurwi.prism.bukkit.command.error;
+package dev.gurwi.prism.bukkit.command.error;
 
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.exception.BukkitArgumentsParseException;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import org.bukkit.command.ConsoleCommandSender;
 import org.jetbrains.annotations.NotNull;
 
 public class DefaultCommandExecutionErrorHandler implements LegacyCommandExecutionErrorHandler {
+
+    private final LegacyCommandExecutionErrorHandler consoleHandler = LegacyCommandExecutionErrorHandler.consoleHandler();
 
     protected DefaultCommandExecutionErrorHandler() {
 
     }
 
     @Override
-    public void onArgumentsParseError(
-            @NotNull BukkitCommandDefinition command,
-            @NotNull CommandSender sender,
-            @NotNull BukkitArgumentsParseException exception
-    ) {
+    public void onArgumentsParseError(@NotNull BukkitCommandDefinition command, @NotNull CommandSender sender, @NotNull BukkitArgumentsParseException exception) {
+        if (sender instanceof ConsoleCommandSender) {
+            consoleHandler.onArgumentsParseError(command, sender, exception);
+            return;
+        }
+
         sender.sendMessage(
                 ChatColor.RED +
                         switch (exception.getType()) {
-                            case INVALID_ARGUMENT -> formatInvalidArgument(sender, command, exception);
-                            case MISSING_ARGUMENT -> formatMissingArgument(sender, exception);
-                            case UNKNOWN_ARGUMENT -> formatUnknownArgument(sender, exception);
+                            case INVALID_ARGUMENT -> formatInvalidArgument(command, exception);
+                            case MISSING_ARGUMENT -> formatMissingArgument(exception);
+                            case UNKNOWN_ARGUMENT -> formatUnknownArgument(exception);
                         }
         );
     }
 
-    private @NotNull String formatInvalidArgument(
-            @NotNull CommandSender sender,
-            @NotNull BukkitCommandDefinition command,
-            @NotNull BukkitArgumentsParseException exception
-    ) {
+    private @NotNull String formatInvalidArgument(@NotNull BukkitCommandDefinition command, @NotNull BukkitArgumentsParseException exception) {
         String input = exception.getInput();
         String prefix = "Input: ";
 
@@ -42,21 +41,19 @@ public class DefaultCommandExecutionErrorHandler implements LegacyCommandExecuti
                 + "\n"
                 + "Usage: " + command.getUsageString()
                 + "\n"
-                + formatInput(sender, prefix + input,
+                + underline(
+                prefix + input,
                 prefix.length() + exception.getStart(),
-                prefix.length() + exception.getEnd())
+                prefix.length() + exception.getEnd()
+        )
                 + "\n";
     }
 
-    private @NotNull String formatMissingArgument(
-            @NotNull CommandSender sender,
-            @NotNull BukkitArgumentsParseException exception
-    ) {
+    private @NotNull String formatMissingArgument(@NotNull BukkitArgumentsParseException exception) {
         return "\n"
                 + exception.getMessage()
                 + "\n"
-                + formatInput(
-                sender,
+                + underline(
                 exception.getInput(),
                 exception.getStart(),
                 exception.getEnd()
@@ -64,15 +61,11 @@ public class DefaultCommandExecutionErrorHandler implements LegacyCommandExecuti
                 + "\n";
     }
 
-    private @NotNull String formatUnknownArgument(
-            @NotNull CommandSender sender,
-            @NotNull BukkitArgumentsParseException exception
-    ) {
+    private @NotNull String formatUnknownArgument(@NotNull BukkitArgumentsParseException exception) {
         return "\n"
                 + exception.getMessage()
                 + "\n"
-                + formatInput(
-                sender,
+                + underline(
                 exception.getInput(),
                 exception.getStart(),
                 exception.getEnd()
@@ -80,27 +73,7 @@ public class DefaultCommandExecutionErrorHandler implements LegacyCommandExecuti
                 + "\n";
     }
 
-    private @NotNull String formatInput(
-            @NotNull CommandSender sender,
-            @NotNull String input,
-            int start,
-            int end
-    ) {
-        if (sender instanceof Player) {
-            return underline(input, start, end);
-        }
-
-        return input
-                + "\n"
-                + " ".repeat(start)
-                + "^".repeat(Math.max(1, end - start));
-    }
-
-    private @NotNull String underline(
-            @NotNull String input,
-            int start,
-            int end
-    ) {
+    private @NotNull String underline(@NotNull String input, int start, int end) {
         return input.substring(0, start)
                 + ChatColor.DARK_RED
                 + ChatColor.UNDERLINE
@@ -108,4 +81,5 @@ public class DefaultCommandExecutionErrorHandler implements LegacyCommandExecuti
                 + ChatColor.RED
                 + input.substring(end);
     }
+
 }

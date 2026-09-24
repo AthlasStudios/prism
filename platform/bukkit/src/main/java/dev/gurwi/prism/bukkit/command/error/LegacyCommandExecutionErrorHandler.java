@@ -15,4 +15,9 @@ public interface LegacyCommandExecutionErrorHandler {
         return new DefaultCommandExecutionErrorHandler();
     }
 
+    @Contract(value = " -> new", pure = true)
+    static @NotNull LegacyCommandExecutionErrorHandler consoleHandler() {
+        return new ConsoleCommandExecutionErrorHandler();
+    }
+
 }

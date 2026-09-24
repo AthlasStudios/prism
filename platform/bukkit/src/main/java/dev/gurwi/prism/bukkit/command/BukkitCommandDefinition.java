@@ -26,6 +26,13 @@ public class BukkitCommandDefinition extends AbstractCommandDefinition<CommandSe
         this.legacyCommandErrorHandler = legacyCommandErrorHandler;
     }
 
+    public boolean hasExecutor(CommandSender sender) {
+        return getExecutors().stream()
+                .anyMatch(executor ->
+                        executor.getSourceType().isInstance(sender)
+                );
+    }
+
     public String getUsageString() {
         return usageString;
     }

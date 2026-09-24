@@ -1,6 +1,7 @@
 package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.exception.ArgumentParseException;
+import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +23,7 @@ public class EnchantmentArgument extends BukkitArgument<EnchantmentArgument, Enc
 
     @Override
     @SuppressWarnings("deprecation")
-    public Enchantment parse(@NotNull String value) throws ArgumentParseException {
+    public Enchantment parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
         Enchantment enchantment = Enchantment.getByName(value.toUpperCase());
 
         if (enchantment == null) {

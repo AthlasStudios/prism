@@ -1,6 +1,7 @@
 package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.exception.ArgumentParseException;
+import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 public class BooleanArgument extends BukkitArgument<BooleanArgument, Boolean> {
@@ -12,7 +13,7 @@ public class BooleanArgument extends BukkitArgument<BooleanArgument, Boolean> {
     }
 
     @Override
-    public Boolean parse(@NotNull String value) throws ArgumentParseException {
+    public Boolean parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
         if (value.equalsIgnoreCase("true")) {
             return true;
         }

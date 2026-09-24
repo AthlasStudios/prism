@@ -2,6 +2,7 @@ package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -21,7 +22,7 @@ public class MaterialArgument extends BukkitArgument<MaterialArgument, Material>
     }
 
     @Override
-    public Material parse(@NotNull String value) throws ArgumentParseException {
+    public Material parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
         Material material = Material.matchMaterial(value);
 
         if (material == null) {

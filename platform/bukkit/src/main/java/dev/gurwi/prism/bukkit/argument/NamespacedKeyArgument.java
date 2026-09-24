@@ -2,6 +2,7 @@ package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.NamespacedKey;
+import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 public class NamespacedKeyArgument extends BukkitArgument<NamespacedKeyArgument, NamespacedKey> {
@@ -11,7 +12,7 @@ public class NamespacedKeyArgument extends BukkitArgument<NamespacedKeyArgument,
     }
 
     @Override
-    public NamespacedKey parse(@NotNull String value) throws ArgumentParseException {
+    public NamespacedKey parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
         return NamespacedKey.minecraft(value);
     }
 
