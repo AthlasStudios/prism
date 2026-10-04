@@ -5,25 +5,30 @@ import dev.gurwi.prism.bukkit.command.error.LegacyCommandExecutionErrorHandler;
 import dev.gurwi.prism.bukkit.command.executor.BukkitCommandExecutor;
 import dev.gurwi.prism.bukkit.permission.BukkitPermission;
 import dev.gurwi.prism.command.AbstractCommandDefinition;
+import dev.gurwi.prism.command.CommandChildrenFactory;
 import dev.gurwi.prism.requirement.UsageRequirement;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class BukkitCommandDefinition extends AbstractCommandDefinition<CommandSender, BukkitCommandExecutor<? extends CommandSender>, BukkitArgument<?, ?>, BukkitPermission> {
+public class BukkitCommandDefinition extends AbstractCommandDefinition<BukkitCommandDefinition, CommandSender, BukkitCommandExecutor<? extends CommandSender>, BukkitArgument<?, ?>, BukkitPermission> {
 
     private final String usageString = buildUsageString();
 
     private final LegacyCommandExecutionErrorHandler legacyCommandErrorHandler;
 
-    protected BukkitCommandDefinition(String name, List<String> aliases, String description, UsageRequirement<CommandSender> requirement, Set<BukkitPermission> bukkitPermissions, List<BukkitArgument<?, ?>> requiredArguments, List<BukkitArgument<?, ?>> optionalArguments, Map<Class<? extends BukkitCommandExecutor<? extends CommandSender>>, BukkitCommandExecutor<? extends CommandSender>> executors, LegacyCommandExecutionErrorHandler legacyCommandErrorHandler) {
-        super(name, aliases, description, requirement, bukkitPermissions, requiredArguments, optionalArguments, executors);
+    protected BukkitCommandDefinition(@Nullable BukkitCommandDefinition parent, String name, List<String> aliases, String description, UsageRequirement<CommandSender> requirement, Set<BukkitPermission> bukkitPermissions, List<BukkitArgument<?, ?>> requiredArguments, List<BukkitArgument<?, ?>> optionalArguments, Map<Class<? extends BukkitCommandExecutor<? extends CommandSender>>, BukkitCommandExecutor<? extends CommandSender>> executors, @NotNull CommandChildrenFactory<BukkitCommandDefinition> childrenFactory, LegacyCommandExecutionErrorHandler legacyCommandErrorHandler) {
+        super(parent, name, aliases, description, requirement, bukkitPermissions, requiredArguments, optionalArguments, executors, childrenFactory);
         this.legacyCommandErrorHandler = legacyCommandErrorHandler;
+    }
+
+    protected BukkitCommandDefinition(String name, List<String> aliases, String description, UsageRequirement<CommandSender> requirement, Set<BukkitPermission> bukkitPermissions, List<BukkitArgument<?, ?>> requiredArguments, List<BukkitArgument<?, ?>> optionalArguments, Map<Class<? extends BukkitCommandExecutor<? extends CommandSender>>, BukkitCommandExecutor<? extends CommandSender>> executors, CommandChildrenFactory<BukkitCommandDefinition> childrenFactory, LegacyCommandExecutionErrorHandler legacyCommandErrorHandler) {
+        this(null, name, aliases, description, requirement, bukkitPermissions, requiredArguments, optionalArguments, executors, childrenFactory, legacyCommandErrorHandler);
     }
 
     public boolean hasExecutor(CommandSender sender) {
@@ -41,16 +46,54 @@ public class BukkitCommandDefinition extends AbstractCommandDefinition<CommandSe
         return legacyCommandErrorHandler;
     }
 
-    private @NotNull String buildUsageString() {
-        return getName()
-                + " "
-                + Stream.concat(
-                        getRequiredArguments().stream()
-                                .map(argument -> "<" + argument.getName() + ">"),
-                        getOptionalArguments().stream()
-                                .map(argument -> "[<" + argument.getName() + ">]")
-                )
+    public @NotNull String buildUsageString(CommandSender sender) {
+        return buildHierarchy().stream()
+                .filter(definition -> definition.canExecute(sender))
+                .flatMap(definition -> Stream.concat(
+                        Stream.of(definition.getName()),
+                        Stream.concat(
+                                definition.getRequiredArguments().stream()
+                                        .filter(argument -> argument.getRequirement().test(sender))
+                                        .map(argument -> "<" + argument.getName() + ">"),
+                                definition.getOptionalArguments().stream()
+                                        .filter(argument -> argument.getRequirement().test(sender))
+                                        .map(argument -> "[<" + argument.getName() + ">]")
+                        )
+                ))
                 .collect(Collectors.joining(" "));
+    }
+
+    private @NotNull String buildUsageString() {
+        return buildHierarchy().stream()
+                .flatMap(definition -> Stream.concat(
+                        Stream.of(definition.getName()),
+                        Stream.concat(
+                                definition.getRequiredArguments().stream()
+                                        .map(argument -> "<" + argument.getName() + ">"),
+                                definition.getOptionalArguments().stream()
+                                        .map(argument -> "[<" + argument.getName() + ">]")
+                        )
+                ))
+                .collect(Collectors.joining(" "));
+    }
+
+    private @NotNull @Unmodifiable List<BukkitCommandDefinition> buildHierarchy() {
+        Deque<BukkitCommandDefinition> hierarchy = new ArrayDeque<>();
+
+        Optional<BukkitCommandDefinition> current = Optional.of(this);
+
+        while (current.isPresent()) {
+            BukkitCommandDefinition definition = current.get();
+            hierarchy.addFirst(definition);
+            current = definition.getParent();
+        }
+
+        return List.copyOf(hierarchy);
+    }
+
+    @Override
+    public boolean canExecute(CommandSender sender) {
+        return hasExecutor(sender) && super.canExecute(sender);
     }
 
 }

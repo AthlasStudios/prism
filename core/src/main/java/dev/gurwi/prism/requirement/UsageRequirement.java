@@ -6,10 +6,10 @@ import org.jetbrains.annotations.NotNull;
 @FunctionalInterface
 public interface UsageRequirement<Source> {
 
-    boolean canExecute(Source source);
+    boolean test(Source source);
 
     default UsageRequirement<Source> and(UsageRequirement<Source> requirement) {
-        return source -> this.canExecute(source) && requirement.canExecute(source);
+        return source -> this.test(source) && requirement.test(source);
     }
 
     @Contract(pure = true)

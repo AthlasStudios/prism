@@ -12,11 +12,14 @@ public class DefaultCommandExecutionErrorHandler implements LegacyCommandExecuti
     private final LegacyCommandExecutionErrorHandler consoleHandler = LegacyCommandExecutionErrorHandler.consoleHandler();
 
     protected DefaultCommandExecutionErrorHandler() {
-
     }
 
     @Override
-    public void onArgumentsParseError(@NotNull BukkitCommandDefinition command, @NotNull CommandSender sender, @NotNull BukkitArgumentsParseException exception) {
+    public void onArgumentsParseError(
+            @NotNull BukkitCommandDefinition command,
+            @NotNull CommandSender sender,
+            @NotNull BukkitArgumentsParseException exception
+    ) {
         if (sender instanceof ConsoleCommandSender) {
             consoleHandler.onArgumentsParseError(command, sender, exception);
             return;
@@ -25,21 +28,28 @@ public class DefaultCommandExecutionErrorHandler implements LegacyCommandExecuti
         sender.sendMessage(
                 ChatColor.RED +
                         switch (exception.getType()) {
-                            case INVALID_ARGUMENT -> formatInvalidArgument(command, exception);
-                            case MISSING_ARGUMENT -> formatMissingArgument(exception);
-                            case UNKNOWN_ARGUMENT -> formatUnknownArgument(exception);
+                            case INVALID_ARGUMENT ->
+                                    formatInvalidArgument(sender, command, exception);
+                            case MISSING_ARGUMENT ->
+                                    formatMissingArgument(sender, command, exception);
+                            case UNKNOWN_ARGUMENT ->
+                                    formatUnknownArgument(exception);
                         }
         );
     }
 
-    private @NotNull String formatInvalidArgument(@NotNull BukkitCommandDefinition command, @NotNull BukkitArgumentsParseException exception) {
+    private @NotNull String formatInvalidArgument(
+            @NotNull CommandSender sender,
+            @NotNull BukkitCommandDefinition command,
+            @NotNull BukkitArgumentsParseException exception
+    ) {
         String input = exception.getInput();
         String prefix = "Input: ";
 
         return "\n"
                 + "Invalid argument: " + exception.getMessage()
                 + "\n"
-                + "Usage: " + command.getUsageString()
+                + "Usage: " + command.buildUsageString(sender)
                 + "\n"
                 + underline(
                 prefix + input,
@@ -49,7 +59,30 @@ public class DefaultCommandExecutionErrorHandler implements LegacyCommandExecuti
                 + "\n";
     }
 
-    private @NotNull String formatMissingArgument(@NotNull BukkitArgumentsParseException exception) {
+    private @NotNull String formatMissingArgument(
+            @NotNull CommandSender sender,
+            @NotNull BukkitCommandDefinition command,
+            @NotNull BukkitArgumentsParseException exception
+    ) {
+        String usage = command.buildUsageString(sender);
+        String argument = "<" + exception.getArgument().getName() + ">";
+
+        int start = usage.indexOf(argument);
+
+        return "\n"
+                + exception.getMessage()
+                + "\n"
+                + underline(
+                usage,
+                start,
+                start + argument.length()
+        )
+                + "\n";
+    }
+
+    private @NotNull String formatUnknownArgument(
+            @NotNull BukkitArgumentsParseException exception
+    ) {
         return "\n"
                 + exception.getMessage()
                 + "\n"
@@ -61,19 +94,11 @@ public class DefaultCommandExecutionErrorHandler implements LegacyCommandExecuti
                 + "\n";
     }
 
-    private @NotNull String formatUnknownArgument(@NotNull BukkitArgumentsParseException exception) {
-        return "\n"
-                + exception.getMessage()
-                + "\n"
-                + underline(
-                exception.getInput(),
-                exception.getStart(),
-                exception.getEnd()
-        )
-                + "\n";
-    }
-
-    private @NotNull String underline(@NotNull String input, int start, int end) {
+    private @NotNull String underline(
+            @NotNull String input,
+            int start,
+            int end
+    ) {
         return input.substring(0, start)
                 + ChatColor.DARK_RED
                 + ChatColor.UNDERLINE
@@ -81,5 +106,4 @@ public class DefaultCommandExecutionErrorHandler implements LegacyCommandExecuti
                 + ChatColor.RED
                 + input.substring(end);
     }
-
 }

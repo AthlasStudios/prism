@@ -4,16 +4,22 @@ import dev.gurwi.prism.argument.AbstractArgument;
 import dev.gurwi.prism.permission.PermissionNode;
 import dev.gurwi.prism.requirement.UsageRequirement;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public abstract class AbstractCommandDefinition<
+        Impl extends AbstractCommandDefinition<Impl, Source, Executor, Argument, Permission>,
         Source,
-        Executor extends CommandExecutor<?>,
-        Argument extends AbstractArgument<?, ?, Source, ?>,
+        Executor extends CommandExecutor<? extends Source, Impl>,
+        Argument extends AbstractArgument<?, ?, ? extends Source, ?>,
         Permission extends PermissionNode<?, Source>
 > {
+
+    private final Map<String, Impl> children = new HashMap<>();
 
     private final Map<Class<? extends Executor>, Executor> executors = new HashMap<>();
     private final Set<Permission> permissions = new HashSet<>();
@@ -26,7 +32,10 @@ public abstract class AbstractCommandDefinition<
     private final String description;
     private final UsageRequirement<Source> requirement;
 
-    protected AbstractCommandDefinition(String name, List<String> aliases, String description, UsageRequirement<Source> requirement, Set<Permission> permissions, List<Argument> requiredArguments, List<Argument> optionalArguments, Map<Class<? extends Executor>, Executor> executors) {
+    private final Impl parent;
+
+    protected AbstractCommandDefinition(@Nullable Impl parent, String name, List<String> aliases, String description, UsageRequirement<Source> requirement, Set<Permission> permissions, List<Argument> requiredArguments, List<Argument> optionalArguments, Map<Class<? extends Executor>, Executor> executors, @NotNull CommandChildrenFactory<Impl> childrenFactory) {
+        this.parent = parent;
         this.name = name;
         this.aliases = aliases;
         this.description = description;
@@ -36,6 +45,18 @@ public abstract class AbstractCommandDefinition<
         this.requiredArguments.addAll(requiredArguments);
         this.optionalArguments.addAll(optionalArguments);
         this.executors.putAll(executors);
+
+        //noinspection unchecked
+        this.children.putAll(childrenFactory.apply((Impl) this).stream()
+                .collect(Collectors.toMap(
+                        AbstractCommandDefinition::getName,
+                        Function.identity()
+                ))
+        );
+    }
+
+    protected AbstractCommandDefinition(String name, List<String> aliases, String description, UsageRequirement<Source> requirement, Set<Permission> permissions, List<Argument> requiredArguments, List<Argument> optionalArguments, Map<Class<? extends Executor>, Executor> executors, CommandChildrenFactory<Impl> childrenFactory) {
+        this(null, name, aliases, description, requirement, permissions, requiredArguments, optionalArguments, executors, childrenFactory);
     }
 
     public String getName() {
@@ -72,6 +93,23 @@ public abstract class AbstractCommandDefinition<
 
     public @Unmodifiable Set<Executor> getExecutors() {
         return Set.copyOf(executors.values());
+    }
+
+    public @Unmodifiable Set<Impl> getChildren() {
+        return Set.copyOf(children.values());
+    }
+
+    public Optional<Impl> getChild(String name) {
+        return Optional.ofNullable(children.get(name));
+    }
+
+    public Optional<Impl> getParent() {
+        return Optional.ofNullable(parent);
+    }
+
+    public boolean canExecute(Source source) {
+        return  getRequirement().test(source) && getPermissions().stream()
+                .allMatch(permission -> permission.hasPermission(source));
     }
 
 }

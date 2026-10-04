@@ -6,9 +6,11 @@ import dev.gurwi.prism.bukkit.argument.GreedyArgument;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.exception.BukkitArgumentsParseException;
 import dev.gurwi.prism.bukkit.exception.GreedyArgumentException;
+import dev.gurwi.prism.bukkit.exception.UnavailableArgumentException;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,157 +23,78 @@ public final class LegacyArgumentsParser {
     private LegacyArgumentsParser() {
     }
 
-    public static @NotNull CommandArguments parse(@NotNull CommandSender sender, @NotNull BukkitCommandDefinition definition, @NotNull String[] rawArgs) throws BukkitArgumentsParseException {
-        validateArguments(definition);
-
-        Map<String, Object> required = parseArguments(
-                sender,
-                definition,
-                definition.getRequiredArguments(),
-                rawArgs,
-                true
-        );
-
-        int consumed = consumedArguments(definition.getRequiredArguments(), rawArgs);
-
-        String[] remainingArgs = Arrays.copyOfRange(
-                rawArgs,
-                consumed,
-                rawArgs.length
-        );
-
-        Map<String, Object> optional = parseArguments(
-                sender,
-                definition,
-                definition.getOptionalArguments(),
-                remainingArgs,
-                false
-        );
-
-        consumed += consumedArguments(
-                definition.getOptionalArguments(),
-                remainingArgs
-        );
-
-        if (consumed < rawArgs.length) {
-            String input = String.join(" ", rawArgs);
-            int start = inputStart(rawArgs, consumed);
-
-            throw BukkitArgumentsParseException.unknown(
-                    input,
-                    start,
-                    start + rawArgs[consumed].length()
-            );
-        }
-
-        return new CommandArguments(required, optional);
+    public static @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parse(@NotNull CommandSender sender, @NotNull BukkitCommandDefinition definition, @NotNull String @NotNull [] rawArgs) throws BukkitArgumentsParseException {
+        return parse(sender, definition, rawArgs, rawArgs, 0, null);
     }
 
-    private static @NotNull Map<String, Object> parseArguments(@NotNull CommandSender sender, @NotNull BukkitCommandDefinition definition, @NotNull List<BukkitArgument<?, ?>> arguments, @NotNull String[] rawArgs, boolean required) throws BukkitArgumentsParseException {
-        Map<String, Object> parsed = new HashMap<>();
+    public static @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parse(@NotNull CommandSender sender, @NotNull BukkitCommandDefinition definition, @NotNull String @NotNull [] rawArgs, @NotNull String @NotNull [] originalArgs, int offset, @Nullable CommandArguments<BukkitCommandDefinition, CommandSender> parent) throws BukkitArgumentsParseException {
+        validateArguments(definition);
 
-        for (int i = 0; i < arguments.size(); i++) {
-            BukkitArgument<?, ?> argument = arguments.get(i);
+        Map<String, Object> required = new HashMap<>();
+        Map<String, Object> optional = new HashMap<>();
 
-            if (i >= rawArgs.length) {
-                if (required) {
-                    String usage = definition.getUsageString();
-                    int start = usageArgumentStart(
-                            usage,
-                            argument
-                    );
+        int position = parseInto(required, sender, definition.getRequiredArguments(), rawArgs, 0, originalArgs, offset, true);
+        position = parseInto(optional, sender, definition.getOptionalArguments(), rawArgs, position, originalArgs, offset, false);
 
-                    throw BukkitArgumentsParseException.missing(
-                            argument,
-                            usage,
-                            start,
-                            start + argumentToken(argument).length()
-                    );
-                }
+        if (position < rawArgs.length) {
+            int start = inputStart(originalArgs, offset + position);
 
-                break;
-            }
-
-            if (argument instanceof GreedyArgument) {
-                String input = String.join(
-                        " ",
-                        Arrays.copyOfRange(
-                                rawArgs,
-                                i,
-                                rawArgs.length
-                        )
-                );
-
-                try {
-                    parsed.put(
-                            argument.getName(),
-                            argument.parse(sender, input)
-                    );
-                } catch (ArgumentParseException e) {
-                    int start = inputStart(rawArgs, i);
-
-                    throw BukkitArgumentsParseException.invalid(
-                            e,
-                            String.join(" ", rawArgs),
-                            start,
-                            start + input.length()
-                    );
-                }
-
-                break;
-            }
-
-            try {
-                parsed.put(
-                        argument.getName(),
-                        argument.parse(sender, rawArgs[i])
-                );
-            } catch (ArgumentParseException e) {
-                int start = inputStart(rawArgs, i);
-
-                throw BukkitArgumentsParseException.invalid(
-                        e,
-                        String.join(" ", rawArgs),
-                        start,
-                        start + rawArgs[i].length()
-                );
-            }
+            throw BukkitArgumentsParseException.unknown(String.join(" ", originalArgs), start, start + rawArgs[position].length());
         }
 
-        return parsed;
+        return new CommandArguments<>(definition, required, optional, parent);
+    }
+
+    private static int parseInto(@NotNull Map<String, Object> target, @NotNull CommandSender sender, @NotNull List<BukkitArgument<?, ?>> arguments, @NotNull String @NotNull [] rawArgs, int start, @NotNull String @NotNull [] originalArgs, int offset, boolean required) throws BukkitArgumentsParseException {
+        int position = start;
+
+        for (BukkitArgument<?, ?> argument : arguments) {
+            if (!argument.getRequirement().test(sender)) {
+                throw new UnavailableArgumentException();
+            }
+
+            if (position >= rawArgs.length) {
+                if (required) {
+                    throw BukkitArgumentsParseException.missing(argument, 0, 0);
+                }
+
+                break;
+            }
+
+            int end = ArgumentTokens.advance(argument, position, rawArgs.length);
+
+            if (end > rawArgs.length) {
+                throw BukkitArgumentsParseException.missing(argument, 0, 0);
+            }
+
+            String input = String.join(" ", Arrays.copyOfRange(rawArgs, position, end));
+
+            try {
+                target.put(argument.getName(), argument.parse(sender, input));
+            } catch (ArgumentParseException e) {
+                int from = inputStart(originalArgs, offset + position);
+
+                throw BukkitArgumentsParseException.invalid(e, String.join(" ", originalArgs), from, from + input.length());
+            }
+
+            position = end;
+        }
+
+        return position;
     }
 
     private static void validateArguments(@NotNull BukkitCommandDefinition definition) {
-        List<BukkitArgument<?, ?>> arguments = new ArrayList<>();
-
-        arguments.addAll(definition.getRequiredArguments());
+        List<BukkitArgument<?, ?>> arguments = new ArrayList<>(definition.getRequiredArguments());
         arguments.addAll(definition.getOptionalArguments());
 
-        for (int i = 0; i < arguments.size(); i++) {
-            if (arguments.get(i) instanceof GreedyArgument
-                    && i != arguments.size() - 1) {
-                throw new GreedyArgumentException(
-                        "A greedy argument must be the last argument."
-                );
-            }
-        }
-    }
-
-    private static int consumedArguments(@NotNull List<BukkitArgument<?, ?>> arguments, @NotNull String[] rawArgs) {
-        int consumed = 0;
-
-        for (int i = 0; i < arguments.size() && i < rawArgs.length; i++) {
-            consumed++;
-
+        for (int i = 0; i < arguments.size() - 1; i++) {
             if (arguments.get(i) instanceof GreedyArgument) {
-                return rawArgs.length;
+                throw new GreedyArgumentException("A greedy argument must be the last argument.");
             }
         }
-
-        return consumed;
     }
 
-    private static int inputStart(@NotNull String[] rawArgs, int index) {
+    private static int inputStart(@NotNull String @NotNull [] rawArgs, int index) {
         int start = 0;
 
         for (int i = 0; i < index; i++) {
@@ -179,14 +102,6 @@ public final class LegacyArgumentsParser {
         }
 
         return start;
-    }
-
-    private static int usageArgumentStart(@NotNull String usage, @NotNull BukkitArgument<?, ?> argument) {
-        return usage.indexOf(argumentToken(argument));
-    }
-
-    private static @NotNull String argumentToken(@NotNull BukkitArgument<?, ?> argument) {
-        return "<" + argument.getName() + ">";
     }
 
 }

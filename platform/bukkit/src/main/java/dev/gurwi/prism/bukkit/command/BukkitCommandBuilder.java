@@ -5,9 +5,11 @@ import dev.gurwi.prism.bukkit.command.error.LegacyCommandExecutionErrorHandler;
 import dev.gurwi.prism.bukkit.command.executor.*;
 import dev.gurwi.prism.bukkit.permission.BukkitPermission;
 import dev.gurwi.prism.command.AbstractCommandBuilder;
+import dev.gurwi.prism.command.CommandChildrenFactory;
 import dev.gurwi.prism.requirement.UsageRequirement;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -29,7 +31,7 @@ public abstract class BukkitCommandBuilder<Impl extends BukkitCommandBuilder<Imp
 
     public <Sender extends CommandSender> Impl withRequirement(Class<Sender> type, UsageRequirement<Sender> requirement) {
         return withRequirement(sender ->
-                !type.isInstance(sender) || requirement.canExecute(type.cast(sender))
+                !type.isInstance(sender) || requirement.test(type.cast(sender))
         );
     }
 
@@ -88,8 +90,20 @@ public abstract class BukkitCommandBuilder<Impl extends BukkitCommandBuilder<Imp
     }
 
     @Override
-    public BukkitCommandDefinition build() {
-        return new BukkitCommandDefinition(name, aliases, description, requirement, permissions, requiredArguments, optionalArguments, executors, legacyCommandErrorHandler);
+    public BukkitCommandDefinition build(@Nullable BukkitCommandDefinition parent) {
+        return new BukkitCommandDefinition(
+                parent,
+                name,
+                aliases,
+                description,
+                requirement,
+                permissions,
+                requiredArguments,
+                optionalArguments,
+                executors,
+                CommandChildrenFactory.create(children),
+                legacyCommandErrorHandler
+        );
     }
 
 }

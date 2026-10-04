@@ -6,20 +6,22 @@ import dev.gurwi.prism.platform.CommandsRegistry;
 import dev.gurwi.prism.platform.Platform;
 import dev.gurwi.prism.requirement.UsageRequirement;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 public abstract class AbstractCommandBuilder<
         Impl extends AbstractCommandBuilder<Impl, Definition, Source, Executor, Argument, Permission>,
-        Definition extends AbstractCommandDefinition<Source, Executor, Argument, Permission>,
+        Definition extends AbstractCommandDefinition<Definition, Source, Executor, Argument, Permission>,
         Source,
-        Executor extends CommandExecutor<?>,
+        Executor extends CommandExecutor<? extends Source, Definition>,
         Argument extends AbstractArgument<?, ?, Source, ?>,
         Permission extends PermissionNode<?, Source>
 > {
 
     protected final List<Argument> requiredArguments = new ArrayList<>();
     protected final List<Argument> optionalArguments = new ArrayList<>();
+    protected final List<Impl> children = new ArrayList<>();
     protected final Map<Class<? extends Executor>, Executor> executors = new HashMap<>();
 
     protected final String name;
@@ -28,6 +30,8 @@ public abstract class AbstractCommandBuilder<
 
     protected UsageRequirement<Source> requirement = UsageRequirement.none();
     protected Set<Permission> permissions = new HashSet<>();
+
+    protected Impl parent = null;
 
     public AbstractCommandBuilder(String name, List<String> aliases, String description) {
         this.name = name;
@@ -63,6 +67,14 @@ public abstract class AbstractCommandBuilder<
         return self();
     }
 
+    public Impl withSubCommands(Impl @NotNull ... children) {
+        for (Impl child : children) {
+            this.children.add(child.asChildOf(self()));
+        }
+
+        return self();
+    }
+
     public <E extends Executor> Impl executes(Class<E> type, E executor) {
         executors.put(type, executor);
         return self();
@@ -84,6 +96,15 @@ public abstract class AbstractCommandBuilder<
         return (Impl) this;
     }
 
-    public abstract Definition build();
+    public abstract Definition build(@Nullable Definition parent);
+
+    public Definition build() {
+        return build(null);
+    }
+
+    protected Impl asChildOf(Impl parent) {
+        this.parent = parent;
+        return self();
+    }
 
 }

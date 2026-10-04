@@ -8,7 +8,9 @@ import org.jetbrains.annotations.NotNull;
 public class BukkitArgumentsParseException extends IllegalArgumentException {
 
     public enum Type {
-        INVALID_ARGUMENT, MISSING_ARGUMENT, UNKNOWN_ARGUMENT
+        INVALID_ARGUMENT,
+        MISSING_ARGUMENT,
+        UNKNOWN_ARGUMENT
     }
 
     private final Type type;
@@ -17,7 +19,15 @@ public class BukkitArgumentsParseException extends IllegalArgumentException {
     private final int start;
     private final int end;
 
-    private BukkitArgumentsParseException(Type type, AbstractArgument<?, ?, ?, ?> argument, String input, int start, int end, String message, Throwable cause) {
+    private BukkitArgumentsParseException(
+            Type type,
+            AbstractArgument<?, ?, ?, ?> argument,
+            String input,
+            int start,
+            int end,
+            String message,
+            Throwable cause
+    ) {
         super(message, cause);
 
         this.type = type;
@@ -28,18 +38,55 @@ public class BukkitArgumentsParseException extends IllegalArgumentException {
     }
 
     @Contract("_, _, _, _ -> new")
-    public static @NotNull BukkitArgumentsParseException invalid(ArgumentParseException cause, String input, int start, int end) {
-        return new BukkitArgumentsParseException(Type.INVALID_ARGUMENT, cause.getArgument(), input, start, end, cause.getMessage(), cause);
-    }
-
-    @Contract("_, _, _, _ -> new")
-    public static @NotNull BukkitArgumentsParseException missing(AbstractArgument<?, ?, ?, ?> argument, String usage, int start, int end) {
-        return new BukkitArgumentsParseException(Type.MISSING_ARGUMENT, argument, usage, start, end, "Missing argument: <" + argument.getName() + ">", null);
+    public static @NotNull BukkitArgumentsParseException invalid(
+            ArgumentParseException cause,
+            String input,
+            int start,
+            int end
+    ) {
+        return new BukkitArgumentsParseException(
+                Type.INVALID_ARGUMENT,
+                cause.getArgument(),
+                input,
+                start,
+                end,
+                cause.getMessage(),
+                cause
+        );
     }
 
     @Contract("_, _, _ -> new")
-    public static @NotNull BukkitArgumentsParseException unknown(String input, int start, int end) {
-        return new BukkitArgumentsParseException(Type.UNKNOWN_ARGUMENT, null, input, start, end, "Unknown argument", null);
+    public static @NotNull BukkitArgumentsParseException missing(
+            AbstractArgument<?, ?, ?, ?> argument,
+            int start,
+            int end
+    ) {
+        return new BukkitArgumentsParseException(
+                Type.MISSING_ARGUMENT,
+                argument,
+                null,
+                start,
+                end,
+                "Missing argument: <" + argument.getName() + ">",
+                null
+        );
+    }
+
+    @Contract("_, _, _ -> new")
+    public static @NotNull BukkitArgumentsParseException unknown(
+            String input,
+            int start,
+            int end
+    ) {
+        return new BukkitArgumentsParseException(
+                Type.UNKNOWN_ARGUMENT,
+                null,
+                input,
+                start,
+                end,
+                "Unknown argument",
+                null
+        );
     }
 
     public Type getType() {
