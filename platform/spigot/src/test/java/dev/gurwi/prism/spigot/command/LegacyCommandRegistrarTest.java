@@ -1,6 +1,7 @@
 package dev.gurwi.prism.spigot.command;
 
 import dev.gurwi.prism.bukkit.command.BukkitExecutableCommand;
+import dev.gurwi.prism.bukkit.command.PrismBukkitCommand;
 import dev.gurwi.prism.spigot.SpigotPlatform;
 import dev.gurwi.prism.test.bukkit.BukkitTest;
 import org.bukkit.command.Command;
@@ -19,7 +20,7 @@ class LegacyCommandRegistrarTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new SpigotCommand(
+                        new PrismBukkitCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"
@@ -43,7 +44,7 @@ class LegacyCommandRegistrarTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new SpigotCommand(
+                        new PrismBukkitCommand(
                                 "prism",
                                 List.of("pr"),
                                 "Prism command"
@@ -69,7 +70,7 @@ class LegacyCommandRegistrarTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new SpigotCommand(
+                        new PrismBukkitCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"
@@ -98,7 +99,7 @@ class LegacyCommandRegistrarTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry();
 
-        var definition = new SpigotCommand(
+        var definition = new PrismBukkitCommand(
                 "prism",
                 "Prism command",
                 "pr"
@@ -119,7 +120,7 @@ class LegacyCommandRegistrarTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry();
 
-        var definition = new SpigotCommand(
+        var definition = new PrismBukkitCommand(
                 "prism",
                 "Prism command",
                 "pr"

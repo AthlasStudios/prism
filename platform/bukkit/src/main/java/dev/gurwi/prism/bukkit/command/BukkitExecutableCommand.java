@@ -8,6 +8,7 @@ import dev.gurwi.prism.bukkit.exception.BukkitArgumentsParseException;
 import dev.gurwi.prism.command.AbstractCommandDefinition;
 import dev.gurwi.prism.exception.NoExecutorException;
 import org.bukkit.command.*;
+import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +17,7 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 
-public class BukkitExecutableCommand extends Command implements CommandExecutor, TabCompleter, PluginIdentifiableCommand {
+public class BukkitExecutableCommand extends BukkitCommand implements CommandExecutor, TabCompleter, PluginIdentifiableCommand {
 
     private final JavaPlugin plugin;
     private final BukkitCommandDefinition definition;
@@ -79,9 +80,7 @@ public class BukkitExecutableCommand extends Command implements CommandExecutor,
 
     @Override
     public boolean testPermission(@NotNull CommandSender target) {
-        return definition.getRequirement().test(target)
-                && definition.getPermissions().stream()
-                .allMatch(permission -> permission.hasPermission(target));
+        return definition.canExecute(target);
     }
 
     @Override

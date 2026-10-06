@@ -15,8 +15,9 @@ plugins {
 rootProject.name = "prism"
 
 include(":core")
+include(":reflection")
+include(":test:plugin")
+include(":platform:bukkit")
 include(":platform:spigot")
-include("platform:brigadier")
-include("reflection")
-include("test:plugin")
-include("platform:bukkit")
+include(":platform:paper")
+include(":platform:brigadier")

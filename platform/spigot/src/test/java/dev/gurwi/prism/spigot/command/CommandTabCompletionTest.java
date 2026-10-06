@@ -1,5 +1,6 @@
 package dev.gurwi.prism.spigot.command;
 
+import dev.gurwi.prism.bukkit.command.PrismBukkitCommand;
 import dev.gurwi.prism.bukkit.permission.BukkitPermission;
 import dev.gurwi.prism.bukkit.permission.CommandPermission;
 import dev.gurwi.prism.spigot.SpigotPlatform;
@@ -22,7 +23,7 @@ class CommandTabCompletionTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new SpigotCommand(
+                        new PrismBukkitCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"
@@ -47,7 +48,7 @@ class CommandTabCompletionTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new SpigotCommand("prism")
+                        new PrismBukkitCommand("prism")
                                 .withPermissions(CommandPermission.OP)
                                 .executesPlayer((sender, args) -> {})
                                 .build()
@@ -68,7 +69,7 @@ class CommandTabCompletionTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new SpigotCommand("prism")
+                        new PrismBukkitCommand("prism")
                                 .withPlayerRequirement(playerMock -> false)
                                 .executesPlayer((sender, args) -> {})
                                 .build()
@@ -89,7 +90,7 @@ class CommandTabCompletionTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new SpigotCommand("prism")
+                        new PrismBukkitCommand("prism")
                                 .executesConsole((sender, args) -> {})
                                 .build()
                 );
@@ -109,7 +110,7 @@ class CommandTabCompletionTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new SpigotCommand("prism")
+                        new PrismBukkitCommand("prism")
                                 .withPermissions(
                                         BukkitPermission.of("prism.use")
                                 )
@@ -133,7 +134,7 @@ class CommandTabCompletionTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new SpigotCommand("prism")
+                        new PrismBukkitCommand("prism")
                                 .withPermissions(
                                         BukkitPermission.of("prism.use")
                                 )
@@ -159,7 +160,7 @@ class CommandTabCompletionTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new SpigotCommand("prism")
+                        new PrismBukkitCommand("prism")
                                 .withPlayerRequirement(playerMock -> false)
                                 .withPermissions(
                                         BukkitPermission.of("prism.use")
@@ -184,7 +185,7 @@ class CommandTabCompletionTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new SpigotCommand(
+                        new PrismBukkitCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"
@@ -207,7 +208,7 @@ class CommandTabCompletionTest extends BukkitTest {
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new SpigotCommand("prism")
+                        new PrismBukkitCommand("prism")
                                 .executesPlayer((sender, args) -> {})
                                 .build()
                 );

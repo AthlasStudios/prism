@@ -13,11 +13,9 @@ public class WeatherArgument extends BukkitArgument<WeatherArgument, WeatherType
         super(name);
 
         replaceSuggestions(
-                BukkitSuggestionsSupplier.of(
-                        Arrays.stream(WeatherType.values())
-                                .map(weatherType -> weatherType.name().toLowerCase())
-                                .toList()
-                )
+                Arrays.stream(WeatherType.values())
+                        .map(weatherType -> weatherType.name().toLowerCase())
+                        .toList()
         );
     }
 

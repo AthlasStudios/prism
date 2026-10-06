@@ -4,10 +4,12 @@ plugins {
 }
 
 dependencies {
-    api(project(":core"))
     api(project(":platform:bukkit"))
     implementation(project(":reflection"))
-    implementation(project(":platform:brigadier"))
+
+    compileOnly("org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT") {
+        exclude(group = "net.md-5", module = "bungeecord-chat")
+    }
 
     testImplementation(testFixtures(project(":platform:bukkit")))
 }

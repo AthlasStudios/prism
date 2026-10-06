@@ -20,9 +20,7 @@ allprojects {
             JavaLanguageVersion.of(targetJavaVersion)
         )
     }
-}
 
-subprojects {
     repositories {
         mavenCentral()
         mavenLocal()
@@ -30,9 +28,12 @@ subprojects {
         maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
         maven("https://oss.sonatype.org/content/repositories/snapshots/")
         maven("https://repo.papermc.io/repository/maven-public/")
+        maven("https://repo.papermc.io/repository/maven-snapshots/")
         maven("https://libraries.minecraft.net")
     }
+}
 
+subprojects {
     dependencies {
         compileOnly("org.jetbrains:annotations:26.0.2")
 

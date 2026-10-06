@@ -1,5 +1,6 @@
 package dev.gurwi.prism.spigot.command;
 
+import dev.gurwi.prism.bukkit.command.PrismBukkitCommand;
 import dev.gurwi.prism.bukkit.permission.BukkitPermission;
 import dev.gurwi.prism.spigot.SpigotPlatform;
 import dev.gurwi.prism.test.bukkit.BukkitTest;
@@ -17,7 +18,7 @@ class CommandPermissionTest extends BukkitTest {
                 .disableBrigadier()
                 .init();
 
-        var definition = new SpigotCommand("prism")
+        var definition = new PrismBukkitCommand("prism")
                 .executesPlayer((sender, args) -> {})
                 .build();
 
@@ -37,7 +38,7 @@ class CommandPermissionTest extends BukkitTest {
                 .disableBrigadier()
                 .init();
 
-        var definition = new SpigotCommand("prism")
+        var definition = new PrismBukkitCommand("prism")
                 .withPermissions(BukkitPermission.of("prism.use"))
                 .executesPlayer((sender, args) -> {})
                 .build();
@@ -59,7 +60,7 @@ class CommandPermissionTest extends BukkitTest {
                 .disableBrigadier()
                 .init();
 
-        var definition = new SpigotCommand("prism")
+        var definition = new PrismBukkitCommand("prism")
                 .withPermissions(BukkitPermission.of("prism.use"))
                 .executesPlayer((sender, args) -> {})
                 .build();
@@ -83,7 +84,7 @@ class CommandPermissionTest extends BukkitTest {
                 .disableBrigadier()
                 .init();
 
-        var definition = new SpigotCommand("prism")
+        var definition = new PrismBukkitCommand("prism")
                 .withPlayerRequirement(player -> false)
                 .executesPlayer((sender, args) -> {})
                 .build();
@@ -104,7 +105,7 @@ class CommandPermissionTest extends BukkitTest {
                 .disableBrigadier()
                 .init();
 
-        var definition = new SpigotCommand("prism")
+        var definition = new PrismBukkitCommand("prism")
                 .withPlayerRequirement(player -> false)
                 .withPermissions(BukkitPermission.of("prism.use"))
                 .executesPlayer((sender, args) -> {})
@@ -129,7 +130,7 @@ class CommandPermissionTest extends BukkitTest {
                 .disableBrigadier()
                 .init();
 
-        var definition = new SpigotCommand("prism")
+        var definition = new PrismBukkitCommand("prism")
                 .withPlayerRequirement(player -> true)
                 .withPermissions(BukkitPermission.of("prism.use"))
                 .executesPlayer((sender, args) -> {})

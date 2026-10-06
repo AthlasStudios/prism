@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
-public final class SpigotPlatformConfiguration {
+public class SpigotPlatformConfiguration {
 
     private final boolean disableBrigadier;
     private final boolean disableLegacyRegistrar;
@@ -24,6 +24,10 @@ public final class SpigotPlatformConfiguration {
 
     public boolean isBrigadierDisabled() {
         return disableBrigadier;
+    }
+
+    public boolean isLegacyRegistrarDisabled() {
+        return disableLegacyRegistrar;
     }
 
     public boolean isPermissionRegistrationEnabled() {

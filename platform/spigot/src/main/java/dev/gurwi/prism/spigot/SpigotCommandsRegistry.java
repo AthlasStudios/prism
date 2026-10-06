@@ -36,6 +36,11 @@ public class SpigotCommandsRegistry implements BukkitCommandsRegistry<SpigotPlat
         return registrar.getRegisteredCommands();
     }
 
+    @Override
+    public SpigotPlatform getPlatform() {
+        return platform;
+    }
+
     @Contract(" -> new")
     private @NotNull BukkitCommandRegistrar getRegistrar() {
         try {
@@ -43,11 +48,6 @@ public class SpigotCommandsRegistry implements BukkitCommandsRegistry<SpigotPlat
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public SpigotPlatform getPlatform() {
-        return platform;
     }
 
 }

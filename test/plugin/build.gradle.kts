@@ -11,11 +11,9 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":platform:spigot"))
+    implementation(project(":platform:paper"))
 
-    compileOnly("org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT") {
-        exclude(group = "net.md-5", module = "bungeecord-chat")
-    }
+    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
 }
 
 tasks {
@@ -24,17 +22,23 @@ tasks {
     }
 
     shadowJar {
-        archiveFileName.set("${rootProject.name}-${rootProject.version}-SPIGOT-TEST.jar")
+        archiveFileName.set("${rootProject.name}-${rootProject.version}-PAPER-TEST.jar")
     }
 
     runServer {
-        minecraftVersion("1.19.2")
+        minecraftVersion("1.21.11")
     }
+}
+
+java {
+    toolchain.languageVersion.set(
+        JavaLanguageVersion.of(25)
+    )
 }
 
 tasks.withType(xyz.jpenilla.runtask.task.AbstractRun::class) {
     javaLauncher = javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 

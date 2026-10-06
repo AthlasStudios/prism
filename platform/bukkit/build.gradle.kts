@@ -9,7 +9,7 @@ dependencies {
     api(project(":core"))
     implementation(project(":reflection"))
 
-    compileOnlyApi("org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT") {
+    compileOnly("org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT") {
         exclude(group = "net.md-5", module = "bungeecord-chat")
     }
 

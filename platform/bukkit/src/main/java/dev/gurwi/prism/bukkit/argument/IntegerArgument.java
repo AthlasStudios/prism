@@ -38,4 +38,12 @@ public class IntegerArgument extends BukkitArgument<IntegerArgument, Integer> {
         }
     }
 
+    public int getMin() {
+        return min;
+    }
+
+    public int getMax() {
+        return max;
+    }
+
 }
