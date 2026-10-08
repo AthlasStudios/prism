@@ -1,5 +1,7 @@
 package dev.gurwi.prism.test.plugin;
 
+import dev.gurwi.prism.brigadier.minecraft.BrigadierCommandRegistrar;
+import dev.gurwi.prism.brigadier.minecraft.MinecraftCommandDispatcherProvider;
 import dev.gurwi.prism.bukkit.argument.IntegerArgument;
 import dev.gurwi.prism.bukkit.argument.LocationArgument;
 import dev.gurwi.prism.bukkit.argument.StringArgument;
@@ -10,15 +12,16 @@ import dev.gurwi.prism.paper.PaperPlatform;
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Collections;
+
 public class TestPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
         PaperPlatform platform = PaperPlatform.configure(this)
-                .withGlobalLegacyCommandErrorHandler(LegacyCommandExecutionErrorHandler.defaultHandler())
                 .init();
 
-        BukkitCommandDefinition build = new PrismBukkitCommand("test")
+        BukkitCommandDefinition build = new PrismBukkitCommand("test", Collections.emptyList(), "Test command")
                 .withArguments(
                         new StringArgument("color")
                 )
@@ -52,7 +55,9 @@ public class TestPlugin extends JavaPlugin {
                     sender.sendMessage("Selected team color " + args.get("color"));
                 }).build();
 
-        platform.getCommandsRegistry().register(build);
+//        platform.getCommandsRegistry().register(build);
+        MinecraftCommandDispatcherProvider dispatcher = MinecraftCommandDispatcherProvider.get(this).orElseThrow();
+        new BrigadierCommandRegistrar(dispatcher).register(build);
     }
 
 }

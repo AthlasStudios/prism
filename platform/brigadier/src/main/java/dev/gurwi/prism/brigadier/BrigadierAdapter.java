@@ -25,5 +25,4 @@ public interface BrigadierAdapter<Source, Definition extends AbstractCommandDefi
 
     @Nullable SuggestionProvider<Source> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType);
 
-
 }

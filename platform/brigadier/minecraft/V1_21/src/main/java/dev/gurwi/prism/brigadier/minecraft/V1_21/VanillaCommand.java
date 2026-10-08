@@ -1,0 +1,70 @@
+package dev.gurwi.prism.brigadier.minecraft.V1_21;
+
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.Suggestion;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import dev.gurwi.prism.brigadier.minecraft.MinecraftBrigadierSource;
+import net.minecraft.commands.CommandSourceStack;
+import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
+import org.bukkit.craftbukkit.command.VanillaCommandWrapper;
+import org.bukkit.entity.Entity;
+
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+final class VanillaCommand extends VanillaCommandWrapper {
+
+    private final CommandDispatcher<MinecraftBrigadierSource> own;
+    private final String root;
+
+    VanillaCommand(CommandDispatcher<MinecraftBrigadierSource> own, LiteralCommandNode<CommandSourceStack> node, String description, List<String> aliases) {
+        super(node);
+        this.own = own;
+        this.root = node.getName();
+
+        setDescription(description == null ? "" : description);
+        setAliases(aliases);
+        setPermission(null);
+    }
+
+    @Override
+    public boolean execute(CommandSender sender, String label, String[] args) {
+        try {
+            own.execute(input(args), source(sender));
+        } catch (CommandSyntaxException exception) {
+            sender.sendMessage(exception.getMessage());
+        }
+
+        return true;
+    }
+
+    @Override
+    public List<String> tabComplete(CommandSender sender, String alias, String[] args) {
+        try {
+            return own.getCompletionSuggestions(own.parse(input(args), source(sender)))
+                    .get()
+                    .getList()
+                    .stream()
+                    .map(Suggestion::getText)
+                    .toList();
+        } catch (InterruptedException | ExecutionException exception) {
+            return List.of();
+        }
+    }
+
+    @Override
+    public List<String> tabComplete(CommandSender sender, String alias, String[] args, Location location) {
+        return tabComplete(sender, alias, args);
+    }
+
+    private String input(String[] args) {
+        return args.length == 0 ? root : root + " " + String.join(" ", args);
+    }
+
+    private MinecraftBrigadierSource source(CommandSender sender) {
+        return MinecraftBrigadierSource.delegate(() -> sender, () -> sender instanceof Entity entity ? entity : null);
+    }
+
+}

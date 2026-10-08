@@ -21,3 +21,7 @@ include(":platform:bukkit")
 include(":platform:spigot")
 include(":platform:paper")
 include(":platform:brigadier")
+include("platform:jda")
+
+include(":platform:brigadier:minecraft")
+include(":platform:brigadier:minecraft:V1_21")

@@ -17,7 +17,7 @@ public class PaperDefaultMappings {
     }
 
     public static void registerDefaults() {
-        PaperMappings.register(LocationArgument.class, new PaperMapping<>() {
+        PaperMappings.register(LocationArgument.class, new PaperArgumentMapping<>() {
 
             @Override
             public ArgumentType<?> type(LocationArgument argument) {
@@ -31,7 +31,7 @@ public class PaperDefaultMappings {
 
         });
 
-        PaperMappings.register(StringArgument.class, new PaperMapping<>() {
+        PaperMappings.register(StringArgument.class, new PaperArgumentMapping<>() {
             @Override
             public ArgumentType<?> type(StringArgument argument) {
                 return StringArgumentType.word();
@@ -43,7 +43,7 @@ public class PaperDefaultMappings {
             }
         });
 
-        PaperMappings.register(IntegerArgument.class, new PaperMapping<>() {
+        PaperMappings.register(IntegerArgument.class, new PaperArgumentMapping<>() {
             @Override
             public ArgumentType<?> type(IntegerArgument argument) {
                 return IntegerArgumentType.integer(argument.getMin(), argument.getMax());

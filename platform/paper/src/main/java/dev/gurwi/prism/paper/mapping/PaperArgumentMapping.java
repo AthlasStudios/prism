@@ -5,7 +5,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.gurwi.prism.bukkit.argument.BukkitArgument;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 
-public interface PaperMapping<A extends BukkitArgument<?, ?>> {
+public interface PaperArgumentMapping<A extends BukkitArgument<?, ?>> {
 
     ArgumentType<?> type(A argument);
 

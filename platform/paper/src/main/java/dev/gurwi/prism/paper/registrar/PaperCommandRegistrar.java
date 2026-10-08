@@ -18,8 +18,8 @@ import dev.gurwi.prism.bukkit.argument.parser.ArgumentTokens;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.registrar.BukkitCommandRegistrar;
 import dev.gurwi.prism.exception.ArgumentParseException;
+import dev.gurwi.prism.paper.mapping.PaperArgumentMapping;
 import dev.gurwi.prism.paper.mapping.PaperDefaultMappings;
-import dev.gurwi.prism.paper.mapping.PaperMapping;
 import dev.gurwi.prism.paper.mapping.PaperMappings;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -81,7 +81,7 @@ public class PaperCommandRegistrar implements BukkitCommandRegistrar, BrigadierA
 
     @Override
     public @Nullable ArgumentType<?> nativeType(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
-        PaperMapping<BukkitArgument<?, ?>> mapping = PaperMappings.find(argument);
+        PaperArgumentMapping<BukkitArgument<?, ?>> mapping = PaperMappings.find(argument);
         return mapping == null ? null : mapping.type((BukkitArgument<?, ?>) argument);
     }
 
@@ -183,7 +183,7 @@ public class PaperCommandRegistrar implements BukkitCommandRegistrar, BrigadierA
     }
 
     private @NotNull Object read(@NotNull BukkitArgument<?, ?> argument, @NotNull List<BrigadierTreeBuilder.Slot> slots, @NotNull CommandContext<CommandSourceStack> context, @NotNull CommandSourceStack source, @NotNull CommandSender sender) throws CommandSyntaxException {
-        PaperMapping<BukkitArgument<?, ?>> mapping = PaperMappings.find(argument);
+        PaperArgumentMapping<BukkitArgument<?, ?>> mapping = PaperMappings.find(argument);
 
         if (mapping != null) {
             return mapping.convert(argument, source, context.getArgument(slots.getFirst().name(), Object.class));
@@ -220,8 +220,7 @@ public class PaperCommandRegistrar implements BukkitCommandRegistrar, BrigadierA
     }
 
     private boolean visible(@NotNull BukkitCommandDefinition definition, @NotNull CommandSender sender) {
-        boolean usable = definition.getRequirement().test(sender)
-                && definition.getPermissions().stream().allMatch(permission -> permission.hasPermission(sender));
+        boolean usable = definition.canExecute(sender);
 
         if (!usable) {
             return false;
