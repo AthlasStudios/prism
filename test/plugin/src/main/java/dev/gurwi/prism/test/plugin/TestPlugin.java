@@ -2,7 +2,6 @@ package dev.gurwi.prism.test.plugin;
 
 import dev.gurwi.prism.brigadier.minecraft.BrigadierCommandRegistrar;
 import dev.gurwi.prism.brigadier.minecraft.provider.MinecraftCommandDispatcherProvider;
-import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandDispatcher;
 import dev.gurwi.prism.bukkit.argument.IntegerArgument;
 import dev.gurwi.prism.bukkit.argument.LocationArgument;
 import dev.gurwi.prism.bukkit.argument.StringArgument;
@@ -58,24 +57,22 @@ public class TestPlugin extends JavaPlugin {
                     sender.sendMessage("Selected team color " + args.get("color"));
                 }).build();
 
-        platform.getCommandsRegistry().register(build);
-//        MinecraftCommandDispatcherProvider dispatcher = MinecraftCommandDispatcherProvider.get(this).orElseThrow();
-//        new BrigadierCommandRegistrar(dispatcher).register(build);
+//        platform.getCommandsRegistry().register(build);
 
-//        MinecraftCommandDispatcherProvider provider = MinecraftCommandDispatcherProvider.get(this).orElseThrow();
-//        BrigadierCommandRegistrar brigadierCommandRegistrar = new BrigadierCommandRegistrar(provider.getDispatcher());
-//
-//        brigadierCommandRegistrar.register(build);
-//
-//        brigadierCommandRegistrar.register(
-//                new PrismBukkitCommand("pri")
-//                        .withOptionalArguments(
-//                                new StringArgument("str")
-//                                        .replaceSuggestions("Stringa", "Cocker", "Pocker")
-//                        )
-//                        .executes((sender, args) -> sender.sendMessage("Hello World"))
-//                        .build()
-//        );
+        MinecraftCommandDispatcherProvider provider = MinecraftCommandDispatcherProvider.get(this).orElseThrow();
+        BrigadierCommandRegistrar brigadierCommandRegistrar = new BrigadierCommandRegistrar(provider.getDispatcher());
+
+        brigadierCommandRegistrar.register(build);
+
+        brigadierCommandRegistrar.register(
+                new PrismBukkitCommand("pri")
+                        .withOptionalArguments(
+                                new StringArgument("str")
+                                        .replaceSuggestions("Stringa", "Cocker", "Pocker")
+                        )
+                        .executes((sender, args) -> sender.sendMessage("Hello World"))
+                        .build()
+        );
     }
 
 }

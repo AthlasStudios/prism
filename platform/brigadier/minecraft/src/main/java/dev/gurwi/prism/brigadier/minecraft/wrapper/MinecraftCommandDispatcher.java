@@ -11,13 +11,16 @@ import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.gurwi.prism.brigadier.minecraft.BrigadierCompatibilityChecker;
+import dev.gurwi.prism.bukkit.wrapper.WrappedCommandMap;
 import dev.gurwi.prism.reflection.ReflectionUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
@@ -38,9 +41,11 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
 
     protected MinecraftCommandDispatcher(@NotNull Plugin plugin) throws NoSuchFieldException, IllegalAccessException {
         this.plugin = plugin;
-        this.commandMap = new WrappedCommandMap(plugin.getServer()); // TODO -> REMOVE DUPLICATE CODE, LEGACYCOMMANDREGISTRAR REQUIRES THIS TOO
+        this.commandMap = new WrappedCommandMap(plugin.getServer());
 
         listen(ServerLoadEvent.class);
+
+        Bukkit.getPluginManager().registerEvents(new JoinListener(), plugin);
 
         if (BrigadierCompatibilityChecker.has(RELOAD_EVENT)) {
             try {
@@ -211,6 +216,17 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
         }
 
         vanillaRoot.addChild(mirror(root, name));
+    }
+
+    private final class JoinListener implements Listener {
+
+        @EventHandler
+        public void onJoin(PlayerJoinEvent event) {
+            Player player = event.getPlayer();
+
+            Bukkit.getScheduler().runTaskLater(plugin, player::updateCommands, 1L);
+        }
+
     }
 
     private record Entry(LiteralCommandNode<MinecraftCommandSource> root, Command command, String prefix, List<String> labels) {

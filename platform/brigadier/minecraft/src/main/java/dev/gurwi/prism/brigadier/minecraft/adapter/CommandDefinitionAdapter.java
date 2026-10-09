@@ -3,7 +3,6 @@ package dev.gurwi.prism.brigadier.minecraft.adapter;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.arguments.ArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
@@ -77,7 +76,7 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
 
     @Override
     public @Nullable SuggestionProvider<MinecraftCommandSource> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType) {
-        if (nativeType != null && !(nativeType instanceof StringArgumentType)) {
+        if (nativeType != null) {
             return null;
         }
 
@@ -134,7 +133,7 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
         Map<AbstractArgument<?, ?, ?, ?>, List<BrigadierTreeBuilder.Slot>> grouped = new LinkedHashMap<>();
 
         for (BrigadierTreeBuilder.Slot slot : builder.slots(level)) {
-            grouped.computeIfAbsent(slot.argument(), key -> new java.util.ArrayList<>()).add(slot);
+            grouped.computeIfAbsent(slot.argument(), key -> new ArrayList<>()).add(slot);
         }
 
         Map<String, Object> required = new HashMap<>();
