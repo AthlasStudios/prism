@@ -1,8 +1,11 @@
 package dev.gurwi.prism.brigadier.minecraft.paper;
 
+import dev.gurwi.prism.brigadier.minecraft.BrigadierCommandRegistrar;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.registrar.BukkitCommandRegistrar;
+import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -13,15 +16,13 @@ public class PaperBrigadierCommandRegistrar implements BukkitCommandRegistrar {
     private final Set<BukkitCommandDefinition> registeredCommands = Set.of();
 
     public PaperBrigadierCommandRegistrar(@NotNull LifecycleEventManager lifecycleManager) {
-//        lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+        lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+
 //            Commands registrar = event.registrar();
-//
-//            for (BukkitCommandDefinition definition : definitions) {
-//                for (String label : builder.labels(definition)) {
-//                    registrar.register(builder.build(definition, label), definition.getDescription(), List.of());
-//                }
+//            for (BukkitCommandDefinition definition : registeredCommands) {
+//                Commands.register(definition);
 //            }
-//        });
+        });
     }
 
     @Override

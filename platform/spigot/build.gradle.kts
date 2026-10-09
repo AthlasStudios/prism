@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     api(project(":platform:bukkit"))
+    implementation(project(":platform:brigadier:minecraft"))
     implementation(project(":reflection"))
 
     compileOnly("org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT") {

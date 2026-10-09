@@ -3,7 +3,6 @@ plugins {
 }
 
 dependencies {
-    api(project(":core"))
-
+    compileOnlyApi(project(":core"))
     compileOnlyApi("com.mojang:brigadier:1.0.18")
 }

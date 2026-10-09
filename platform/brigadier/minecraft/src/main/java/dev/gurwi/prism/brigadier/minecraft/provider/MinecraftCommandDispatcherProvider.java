@@ -57,10 +57,6 @@ public abstract class MinecraftCommandDispatcherProvider {
     private static @NotNull List<String> candidates() {
         List<String> result = new ArrayList<>();
 
-//        if (hasPaperBrigadierApi()) {
-//            result.add("Paper");
-//        }
-
         String[] parts = Bukkit.getBukkitVersion().split("-")[0].split("\\.");
 
         if (parts.length >= 3) {

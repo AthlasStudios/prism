@@ -9,9 +9,9 @@ import java.util.function.Function;
 
 public interface ArgumentMapper<T, Argument extends BukkitArgument<?, T>> extends ArgumentValueMapper<Argument, T> {
 
-    ArgumentType<T> toBrigadierType(Argument argument);
+    ArgumentType<?> toBrigadierType(Argument argument);
 
-    static <T, Argument extends BukkitArgument<?, T>> @NotNull ArgumentMapper<T, Argument> create(Function<Argument, ArgumentType<T>> typeSupplier, ArgumentValueMapper<Argument, T> mapper) {
+    static <T, Argument extends BukkitArgument<?, T>> @NotNull ArgumentMapper<T, Argument> create(Function<Argument, ArgumentType<?>> typeSupplier, ArgumentValueMapper<Argument, T> mapper) {
         return new ArgumentMapper<>() {
 
             @Override
@@ -20,14 +20,14 @@ public interface ArgumentMapper<T, Argument extends BukkitArgument<?, T>> extend
             }
 
             @Override
-            public ArgumentType<T> toBrigadierType(Argument argument) {
+            public ArgumentType<?> toBrigadierType(Argument argument) {
                 return typeSupplier.apply(argument);
             }
 
         };
     }
 
-    static <T, Argument extends BukkitArgument<?, T>> @NotNull ArgumentMapper<T, Argument> simple(Function<Argument, ArgumentType<T>> typeSupplier) {
+    static <T, Argument extends BukkitArgument<?, T>> @NotNull ArgumentMapper<T, Argument> simple(Function<Argument, ArgumentType<?>> typeSupplier) {
         return new ArgumentMapper<>() {
 
             @Override
@@ -36,7 +36,7 @@ public interface ArgumentMapper<T, Argument extends BukkitArgument<?, T>> extend
             }
 
             @Override
-            public ArgumentType<T> toBrigadierType(Argument argument) {
+            public ArgumentType<?> toBrigadierType(Argument argument) {
                 return typeSupplier.apply(argument);
             }
 

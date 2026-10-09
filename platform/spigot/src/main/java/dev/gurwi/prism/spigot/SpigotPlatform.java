@@ -33,13 +33,13 @@ public class SpigotPlatform implements BukkitPlatform<SpigotCommandsRegistry> {
         return commandsRegistry;
     }
 
-    public SpigotPlatformConfiguration getConfiguration() {
-        return configuration;
-    }
-
     @Override
     public JavaPlugin getPlugin() {
         return plugin;
+    }
+
+    public SpigotPlatformConfiguration getConfiguration() {
+        return configuration;
     }
 
 }

@@ -211,7 +211,7 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
         return definition.hasExecutor(sender) || definition.getChildren().stream().anyMatch(child -> visible(child, sender));
     }
 
-    private <T, Argument extends BukkitArgument<?, T>> @Nullable ArgumentType<T> findNativeType(@NotNull Argument argument) {
+    private <T, Argument extends BukkitArgument<?, T>> @Nullable ArgumentType<?> findNativeType(@NotNull Argument argument) {
         return findArgumentMapper(argument)
                 .map(mapper -> mapper.toBrigadierType(argument))
                 .orElse(null);

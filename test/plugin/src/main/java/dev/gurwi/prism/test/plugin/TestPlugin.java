@@ -1,19 +1,28 @@
 package dev.gurwi.prism.test.plugin;
 
-import dev.gurwi.prism.brigadier.minecraft.BrigadierCommandRegistrar;
-import dev.gurwi.prism.brigadier.minecraft.provider.MinecraftCommandDispatcherProvider;
+import dev.gurwi.prism.brigadier.minecraft.argument.mapping.ArgumentMapper;
+import dev.gurwi.prism.brigadier.minecraft.argument.mapping.ArgumentMappings;
+import dev.gurwi.prism.bukkit.argument.FloatArgument;
 import dev.gurwi.prism.bukkit.argument.IntegerArgument;
 import dev.gurwi.prism.bukkit.argument.LocationArgument;
 import dev.gurwi.prism.bukkit.argument.StringArgument;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.command.PrismBukkitCommand;
 import dev.gurwi.prism.paper.PaperPlatform;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Collections;
 
 public class TestPlugin extends JavaPlugin {
+
+    @Override
+    public void onLoad() {
+        ArgumentMappings.INSTANCE.register(LocationArgument.class, ArgumentMapper.create(argument -> {
+            return ArgumentTypes.finePosition();
+        }, (item, source, value) -> value));
+    }
 
     @Override
     public void onEnable() {
@@ -46,6 +55,10 @@ public class TestPlugin extends JavaPlugin {
                         new PrismBukkitCommand("number")
                                 .withArguments(
                                         new IntegerArgument("number", 0, 10)
+                                                .replaceSuggestions("5", "10")
+                                )
+                                .withOptionalArguments(
+                                        new FloatArgument("float", 0.1f, 9.9f)
                                 )
                                 .executes((sender, args) -> {
                                     Integer number = args.get("number");
@@ -57,22 +70,7 @@ public class TestPlugin extends JavaPlugin {
                     sender.sendMessage("Selected team color " + args.get("color"));
                 }).build();
 
-//        platform.getCommandsRegistry().register(build);
-
-        MinecraftCommandDispatcherProvider provider = MinecraftCommandDispatcherProvider.get(this).orElseThrow();
-        BrigadierCommandRegistrar brigadierCommandRegistrar = new BrigadierCommandRegistrar(provider.getDispatcher());
-
-        brigadierCommandRegistrar.register(build);
-
-        brigadierCommandRegistrar.register(
-                new PrismBukkitCommand("pri")
-                        .withOptionalArguments(
-                                new StringArgument("str")
-                                        .replaceSuggestions("Stringa", "Cocker", "Pocker")
-                        )
-                        .executes((sender, args) -> sender.sendMessage("Hello World"))
-                        .build()
-        );
+        platform.getCommandsRegistry().register(build);
     }
 
 }

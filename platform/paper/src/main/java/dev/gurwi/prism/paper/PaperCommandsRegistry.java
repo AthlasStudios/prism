@@ -1,24 +1,32 @@
 package dev.gurwi.prism.paper;
 
+import dev.gurwi.prism.brigadier.minecraft.BrigadierCommandRegistrar;
+import dev.gurwi.prism.brigadier.minecraft.BrigadierCompatibilityChecker;
+import dev.gurwi.prism.brigadier.minecraft.provider.MinecraftCommandDispatcherProvider;
 import dev.gurwi.prism.bukkit.BukkitCommandsRegistry;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.registrar.BukkitCommandRegistrar;
 import dev.gurwi.prism.bukkit.registrar.LegacyCommandRegistrar;
-import dev.gurwi.prism.paper.registrar.PaperCommandRegistrar;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class PaperCommandsRegistry implements BukkitCommandsRegistry<PaperPlatform> {
 
     private final PaperPlatform platform;
     private final BukkitCommandRegistrar registrar;
 
-    public PaperCommandsRegistry(PaperPlatform platform) {
+    public PaperCommandsRegistry(@NonNull PaperPlatform platform) {
         this.platform = platform;
         this.registrar = getRegistrar();
+
+        platform.getPlugin().getLogger().info(
+                "Command registration initialized using " + registrar.getType().name() + "."
+        );
     }
 
     @Override
@@ -44,12 +52,22 @@ public class PaperCommandsRegistry implements BukkitCommandsRegistry<PaperPlatfo
 
     @Contract(" -> new")
     private @NotNull BukkitCommandRegistrar getRegistrar() {
-        return new PaperCommandRegistrar(platform.getPlugin());
-//        try {
-//            return new LegacyCommandRegistrar(platform.getPlugin());
-//        } catch (NoSuchFieldException | IllegalAccessException e) {
-//            throw new RuntimeException(e);
-//        }
+        try {
+            AtomicReference<BukkitCommandRegistrar> registrar = new AtomicReference<>(new LegacyCommandRegistrar(platform.getPlugin()));
+
+            if (!platform.getConfiguration().isBrigadierDisabled() && BrigadierCompatibilityChecker.isSupported()) {
+                MinecraftCommandDispatcherProvider.get(platform.getPlugin()).ifPresentOrElse(
+                        provider -> registrar.set(new BrigadierCommandRegistrar(provider.getDispatcher())),
+                        () -> platform.getPlugin().getLogger().warning(
+                                "Failed to initialize Brigadier. The Minecraft version may be unsupported. Falling back to legacy registration. If the issue persists on a supported version, report it on our Discord."
+                        )
+                );
+            }
+
+            return registrar.get();
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

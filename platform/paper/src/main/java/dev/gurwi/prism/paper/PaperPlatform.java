@@ -38,4 +38,8 @@ public class PaperPlatform implements BukkitPlatform<PaperCommandsRegistry> {
         return commandsRegistry;
     }
 
+    public PaperPlatformConfiguration getConfiguration() {
+        return configuration;
+    }
+
 }
