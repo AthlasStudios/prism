@@ -1,6 +1,6 @@
 package dev.gurwi.prism.bukkit.argument;
 
-public abstract class MultiTokenArgument<Impl, T> extends BukkitArgument<Impl, T> {
+public abstract class MultiTokenArgument<Impl extends MultiTokenArgument<Impl, T>, T> extends BukkitArgument<Impl, T> {
 
     private final int consumption;
 

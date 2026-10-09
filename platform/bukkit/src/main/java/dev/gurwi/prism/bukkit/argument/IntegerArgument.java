@@ -4,7 +4,7 @@ import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-public class IntegerArgument extends BukkitArgument<IntegerArgument, Integer> {
+public class IntegerArgument extends BoundedArgument<IntegerArgument, Integer> {
 
     private final int min;
     private final int max;
@@ -38,11 +38,13 @@ public class IntegerArgument extends BukkitArgument<IntegerArgument, Integer> {
         }
     }
 
-    public int getMin() {
+    @Override
+    public Integer getMin() {
         return min;
     }
 
-    public int getMax() {
+    @Override
+    public Integer getMax() {
         return max;
     }
 

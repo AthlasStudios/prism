@@ -4,7 +4,7 @@ import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-public class FloatArgument extends BukkitArgument<FloatArgument, Float> {
+public class FloatArgument extends BoundedArgument<FloatArgument, Float> {
 
     private final float min;
     private final float max;
@@ -36,6 +36,16 @@ public class FloatArgument extends BukkitArgument<FloatArgument, Float> {
         } catch (NumberFormatException e) {
             throw new ArgumentParseException(this, value, "Expected a float got " + value);
         }
+    }
+
+    @Override
+    public Float getMin() {
+        return min;
+    }
+
+    @Override
+    public Float getMax() {
+        return max;
     }
 
 }

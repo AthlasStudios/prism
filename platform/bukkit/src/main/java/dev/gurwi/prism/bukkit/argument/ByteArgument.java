@@ -4,7 +4,7 @@ import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-public class ByteArgument extends BukkitArgument<ByteArgument, Byte> {
+public class ByteArgument extends BoundedArgument<ByteArgument, Byte> {
 
     private final byte min;
     private final byte max;
@@ -37,5 +37,16 @@ public class ByteArgument extends BukkitArgument<ByteArgument, Byte> {
             throw new ArgumentParseException(this, value, "Expected a byte got " + value);
         }
     }
+
+    @Override
+    public Byte getMin() {
+        return min;
+    }
+
+    @Override
+    public Byte getMax() {
+        return max;
+    }
+
 
 }

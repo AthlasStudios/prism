@@ -14,4 +14,12 @@ public interface BukkitCommandRegistrar {
     @Unmodifiable
     Set<BukkitCommandDefinition> getRegisteredCommands();
 
+    Type getType();
+
+    enum Type {
+        LEGACY,
+        NMS_BRIGADIER,
+        PAPER_BRIGADIER
+    }
+
 }

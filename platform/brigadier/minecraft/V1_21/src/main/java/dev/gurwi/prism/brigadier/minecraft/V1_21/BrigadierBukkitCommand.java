@@ -4,22 +4,24 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import dev.gurwi.prism.brigadier.minecraft.MinecraftBrigadierSource;
+import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.command.VanillaCommandWrapper;
 import org.bukkit.entity.Entity;
+import org.jetbrains.annotations.Contract;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-final class VanillaCommand extends VanillaCommandWrapper {
+final class BrigadierBukkitCommand extends VanillaCommandWrapper {
 
-    private final CommandDispatcher<MinecraftBrigadierSource> own;
+    private final CommandDispatcher<MinecraftCommandSource> own;
     private final String root;
 
-    VanillaCommand(CommandDispatcher<MinecraftBrigadierSource> own, LiteralCommandNode<CommandSourceStack> node, String description, List<String> aliases) {
+    BrigadierBukkitCommand(CommandDispatcher<MinecraftCommandSource> own, LiteralCommandNode<CommandSourceStack> node, String description, List<String> aliases) {
         super(node);
         this.own = own;
         this.root = node.getName();
@@ -63,8 +65,9 @@ final class VanillaCommand extends VanillaCommandWrapper {
         return args.length == 0 ? root : root + " " + String.join(" ", args);
     }
 
-    private MinecraftBrigadierSource source(CommandSender sender) {
-        return MinecraftBrigadierSource.delegate(() -> sender, () -> sender instanceof Entity entity ? entity : null);
+    @Contract(value = "_ -> new", pure = true)
+    private @NonNull MinecraftCommandSource source(CommandSender sender) {
+        return MinecraftCommandSource.create(() -> sender, () -> sender instanceof Entity ? (Entity) sender : null);
     }
 
 }

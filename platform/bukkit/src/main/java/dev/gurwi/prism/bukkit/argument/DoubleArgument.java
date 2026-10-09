@@ -4,7 +4,7 @@ import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-public class DoubleArgument extends BukkitArgument<DoubleArgument, Double> {
+public class DoubleArgument extends BoundedArgument<DoubleArgument, Double> {
 
     private final double min;
     private final double max;
@@ -36,6 +36,16 @@ public class DoubleArgument extends BukkitArgument<DoubleArgument, Double> {
         } catch (NumberFormatException e) {
             throw new ArgumentParseException(this, value, "Expected a double got " + value);
         }
+    }
+
+    @Override
+    public Double getMin() {
+        return min;
+    }
+
+    @Override
+    public Double getMax() {
+        return max;
     }
 
 }

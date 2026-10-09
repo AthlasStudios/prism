@@ -96,4 +96,9 @@ public class LegacyCommandRegistrar implements BukkitCommandRegistrar {
         return Set.copyOf(registeredCommands.keySet());
     }
 
+    @Override
+    public Type getType() {
+        return Type.LEGACY;
+    }
+
 }

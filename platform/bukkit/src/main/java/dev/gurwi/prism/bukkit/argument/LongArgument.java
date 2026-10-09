@@ -4,7 +4,7 @@ import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-public class LongArgument extends BukkitArgument<LongArgument, Long> {
+public class LongArgument extends BoundedArgument<LongArgument, Long> {
 
     private final long min;
     private final long max;
@@ -36,6 +36,16 @@ public class LongArgument extends BukkitArgument<LongArgument, Long> {
         } catch (NumberFormatException e) {
             throw new ArgumentParseException(this, value, "Expected a long got " + value);
         }
+    }
+
+    @Override
+    public Long getMin() {
+        return min;
+    }
+
+    @Override
+    public Long getMax() {
+        return max;
     }
 
 }

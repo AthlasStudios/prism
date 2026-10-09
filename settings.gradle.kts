@@ -25,3 +25,4 @@ include("platform:jda")
 
 include(":platform:brigadier:minecraft")
 include(":platform:brigadier:minecraft:V1_21")
+include("platform:brigadier:minecraft:paper")

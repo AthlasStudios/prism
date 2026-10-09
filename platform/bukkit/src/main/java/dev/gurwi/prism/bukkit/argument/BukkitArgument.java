@@ -7,7 +7,7 @@ import org.bukkit.command.CommandSender;
 
 import java.util.Collection;
 
-public abstract class BukkitArgument<Impl, T> extends AbstractArgument<Impl, T, CommandSender, BukkitSuggestionsSupplier> {
+public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> extends AbstractArgument<Impl, T, CommandSender, BukkitSuggestionsSupplier> {
 
     public BukkitArgument(String name) {
         super(name, BukkitSuggestionsSupplier.empty());

@@ -23,6 +23,7 @@ import dev.gurwi.prism.paper.mapping.PaperDefaultMappings;
 import dev.gurwi.prism.paper.mapping.PaperMappings;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -67,6 +68,11 @@ public class PaperCommandRegistrar implements BukkitCommandRegistrar, BrigadierA
     @Override
     public @Unmodifiable Set<BukkitCommandDefinition> getRegisteredCommands() {
         return Set.copyOf(definitions);
+    }
+
+    @Override
+    public Type getType() {
+        return Type.PAPER_BRIGADIER;
     }
 
     @Override

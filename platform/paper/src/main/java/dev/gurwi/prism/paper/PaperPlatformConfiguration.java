@@ -1,6 +1,7 @@
 package dev.gurwi.prism.paper;
 
 import dev.gurwi.prism.bukkit.command.error.LegacyCommandExecutionErrorHandler;
+import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -74,6 +75,10 @@ public class PaperPlatformConfiguration {
 
         public PaperPlatform init() {
             //if (disableLegacyRegistrar && (disableBrigadier || !PrismBrigadier.isCompatible())) throw new IllegalStateException("Cannot disable both legacy registrar and brigadier");
+            return new PaperPlatform(plugin, new PaperPlatformConfiguration(this));
+        }
+
+        public PaperPlatform init(BootstrapContext context) {
             return new PaperPlatform(plugin, new PaperPlatformConfiguration(this));
         }
 

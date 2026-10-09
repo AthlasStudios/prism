@@ -1,4 +1,4 @@
-package dev.gurwi.prism.brigadier.minecraft;
+package dev.gurwi.prism.brigadier.minecraft.adapter;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.LiteralMessage;
@@ -13,9 +13,9 @@ import dev.gurwi.prism.argument.CommandArguments;
 import dev.gurwi.prism.brigadier.BrigadierAdapter;
 import dev.gurwi.prism.brigadier.BrigadierCompatibleArgument;
 import dev.gurwi.prism.brigadier.BrigadierTreeBuilder;
-import dev.gurwi.prism.brigadier.minecraft.mapping.DefaultMappings;
-import dev.gurwi.prism.brigadier.minecraft.mapping.MinecraftArgumentMapping;
-import dev.gurwi.prism.brigadier.minecraft.mapping.MinecraftMappings;
+import dev.gurwi.prism.brigadier.minecraft.argument.mapping.ArgumentMapper;
+import dev.gurwi.prism.brigadier.minecraft.argument.mapping.ArgumentMappings;
+import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import dev.gurwi.prism.bukkit.argument.BukkitArgument;
 import dev.gurwi.prism.bukkit.argument.GreedyArgument;
 import dev.gurwi.prism.bukkit.argument.parser.ArgumentTokens;
@@ -27,40 +27,42 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class BrigadierDefinitionAdapter implements BrigadierAdapter<MinecraftBrigadierSource, BukkitCommandDefinition> {
+public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftCommandSource, BukkitCommandDefinition> {
 
     private static final SimpleCommandExceptionType NO_EXECUTOR = new SimpleCommandExceptionType(new LiteralMessage("This command cannot be run by this sender"));
 
-    static {
-        DefaultMappings.registerDefaults();
-    }
-
-    private final BrigadierTreeBuilder<MinecraftBrigadierSource, BukkitCommandDefinition> builder = new BrigadierTreeBuilder<>(this);
+    private final BrigadierTreeBuilder<MinecraftCommandSource, BukkitCommandDefinition> builder = new BrigadierTreeBuilder<>(this);
 
     @Override
-    public boolean visible(@NotNull BukkitCommandDefinition definition, @NotNull MinecraftBrigadierSource source) {
+    public boolean visible(@NotNull BukkitCommandDefinition definition, @NotNull MinecraftCommandSource source) {
         return visible(definition, senderOf(source));
     }
 
     @Override
-    public boolean available(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull MinecraftBrigadierSource source) {
-        return ((BukkitArgument<?, ?>) argument).getRequirement().test(senderOf(source));
+    public boolean available(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull MinecraftCommandSource source) {
+        if (argument instanceof BukkitArgument<?, ?> bukkitArgument) {
+            return bukkitArgument.getRequirement().test(senderOf(source));
+        }
+
+        return false;
     }
 
     @Override
     public @Nullable ArgumentType<?> nativeType(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
-        MinecraftArgumentMapping<BukkitArgument<?, ?>> mapping = MinecraftMappings.find(argument);
-
-        if (mapping == null) {
+        if (!(argument instanceof BukkitArgument<?, ?> bukkitArgument)) {
             return null;
         }
 
-        return mapping.type((BukkitArgument<?, ?>) argument);
+        return findNativeType(bukkitArgument);
     }
 
     @Override
     public int tokens(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
-        return ArgumentTokens.consumption((BukkitArgument<?, ?>) argument);
+        if (!(argument instanceof BukkitArgument<?, ?> bukkitArgument)) {
+            return 0;
+        }
+
+        return ArgumentTokens.consumption(bukkitArgument);
     }
 
     @Override
@@ -69,12 +71,12 @@ public class BrigadierDefinitionAdapter implements BrigadierAdapter<MinecraftBri
     }
 
     @Override
-    public @Nullable Command<MinecraftBrigadierSource> command(@NotNull BukkitCommandDefinition definition) {
-        return context -> execute(definition, context);
+    public @Nullable Command<MinecraftCommandSource> command(@NotNull BukkitCommandDefinition definition) {
+        return ctx -> execute(definition, ctx);
     }
 
     @Override
-    public @Nullable SuggestionProvider<MinecraftBrigadierSource> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType) {
+    public @Nullable SuggestionProvider<MinecraftCommandSource> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType) {
         if (nativeType != null && !(nativeType instanceof StringArgumentType)) {
             return null;
         }
@@ -95,12 +97,12 @@ public class BrigadierDefinitionAdapter implements BrigadierAdapter<MinecraftBri
         };
     }
 
-    public BrigadierTreeBuilder<MinecraftBrigadierSource, BukkitCommandDefinition> getBuilder() {
+    public BrigadierTreeBuilder<MinecraftCommandSource, BukkitCommandDefinition> getBuilder() {
         return builder;
     }
 
-    private int execute(@NotNull BukkitCommandDefinition target, @NotNull CommandContext<MinecraftBrigadierSource> context) throws CommandSyntaxException {
-        MinecraftBrigadierSource source = context.getSource();
+    private int execute(@NotNull BukkitCommandDefinition target, @NotNull CommandContext<MinecraftCommandSource> context) throws CommandSyntaxException {
+        MinecraftCommandSource source = context.getSource();
         CommandSender sender = senderOf(source);
 
         if (!target.hasExecutor(sender)) {
@@ -128,7 +130,7 @@ public class BrigadierDefinitionAdapter implements BrigadierAdapter<MinecraftBri
         return Command.SINGLE_SUCCESS;
     }
 
-    private @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parseLevel(@NotNull BukkitCommandDefinition level, @NotNull CommandContext<MinecraftBrigadierSource> context, @NotNull MinecraftBrigadierSource source, @NotNull CommandSender sender, CommandArguments<BukkitCommandDefinition, CommandSender> parent) throws CommandSyntaxException {
+    private @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parseLevel(@NotNull BukkitCommandDefinition level, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender, CommandArguments<BukkitCommandDefinition, CommandSender> parent) throws CommandSyntaxException {
         Map<AbstractArgument<?, ?, ?, ?>, List<BrigadierTreeBuilder.Slot>> grouped = new LinkedHashMap<>();
 
         for (BrigadierTreeBuilder.Slot slot : builder.slots(level)) {
@@ -159,15 +161,19 @@ public class BrigadierDefinitionAdapter implements BrigadierAdapter<MinecraftBri
         return new CommandArguments<>(level, required, optional, parent);
     }
 
-    private @NotNull Object read(@NotNull BukkitArgument<?, ?> argument, @NotNull List<BrigadierTreeBuilder.Slot> slots, @NotNull CommandContext<MinecraftBrigadierSource> context, @NotNull MinecraftBrigadierSource source, @NotNull CommandSender sender) throws CommandSyntaxException {
-        MinecraftArgumentMapping<BukkitArgument<?, ?>> mapping = MinecraftMappings.find(argument);
+    @SuppressWarnings("unchecked")
+    private <T> @NotNull T read(@NotNull BukkitArgument<?, T> argument, @NotNull List<BrigadierTreeBuilder.Slot> slots, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender) throws CommandSyntaxException {
+        String name = slots.get(0).name();
+        Object value = context.getArgument(name, Object.class);
 
-        if (mapping != null) {
-            return mapping.convert(argument, source, context.getArgument(slots.get(0).name(), Object.class));
+        Optional<ArgumentMapper<T, BukkitArgument<?, T>>> mapping = findArgumentMapper(argument);
+
+        if (mapping.isPresent()) {
+            return mapping.get().map(argument, source, (T) value);
         }
 
         if (argument instanceof BrigadierCompatibleArgument<?> compatible) {
-            return Objects.requireNonNull(compatible.fromBrigadier(context, slots.get(0).name()));
+            return (T) Objects.requireNonNull(compatible.fromBrigadier(context, name));
         }
 
         StringBuilder joined = new StringBuilder();
@@ -187,7 +193,7 @@ public class BrigadierDefinitionAdapter implements BrigadierAdapter<MinecraftBri
         }
     }
 
-    private boolean present(@NotNull CommandContext<MinecraftBrigadierSource> context, @NotNull String node) {
+    private boolean present(@NotNull CommandContext<MinecraftCommandSource> context, @NotNull String node) {
         try {
             context.getArgument(node, Object.class);
             return true;
@@ -206,8 +212,28 @@ public class BrigadierDefinitionAdapter implements BrigadierAdapter<MinecraftBri
         return definition.hasExecutor(sender) || definition.getChildren().stream().anyMatch(child -> visible(child, sender));
     }
 
-    private @NotNull CommandSender senderOf(@NotNull MinecraftBrigadierSource source) {
-        return source.executor() != null ? source.executor() : source.sender();
+    private <T, Argument extends BukkitArgument<?, T>> @Nullable ArgumentType<T> findNativeType(@NotNull Argument argument) {
+        return findArgumentMapper(argument)
+                .map(mapper -> mapper.toBrigadierType(argument))
+                .orElse(null);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T, Argument extends BukkitArgument<?, T>> Optional<ArgumentMapper<T, Argument>> findArgumentMapper(Argument argument) {
+        if (argument instanceof ArgumentMapper<?, ?> mapper) {
+            return Optional.of((ArgumentMapper<T, Argument>) castArgumentMapper(mapper));
+        }
+
+        return ArgumentMappings.INSTANCE.find(argument);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T, Argument extends BukkitArgument<Argument, T>> ArgumentMapper<T, Argument> castArgumentMapper(ArgumentMapper<?, ?> mapper) {
+        return (ArgumentMapper<T, Argument>) mapper;
+    }
+
+    private @NotNull CommandSender senderOf(@NotNull MinecraftCommandSource source) {
+        return source.getEntity().map(CommandSender.class::cast).orElse(source.getSender());
     }
 
 }
