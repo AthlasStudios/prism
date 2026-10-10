@@ -45,6 +45,10 @@ public class WrappedSourceStack implements MinecraftCommandSource {
         return Optional.of(entity.getBukkitEntity());
     }
 
+    public CommandSourceStack getHandle() {
+        return source;
+    }
+
 //    @Override
 //    public MinecraftCommandSource withLocation(@NotNull Location location) {
 //        CommandSourceStack stack = source;

@@ -1,4 +1,9 @@
 package dev.gurwi.prism.brigadier.minecraft.argument.resolver;
 
-public interface PlayerProfileListResolver { // TODO -> PORCO
+import dev.gurwi.prism.brigadier.minecraft.argument.ArgumentResolver;
+import dev.gurwi.prism.brigadier.minecraft.wrapper.WrappedGameProfile;
+
+import java.util.Collection;
+
+public interface PlayerProfileListResolver extends ArgumentResolver<Collection<WrappedGameProfile>> {
 }

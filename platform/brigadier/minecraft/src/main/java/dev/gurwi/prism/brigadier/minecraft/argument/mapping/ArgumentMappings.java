@@ -3,10 +3,15 @@ package dev.gurwi.prism.brigadier.minecraft.argument.mapping;
 import com.mojang.brigadier.arguments.*;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import dev.gurwi.prism.brigadier.minecraft.argument.MinecraftArgumentType;
+import dev.gurwi.prism.brigadier.minecraft.argument.resolver.FinePositionResolver;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import dev.gurwi.prism.bukkit.argument.*;
+import org.bukkit.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,12 +22,6 @@ public class ArgumentMappings {
 
     private final Map<Class<?>, Binder> binders = new ConcurrentHashMap<>();
 
-    private interface Binder {
-
-        BoundArgumentMapper<?> bind(BukkitArgument<?, ?> argument);
-
-    }
-
     private ArgumentMappings() {
         register(StringArgument.class, ArgumentMapper.simple(arg -> StringArgumentType.string()));
         register(GreedyStringArgument.class, ArgumentMapper.simple(arg -> StringArgumentType.greedyString()));
@@ -31,6 +30,39 @@ public class ArgumentMappings {
         register(FloatArgument.class, ArgumentMapper.simple(arg -> FloatArgumentType.floatArg(arg.getMin(), arg.getMax())));
         register(LongArgument.class, ArgumentMapper.simple(arg -> LongArgumentType.longArg(arg.getMin(), arg.getMax())));
         register(BooleanArgument.class, ArgumentMapper.simple(arg -> BoolArgumentType.bool()));
+
+        register(GameModeArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.gameMode()));
+        register(IntegerRangeArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.integerRange()));
+        register(DoubleRangeArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.doubleRange()));
+        register(FloatRangeArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.floatRange()));
+
+        register(EntitySelectorArgument.OneEntity.class, ArgumentMapper.constant(
+                MinecraftArgumentType.entity(),
+                (argument, source, resolver) -> resolver.resolve(source).get(0)
+        ));
+
+        register(EntitySelectorArgument.ManyEntities.class, ArgumentMapper.constant(
+                MinecraftArgumentType.entities(),
+                (argument, source, resolver) -> resolver.resolve(source)
+        ));
+
+        register(EntitySelectorArgument.OnePlayer.class, ArgumentMapper.constant(
+                MinecraftArgumentType.player(),
+                (argument, source, resolver) -> resolver.resolve(source).get(0)
+        ));
+
+        register(EntitySelectorArgument.ManyPlayers.class, ArgumentMapper.constant(
+                MinecraftArgumentType.players(),
+                (argument, source, resolver) -> resolver.resolve(source)
+        ));
+
+        register(LocationArgument.class, ArgumentMapper.create(
+                arg -> {
+                    arg.replaceSuggestions(BukkitSuggestionsSupplier.empty());
+                    return MinecraftArgumentType.finePosition();
+                },
+                (argument, source, resolver) -> ((FinePositionResolver) resolver).resolve(source).toLocation(source.getLocation().getWorld())
+        ));
     }
 
     public <T, BrigadierType, Argument extends BukkitArgument<?, T>> void register(@NotNull Class<Argument> type, @NotNull ArgumentMapper<T, BrigadierType, Argument> mapper) {
@@ -69,6 +101,12 @@ public class ArgumentMappings {
                 return mapper.map(argument, source, (BrigadierType) context.getArgument(node, Object.class));
             }
         };
+    }
+
+    private interface Binder {
+
+        BoundArgumentMapper<?> bind(BukkitArgument<?, ?> argument);
+
     }
 
 }

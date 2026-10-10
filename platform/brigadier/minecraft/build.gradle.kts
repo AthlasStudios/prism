@@ -7,6 +7,8 @@ dependencies {
     implementation(project(":reflection"))
     compileOnlyApi(project(":platform:bukkit"))
 
+    compileOnly("com.mojang:authlib:3.13.56")
+
     compileOnly("org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT") {
         exclude(group = "net.md-5", module = "bungeecord-chat")
     }

@@ -89,7 +89,7 @@ public abstract class MinecraftCommandDispatcherProvider {
         return result;
     }
 
-    private static boolean hasPaperBrigadierApi() {
+    public static boolean hasPaperBrigadierApi() {
         try {
             Class.forName(
                     PAPER_COMMANDS_CLASS,

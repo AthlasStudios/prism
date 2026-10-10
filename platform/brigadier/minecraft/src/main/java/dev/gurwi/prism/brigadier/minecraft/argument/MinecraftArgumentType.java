@@ -1,7 +1,18 @@
 package dev.gurwi.prism.brigadier.minecraft.argument;
 
 import com.mojang.brigadier.arguments.ArgumentType;
-import dev.gurwi.prism.brigadier.minecraft.argument.resolver.*;
+import dev.gurwi.prism.brigadier.minecraft.argument.predicate.BlockInWorldPredicate;
+import dev.gurwi.prism.brigadier.minecraft.argument.predicate.ItemStackPredicate;
+import dev.gurwi.prism.brigadier.minecraft.argument.resolver.AngleResolver;
+import dev.gurwi.prism.brigadier.minecraft.argument.resolver.BlockPositionResolver;
+import dev.gurwi.prism.brigadier.minecraft.argument.resolver.ColumnBlockPositionResolver;
+import dev.gurwi.prism.brigadier.minecraft.argument.resolver.ColumnFinePositionResolver;
+import dev.gurwi.prism.brigadier.minecraft.argument.resolver.EntitySelectorArgumentResolver;
+import dev.gurwi.prism.brigadier.minecraft.argument.resolver.FinePositionResolver;
+import dev.gurwi.prism.brigadier.minecraft.argument.resolver.PlayerProfileListResolver;
+import dev.gurwi.prism.brigadier.minecraft.argument.resolver.PlayerSelectorArgumentResolver;
+import dev.gurwi.prism.brigadier.minecraft.argument.resolver.RotationResolver;
+import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
 import org.bukkit.Axis;
 import org.bukkit.GameMode;
 import org.bukkit.NamespacedKey;
@@ -12,84 +23,156 @@ import org.bukkit.block.structure.StructureRotation;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.DisplaySlot;
 
+import java.awt.Color;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Predicate;
 
-public interface MinecraftArgumentType {
+public final class MinecraftArgumentType {
 
-    ArgumentType<EntitySelectorArgumentResolver> entity();
+    private MinecraftArgumentType() {
+    }
 
-    ArgumentType<PlayerSelectorArgumentResolver> player();
+    private static final class Holder {
 
-    ArgumentType<EntitySelectorArgumentResolver> entities();
+        private static final MinecraftArgumentProvider INSTANCE = MinecraftArgumentProvider.get()
+                .orElseThrow(() -> new IllegalStateException("No MinecraftArgumentProvider is available for this server version"));
 
-    ArgumentType<PlayerSelectorArgumentResolver> players();
+    }
 
-    ArgumentType<PlayerProfileListResolver> playerProfiles();
+    private static MinecraftArgumentProvider provider() {
+        return Holder.INSTANCE;
+    }
 
-    ArgumentType<BlockPositionResolver> blockPosition();
+    public static ArgumentType<EntitySelectorArgumentResolver> entity() {
+        return provider().entity();
+    }
 
-//    ArgumentType<ColumnBlockPositionResolver> columnBlockPosition();
-//
-//    ArgumentType<FinePositionResolver> finePosition(boolean centerIntegers);
-//
-//    ArgumentType<ColumnFinePositionResolver> columnFinePosition(boolean centerIntegers);
-//
-//    ArgumentType<RotationResolver> rotation();
+    public static ArgumentType<EntitySelectorArgumentResolver> entities() {
+        return provider().entities();
+    }
 
-    ArgumentType<AngleResolver> angle();
+    public static ArgumentType<PlayerSelectorArgumentResolver> player() {
+        return provider().player();
+    }
 
-    ArgumentType<Set<Axis>> axes();
+    public static ArgumentType<PlayerSelectorArgumentResolver> players() {
+        return provider().players();
+    }
 
-    ArgumentType<BlockState> blockState();
+    public static ArgumentType<PlayerProfileListResolver> playerProfiles() {
+        return provider().playerProfiles();
+    }
 
-//    ArgumentType<BlockInWorldPredicate> blockInWorldPredicate();
+    public static ArgumentType<BlockPositionResolver> blockPosition() {
+        return provider().blockPosition();
+    }
 
-    ArgumentType<ItemStack> itemStack();
+    public static ArgumentType<ColumnBlockPositionResolver> columnBlockPosition() {
+        return provider().columnBlockPosition();
+    }
 
-    ArgumentType<Predicate<ItemStack>> itemStackPredicate();
+    public static ArgumentType<BlockInWorldPredicate> blockInWorldPredicate() {
+        return provider().blockInWorldPredicate();
+    }
 
-//    ArgumentType<NamedTextColor> namedColor();
-//
-//    ArgumentType<TextColor> hexColor();
-//
-//    ArgumentType<Component> component();
-//
-//    ArgumentType<Style> style();
-//
-//    ArgumentType<SignedMessageResolver> signedMessage();
+    public static ArgumentType<FinePositionResolver> finePosition() {
+        return provider().finePosition(true);
+    }
 
-    ArgumentType<DisplaySlot> scoreboardDisplaySlot();
+    public static ArgumentType<FinePositionResolver> finePosition(boolean centerIntegers) {
+        return provider().finePosition(centerIntegers);
+    }
 
-    ArgumentType<NamespacedKey> namespacedKey();
+    public static ArgumentType<ColumnFinePositionResolver> columnFinePosition() {
+        return provider().columnFinePosition(true);
+    }
 
-//    ArgumentType<Key> key();
-//
-//    ArgumentType<IntegerRangeProvider> integerRange();
-//
-//    ArgumentType<DoubleRangeProvider> doubleRange();
+    public static ArgumentType<ColumnFinePositionResolver> columnFinePosition(boolean centerIntegers) {
+        return provider().columnFinePosition(centerIntegers);
+    }
 
-    ArgumentType<World> world();
+    public static ArgumentType<RotationResolver> rotation() {
+        return provider().rotation();
+    }
 
-    ArgumentType<GameMode> gameMode();
+    public static ArgumentType<AngleResolver> angle() {
+        return provider().angle();
+    }
 
-//    ArgumentType<HeightMap> heightMap();
+    public static ArgumentType<Set<Axis>> axes() {
+        return provider().axes();
+    }
 
-    ArgumentType<UUID> uuid();
+    public static ArgumentType<BlockState> blockState() {
+        return provider().blockState();
+    }
 
-//    ArgumentType<Criteria> objectiveCriteria();
-//
-//    ArgumentType<LookAnchor> entityAnchor();
+    public static ArgumentType<ItemStack> itemStack() {
+        return provider().itemStack();
+    }
 
-    ArgumentType<Integer> time(int minTicks);
+    public static ArgumentType<ItemStackPredicate> itemStackPredicate() {
+        return provider().itemStackPredicate();
+    }
 
-    ArgumentType<Mirror> templateMirror();
+    public static ArgumentType<Color> color() {
+        return provider().color();
+    }
 
-    ArgumentType<StructureRotation> templateRotation();
+    public static ArgumentType<Color> hexColor() {
+        return provider().hexColor();
+    }
 
-//    <T> ArgumentType<TypedKey<T>> resourceKey(RegistryKey<T> registryKey);
-//
-//    <T> ArgumentType<T> resource(RegistryKey<T> registryKey);
+    public static ArgumentType<String> message() {
+        return provider().message();
+    }
+
+    public static ArgumentType<DisplaySlot> scoreboardDisplaySlot() {
+        return provider().scoreboardDisplaySlot();
+    }
+
+    public static ArgumentType<NamespacedKey> namespacedKey() {
+        return provider().namespacedKey();
+    }
+
+    public static ArgumentType<RangedNumber<Integer>> integerRange() {
+        return provider().integerRange();
+    }
+
+    public static ArgumentType<RangedNumber<Double>> doubleRange() {
+        return provider().doubleRange();
+    }
+
+    public static ArgumentType<RangedNumber<Float>> floatRange() {
+        return provider().floatRange();
+    }
+
+    public static ArgumentType<World> world() {
+        return provider().world();
+    }
+
+    public static ArgumentType<GameMode> gameMode() {
+        return provider().gameMode();
+    }
+
+    public static ArgumentType<UUID> uuid() {
+        return provider().uuid();
+    }
+
+    public static ArgumentType<Integer> time() {
+        return provider().time(0);
+    }
+
+    public static ArgumentType<Integer> time(int minTicks) {
+        return provider().time(minTicks);
+    }
+
+    public static ArgumentType<Mirror> templateMirror() {
+        return provider().templateMirror();
+    }
+
+    public static ArgumentType<StructureRotation> templateRotation() {
+        return provider().templateRotation();
+    }
 
 }
