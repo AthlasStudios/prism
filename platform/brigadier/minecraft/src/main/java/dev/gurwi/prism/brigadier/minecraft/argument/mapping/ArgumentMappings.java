@@ -4,14 +4,10 @@ import com.mojang.brigadier.arguments.*;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.gurwi.prism.brigadier.minecraft.argument.MinecraftArgumentType;
-import dev.gurwi.prism.brigadier.minecraft.argument.resolver.FinePositionResolver;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import dev.gurwi.prism.bukkit.argument.*;
-import org.bukkit.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,12 +52,9 @@ public class ArgumentMappings {
                 (argument, source, resolver) -> resolver.resolve(source)
         ));
 
-        register(LocationArgument.class, ArgumentMapper.create(
-                arg -> {
-                    arg.replaceSuggestions(BukkitSuggestionsSupplier.empty());
-                    return MinecraftArgumentType.finePosition();
-                },
-                (argument, source, resolver) -> ((FinePositionResolver) resolver).resolve(source).toLocation(source.getLocation().getWorld())
+        register(LocationArgument.class, ArgumentMapper.constant(
+                MinecraftArgumentType.finePosition(),
+                (argument, source, resolver) -> resolver.resolve(source).toLocation(source.getLocation().getWorld())
         ));
     }
 
