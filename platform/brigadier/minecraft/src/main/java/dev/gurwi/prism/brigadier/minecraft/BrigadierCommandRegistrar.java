@@ -1,7 +1,7 @@
 package dev.gurwi.prism.brigadier.minecraft;
 
 import dev.gurwi.prism.brigadier.minecraft.adapter.CommandDefinitionAdapter;
-import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandDispatcher;
+import dev.gurwi.prism.brigadier.minecraft.wrapper.dispatcher.MinecraftCommandDispatcher;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.registrar.BukkitCommandRegistrar;
 import org.jetbrains.annotations.Unmodifiable;
@@ -36,7 +36,7 @@ public class BrigadierCommandRegistrar implements BukkitCommandRegistrar {
 
     @Override
     public Type getType() {
-        return Type.NMS_BRIGADIER;
+        return Type.BRIGADIER;
     }
 
 }

@@ -18,8 +18,7 @@ public interface BukkitCommandRegistrar {
 
     enum Type {
         LEGACY,
-        NMS_BRIGADIER,
-        PAPER_BRIGADIER
+        BRIGADIER
     }
 
 }

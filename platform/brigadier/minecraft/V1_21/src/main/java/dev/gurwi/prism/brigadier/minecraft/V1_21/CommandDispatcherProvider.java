@@ -1,7 +1,7 @@
 package dev.gurwi.prism.brigadier.minecraft.V1_21;
 
 import dev.gurwi.prism.brigadier.minecraft.provider.MinecraftCommandDispatcherProvider;
-import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandDispatcher;
+import dev.gurwi.prism.brigadier.minecraft.wrapper.dispatcher.MinecraftCommandDispatcher;
 import org.bukkit.plugin.Plugin;
 
 public class CommandDispatcherProvider extends MinecraftCommandDispatcherProvider {

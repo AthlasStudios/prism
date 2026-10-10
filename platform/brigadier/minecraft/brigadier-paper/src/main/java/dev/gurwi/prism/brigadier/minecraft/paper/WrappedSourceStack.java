@@ -32,4 +32,8 @@ public class WrappedSourceStack implements MinecraftCommandSource {
         return sourceStack.getLocation();
     }
 
+    public CommandSourceStack getHandle() {
+        return sourceStack;
+    }
+
 }

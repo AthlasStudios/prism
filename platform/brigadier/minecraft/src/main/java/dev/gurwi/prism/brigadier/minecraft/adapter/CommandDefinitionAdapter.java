@@ -12,8 +12,8 @@ import dev.gurwi.prism.argument.CommandArguments;
 import dev.gurwi.prism.brigadier.BrigadierAdapter;
 import dev.gurwi.prism.brigadier.BrigadierCompatibleArgument;
 import dev.gurwi.prism.brigadier.BrigadierTreeBuilder;
-import dev.gurwi.prism.brigadier.minecraft.argument.mapping.ArgumentMapper;
 import dev.gurwi.prism.brigadier.minecraft.argument.mapping.ArgumentMappings;
+import dev.gurwi.prism.brigadier.minecraft.argument.mapping.BoundArgumentMapper;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import dev.gurwi.prism.bukkit.argument.BukkitArgument;
 import dev.gurwi.prism.bukkit.argument.GreedyArgument;
@@ -52,7 +52,9 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
             return null;
         }
 
-        return findNativeType(bukkitArgument);
+        return ArgumentMappings.INSTANCE.find(bukkitArgument)
+                .map(BoundArgumentMapper::type)
+                .orElse(null);
     }
 
     @Override
@@ -163,12 +165,10 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
     @SuppressWarnings("unchecked")
     private <T> @NotNull T read(@NotNull BukkitArgument<?, T> argument, @NotNull List<BrigadierTreeBuilder.Slot> slots, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender) throws CommandSyntaxException {
         String name = slots.get(0).name();
-        Object value = context.getArgument(name, Object.class);
-
-        Optional<ArgumentMapper<T, BukkitArgument<?, T>>> mapping = findArgumentMapper(argument);
+        Optional<BoundArgumentMapper<T>> mapping = ArgumentMappings.INSTANCE.find(argument);
 
         if (mapping.isPresent()) {
-            return mapping.get().map(argument, source, (T) value);
+            return mapping.get().read(context, name, source);
         }
 
         if (argument instanceof BrigadierCompatibleArgument<?> compatible) {
@@ -209,26 +209,6 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
         }
 
         return definition.hasExecutor(sender) || definition.getChildren().stream().anyMatch(child -> visible(child, sender));
-    }
-
-    private <T, Argument extends BukkitArgument<?, T>> @Nullable ArgumentType<?> findNativeType(@NotNull Argument argument) {
-        return findArgumentMapper(argument)
-                .map(mapper -> mapper.toBrigadierType(argument))
-                .orElse(null);
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T, Argument extends BukkitArgument<?, T>> Optional<ArgumentMapper<T, Argument>> findArgumentMapper(Argument argument) {
-        if (argument instanceof ArgumentMapper<?, ?> mapper) {
-            return Optional.of((ArgumentMapper<T, Argument>) castArgumentMapper(mapper));
-        }
-
-        return ArgumentMappings.INSTANCE.find(argument);
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T, Argument extends BukkitArgument<Argument, T>> ArgumentMapper<T, Argument> castArgumentMapper(ArgumentMapper<?, ?> mapper) {
-        return (ArgumentMapper<T, Argument>) mapper;
     }
 
     private @NotNull CommandSender senderOf(@NotNull MinecraftCommandSource source) {

@@ -5,8 +5,14 @@ plugins {
 
 dependencies {
     implementation(project(":reflection"))
-    implementation(project(":platform:brigadier:minecraft"))
+    compileOnly(project(":platform:brigadier:minecraft"))
     paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
+}
+
+configurations.configureEach {
+    if (isCanBeConsumed) {
+        attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 8)
+    }
 }
 
 java {

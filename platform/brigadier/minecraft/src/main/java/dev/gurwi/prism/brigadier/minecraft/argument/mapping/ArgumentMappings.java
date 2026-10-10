@@ -1,18 +1,27 @@
 package dev.gurwi.prism.brigadier.minecraft.argument.mapping;
 
 import com.mojang.brigadier.arguments.*;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import dev.gurwi.prism.bukkit.argument.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ArgumentMappings {
 
     public static final ArgumentMappings INSTANCE = new ArgumentMappings();
 
-    private final Map<Class<? extends BukkitArgument<?, ?>>, ArgumentMapper<?, ?>> argumentMappings = new HashMap<>();
+    private final Map<Class<?>, Binder> binders = new ConcurrentHashMap<>();
+
+    private interface Binder {
+
+        BoundArgumentMapper<?> bind(BukkitArgument<?, ?> argument);
+
+    }
 
     private ArgumentMappings() {
         register(StringArgument.class, ArgumentMapper.simple(arg -> StringArgumentType.string()));
@@ -24,25 +33,42 @@ public class ArgumentMappings {
         register(BooleanArgument.class, ArgumentMapper.simple(arg -> BoolArgumentType.bool()));
     }
 
-    public <T, Argument extends BukkitArgument<?, T>> void register(@NotNull Class<Argument> type, @NotNull ArgumentMapper<T, Argument> mapping) {
-        argumentMappings.put(type, mapping);
+    public <T, BrigadierType, Argument extends BukkitArgument<?, T>> void register(@NotNull Class<Argument> type, @NotNull ArgumentMapper<T, BrigadierType, Argument> mapper) {
+        binders.put(type, argument -> bind(mapper, type.cast(argument)));
     }
 
     @SuppressWarnings("unchecked")
-    public <T, Argument extends BukkitArgument<?, T>> Optional<ArgumentMapper<T, Argument>> find(@NotNull Argument argument) {
+    public <T> @NotNull Optional<BoundArgumentMapper<T>> find(@NotNull BukkitArgument<?, T> argument) {
         Class<?> type = argument.getClass();
 
         while (type != null && type != Object.class) {
-            ArgumentMapper<?, ?> mapping = argumentMappings.get(type);
+            Binder binder = binders.get(type);
 
-            if (mapping != null) {
-                return Optional.of((ArgumentMapper<T, Argument>) mapping);
+            if (binder != null) {
+                return Optional.of((BoundArgumentMapper<T>) binder.bind(argument));
             }
 
             type = type.getSuperclass();
         }
 
         return Optional.empty();
+    }
+
+    private static <T, BrigadierType, Argument extends BukkitArgument<?, T>> @NotNull BoundArgumentMapper<T> bind(@NotNull ArgumentMapper<T, BrigadierType, Argument> mapper, Argument argument) {
+        ArgumentType<BrigadierType> type = mapper.toBrigadierType(argument);
+
+        return new BoundArgumentMapper<>() {
+            @Override
+            public ArgumentType<?> type() {
+                return type;
+            }
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public T read(CommandContext<MinecraftCommandSource> context, String node, MinecraftCommandSource source) throws CommandSyntaxException {
+                return mapper.map(argument, source, (BrigadierType) context.getArgument(node, Object.class));
+            }
+        };
     }
 
 }

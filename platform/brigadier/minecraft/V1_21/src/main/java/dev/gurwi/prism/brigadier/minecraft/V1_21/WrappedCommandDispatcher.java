@@ -2,8 +2,9 @@ package dev.gurwi.prism.brigadier.minecraft.V1_21;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandDispatcher;
+import dev.gurwi.prism.brigadier.minecraft.wrapper.dispatcher.MinecraftCommandDispatcher;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
+import dev.gurwi.prism.brigadier.minecraft.wrapper.dispatcher.ReflectiveCommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
 import org.bukkit.command.Command;
@@ -12,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class WrappedCommandDispatcher extends MinecraftCommandDispatcher<CommandSourceStack> {
+public class WrappedCommandDispatcher extends ReflectiveCommandDispatcher<CommandSourceStack> {
 
     protected WrappedCommandDispatcher(@NotNull Plugin plugin) throws NoSuchFieldException, IllegalAccessException {
         super(plugin);
