@@ -47,13 +47,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.state.pattern.BlockInWorld;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
-import org.bukkit.Axis;
-import org.bukkit.GameMode;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.BlockState;
-import org.bukkit.block.structure.Mirror;
-import org.bukkit.block.structure.StructureRotation;
 import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_17_R1.block.CraftBlockStates;
 import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
@@ -258,11 +254,6 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     }
 
     @Override
-    public ArgumentType<GameMode> gameMode() {
-        return null;
-    }
-
-    @Override
     public ArgumentType<UUID> uuid() {
         return NativeBackedArgumentType.of(UuidArgument.uuid(), uuid -> uuid);
     }
@@ -276,16 +267,6 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
 
             return ticks;
         });
-    }
-
-    @Override
-    public ArgumentType<Mirror> templateMirror() {
-        return null;
-    }
-
-    @Override
-    public ArgumentType<StructureRotation> templateRotation() {
-        return null;
     }
 
     private <N extends Number & Comparable<N>> @NotNull ArgumentType<RangedNumber<N>> range(ArgumentType<? extends MinMaxBounds<N>> nativeType, N lowest, N highest) {

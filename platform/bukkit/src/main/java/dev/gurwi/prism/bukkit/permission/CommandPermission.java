@@ -15,7 +15,7 @@ public enum CommandPermission implements BukkitPermission {
     }
 
     @Override
-    public String getPermission() {
+    public String permission() {
         return permission;
     }
 

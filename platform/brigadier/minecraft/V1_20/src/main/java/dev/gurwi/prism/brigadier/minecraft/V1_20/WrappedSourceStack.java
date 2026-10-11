@@ -1,4 +1,4 @@
-package dev.gurwi.prism.brigadier.minecraft.V1_17;
+package dev.gurwi.prism.brigadier.minecraft.V1_20;
 
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import net.minecraft.commands.CommandSourceStack;

@@ -1,12 +1,15 @@
 plugins {
     id("java")
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.24"
+    id("prism.spigot-reobf")
 }
 
 dependencies {
     implementation(project(":reflection"))
     compileOnly(project(":platform:brigadier:minecraft"))
-    paperweight.paperDevBundle("1.19.4-R0.1-SNAPSHOT")
+}
+
+spigotNms {
+    version.set("1.19.4-R0.1-SNAPSHOT")
 }
 
 configurations.configureEach {
@@ -16,7 +19,7 @@ configurations.configureEach {
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
 tasks.withType<JavaCompile>().configureEach {

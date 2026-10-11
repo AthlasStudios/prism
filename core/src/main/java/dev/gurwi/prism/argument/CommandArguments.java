@@ -206,7 +206,7 @@ public class CommandArguments<Definition extends AbstractCommandDefinition<Defin
     }
 
     private <T> @NotNull Optional<T> findAt(@NotNull String path, @NotNull String key) {
-        return resolve(path).flatMap(node -> node.<T>local(key));
+        return resolve(path).flatMap(node -> node.local(key));
     }
 
     @SuppressWarnings("unchecked")

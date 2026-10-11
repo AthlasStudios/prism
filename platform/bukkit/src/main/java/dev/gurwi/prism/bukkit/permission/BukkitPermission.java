@@ -25,25 +25,14 @@ public interface BukkitPermission extends PermissionNode<String, CommandSender> 
         return new StartsWith(regex);
     }
 
-    class Plain implements BukkitPermission {
-
-        private final String permission;
-
-        public Plain(String permission) {
-            this.permission = permission;
-        }
+    record Plain(String permission) implements BukkitPermission {
 
         @Override
-        public String getPermission() {
-            return permission;
-        }
+            public boolean hasPermission(@NotNull CommandSender sender) {
+                return sender.isOp() || sender.hasPermission(permission);
+            }
 
-        @Override
-        public boolean hasPermission(@NotNull CommandSender sender) {
-            return sender.isOp() || sender.hasPermission(permission);
         }
-
-    }
 
     class StartsWith implements BukkitPermission {
 
@@ -54,7 +43,7 @@ public interface BukkitPermission extends PermissionNode<String, CommandSender> 
         }
 
         @Override
-        public String getPermission() {
+        public String permission() {
             return regex + "->...";
         }
 

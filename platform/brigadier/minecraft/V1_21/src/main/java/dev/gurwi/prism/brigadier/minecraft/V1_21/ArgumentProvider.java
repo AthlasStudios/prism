@@ -14,7 +14,6 @@ import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.WrappedGameProfile;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.position.*;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
-import io.papermc.paper.command.brigadier.argument.AxisSet;
 import net.minecraft.advancements.criterion.MinMaxBounds;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -162,14 +161,14 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
                 bukkitAxes.add(CraftBlockData.toBukkit(nmsAxis, Axis.class));
             }
 
-            final class AxisSetImpl extends ForwardingSet<Axis> implements AxisSet {
+            final class AxisSetImpl extends ForwardingSet<Axis> {
                 private final EnumSet<Axis> inner;
 
                 public AxisSetImpl(final EnumSet<Axis> inner) {
                     this.inner = inner;
                 }
 
-                protected Set<Axis> delegate() {
+                protected @NotNull Set<Axis> delegate() {
                     return this.inner;
                 }
             }

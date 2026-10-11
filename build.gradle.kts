@@ -1,6 +1,7 @@
 plugins {
     id("java-library")
     id("com.gradleup.shadow") version "9.4.1" apply false
+    kotlin("jvm")
 }
 
 val targetJavaVersion = 17
@@ -29,6 +30,7 @@ allprojects {
         maven("https://oss.sonatype.org/content/repositories/snapshots/")
         maven("https://repo.papermc.io/repository/maven-public/")
         maven("https://repo.papermc.io/repository/maven-snapshots/")
+        maven("https://repo.codemc.io/repository/nms/")
         maven("https://libraries.minecraft.net")
     }
 
@@ -100,4 +102,11 @@ subprojects {
             }
         }
     }
+}
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation(kotlin("test"))
 }

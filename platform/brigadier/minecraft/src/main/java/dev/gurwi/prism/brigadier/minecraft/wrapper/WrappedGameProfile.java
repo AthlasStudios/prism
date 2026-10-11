@@ -1,24 +1,20 @@
 package dev.gurwi.prism.brigadier.minecraft.wrapper;
 
 import com.mojang.authlib.GameProfile;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public final class WrappedGameProfile {
+public record WrappedGameProfile(UUID id, String name) {
 
-    private final GameProfile handle;
-
-    public WrappedGameProfile(GameProfile handle) {
-        this.handle = Objects.requireNonNull(handle, "handle");
+    public WrappedGameProfile(UUID id, String name) {
+        this.id = Objects.requireNonNull(id, "id");
+        this.name = Objects.requireNonNull(name, "name");
     }
 
-    public UUID getId() {
-        return handle.getId();
-    }
-
-    public String getName() {
-        return handle.getName();
+    public WrappedGameProfile(@NotNull GameProfile handle) {
+        this(handle.getId(), handle.getName());
     }
 
 }

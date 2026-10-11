@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.entities.User;
 public class CommandPermission implements PermissionNode<Permission, User> {
 
     @Override
-    public Permission getPermission() {
+    public Permission permission() {
         return null;
     }
 

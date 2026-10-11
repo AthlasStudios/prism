@@ -1,11 +1,10 @@
-package dev.gurwi.prism.brigadier.minecraft.V1_17;
+package dev.gurwi.prism.brigadier.minecraft.V1_20;
 
 import com.google.common.collect.Collections2;
+import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.arguments.ArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import dev.gurwi.prism.brigadier.minecraft.provider.MinecraftArgumentProvider;
 import dev.gurwi.prism.brigadier.minecraft.argument.NativeBackedArgumentType;
 import dev.gurwi.prism.brigadier.minecraft.argument.predicate.BlockInWorldPredicate;
@@ -16,59 +15,66 @@ import dev.gurwi.prism.brigadier.minecraft.wrapper.WrappedGameProfile;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.position.*;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
 import net.minecraft.advancements.critereon.MinMaxBounds;
+import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.arguments.AngleArgument;
-import net.minecraft.commands.arguments.ColorArgument;
-import net.minecraft.commands.arguments.DimensionArgument;
-import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.commands.arguments.GameProfileArgument;
-import net.minecraft.commands.arguments.MessageArgument;
-import net.minecraft.commands.arguments.RangeArgument;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
-import net.minecraft.commands.arguments.ScoreboardSlotArgument;
-import net.minecraft.commands.arguments.TimeArgument;
-import net.minecraft.commands.arguments.UuidArgument;
+import net.minecraft.commands.arguments.*;
 import net.minecraft.commands.arguments.blocks.BlockPredicateArgument;
 import net.minecraft.commands.arguments.blocks.BlockStateArgument;
-import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
-import net.minecraft.commands.arguments.coordinates.ColumnPosArgument;
-import net.minecraft.commands.arguments.coordinates.RotationArgument;
-import net.minecraft.commands.arguments.coordinates.Vec2Argument;
-import net.minecraft.commands.arguments.coordinates.Vec3Argument;
+import net.minecraft.commands.arguments.coordinates.*;
 import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.commands.arguments.item.ItemPredicateArgument;
 import net.minecraft.commands.arguments.selector.EntitySelector;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
+import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.pattern.BlockInWorld;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
-import org.bukkit.Axis;
-import org.bukkit.GameMode;
-import org.bukkit.NamespacedKey;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.structure.Mirror;
 import org.bukkit.block.structure.StructureRotation;
-import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_17_R1.block.CraftBlockStates;
-import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_17_R1.util.CraftNamespacedKey;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.block.CraftBlockEntityState;
+import org.bukkit.craftbukkit.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.scoreboard.CraftScoreboardTranslations;
+import org.bukkit.craftbukkit.util.CraftLocation;
+import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.DisplaySlot;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.Color;
 import java.util.*;
-import java.util.function.Predicate;
+import java.util.List;
 
+/**
+ * Mojang-mapped provider for Paper 1.20.5 / 1.20.6.
+ * <p>
+ * Differences from the 1.21.x provider:
+ * <ul>
+ *     <li>{@code MinMaxBounds} lives in {@code advancements.critereon} (with the typo).</li>
+ *     <li>{@code IdentifierArgument} is still {@code ResourceLocationArgument}.</li>
+ *     <li>{@code Vec3} has public fields ({@code x}, {@code y}, {@code z}), no accessors.</li>
+ *     <li>{@code GameProfileArgument.Result#getNames} returns plain {@code GameProfile}s.</li>
+ *     <li>{@code HexColorArgument} does not exist (added in 1.21.6), so {@code hexColor()} is removed.</li>
+ *     <li>No Paper {@code AxisSet}; a plain {@code EnumSet} is returned.</li>
+ * </ul>
+ */
 public class ArgumentProvider implements MinecraftArgumentProvider {
+
+    private static final SimpleCommandExceptionType UNSUPPORTED_SOURCE = new SimpleCommandExceptionType(new LiteralMessage("This argument cannot be resolved for this sender"));
+
+    private final CommandBuildContext context = CommandBuildContext.simple(MinecraftServer.getServer().registryAccess(), MinecraftServer.getServer().overworld().enabledFeatures());
 
     @Override
     public ArgumentType<EntitySelectorArgumentResolver> entity() {
@@ -84,9 +90,7 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
 
     @Override
     public ArgumentType<PlayerSelectorArgumentResolver> player() {
-        return NativeBackedArgumentType.of(EntityArgument.player(), selector -> source -> List.of(
-                selector.findSinglePlayer(stack(source)).getBukkitEntity()
-        ));
+        return NativeBackedArgumentType.of(EntityArgument.player(), selector -> source -> List.of(selector.findSinglePlayer(stack(source)).getBukkitEntity()));
     }
 
     @Override
@@ -99,7 +103,10 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
         return NativeBackedArgumentType.of(
                 GameProfileArgument.gameProfile(),
                 result -> source -> Collections.unmodifiableCollection(
-                        Collections2.transform(result.getNames(stack(source)), WrappedGameProfile::new)
+                        Collections2.transform(
+                                result.getNames(stack(source)),
+                                WrappedGameProfile::new
+                        )
                 )
         );
     }
@@ -122,22 +129,10 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
 
     @Override
     public ArgumentType<BlockInWorldPredicate> blockInWorldPredicate() {
-        return NativeBackedArgumentType.of(BlockPredicateArgument.blockPredicate(), result -> {
-            Predicate<BlockInWorld> predicate = result.create(MinecraftServer.getServer().getTags());
-
-            return (block, loadChunk) -> {
-                BlockInWorld blockInWorld = new BlockInWorld(
-                        ((CraftWorld) block.getWorld()).getHandle(),
-                        new BlockPos(block.getX(), block.getY(), block.getZ()),
-                        loadChunk
-                );
-
-                if (blockInWorld.getState() == null) {
-                    return BlockInWorldPredicate.Result.UNLOADED_CHUNK;
-                }
-
-                return predicate.test(blockInWorld) ? BlockInWorldPredicate.Result.TRUE : BlockInWorldPredicate.Result.FALSE;
-            };
+        return NativeBackedArgumentType.of(BlockPredicateArgument.blockPredicate(context), result -> (block, loadChunk) -> {
+            BlockInWorld blockInWorld = new BlockInWorld(((CraftWorld) block.getWorld()).getHandle(), CraftLocation.toBlockPosition(block.getLocation()), loadChunk);
+            if (blockInWorld.getState() == null) return BlockInWorldPredicate.Result.UNLOADED_CHUNK;
+            return result.test(blockInWorld) ? BlockInWorldPredicate.Result.TRUE : BlockInWorldPredicate.Result.FALSE;
         });
     }
 
@@ -171,26 +166,45 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     }
 
     @Override
+    public ArgumentType<Set<Axis>> axes() {
+        return NativeBackedArgumentType.of(SwizzleArgument.swizzle(), result -> {
+            EnumSet<Axis> bukkitAxes = EnumSet.noneOf(Axis.class);
+
+            for (Direction.Axis nmsAxis : result) {
+                bukkitAxes.add(Axis.valueOf(nmsAxis.name()));
+            }
+
+            return bukkitAxes;
+        });
+    }
+
+    @Override
     public ArgumentType<BlockState> blockState() {
-        return NativeBackedArgumentType.of(BlockStateArgument.block(), result ->
-                CraftBlockStates.getBlockState(BlockPos.ZERO, result.getState(), null)
-        );
+        return NativeBackedArgumentType.of(BlockStateArgument.block(context), result -> {
+            BlockState snapshot = CraftBlockData.fromData(result.getState()).createBlockState();
+
+            if (result.tag != null && snapshot instanceof CraftBlockEntityState<?> blockEntitySnapshot) {
+                blockEntitySnapshot.loadData(result.tag);
+            }
+
+            return snapshot;
+        });
     }
 
     @Override
     public ArgumentType<ItemStack> itemStack() {
-        return NativeBackedArgumentType.of(ItemArgument.item(), result ->
-                CraftItemStack.asBukkitCopy(result.createItemStack(1, true))
-        );
+        return NativeBackedArgumentType.of(ItemArgument.item(context), (result) -> {
+            try {
+                return CraftItemStack.asBukkitCopy(result.createItemStack(1, true));
+            } catch (CommandSyntaxException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     @Override
     public ArgumentType<ItemStackPredicate> itemStackPredicate() {
-        return NativeBackedArgumentType.of(ItemPredicateArgument.itemPredicate(), result -> {
-            Predicate<net.minecraft.world.item.ItemStack> predicate = result.create(serverContext());
-
-            return item -> predicate.test(CraftItemStack.asNMSCopy(item));
-        });
+        return NativeBackedArgumentType.of(ItemPredicateArgument.itemPredicate(context), result -> item -> result.test(CraftItemStack.asNMSCopy(item)));
     }
 
     @Override
@@ -201,24 +215,17 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
         });
     }
 
-    @Override
-    public ArgumentType<Color> hexColor() {
-        return NativeBackedArgumentType.of(StringArgumentType.word(), ArgumentProvider::parseHex);
-    }
+    // TODO -> COMPONENT ARGUMENT
+    // TODO -> STYLE ARGUMENT
 
     @Override
     public ArgumentType<String> message() {
-        return NativeBackedArgumentType.of(MessageArgument.message(), MessageArgument.Message::getText);
+        return NativeBackedArgumentType.of(MessageArgument.message(), MessageArgument.Message::text);
     }
 
     @Override
     public ArgumentType<DisplaySlot> scoreboardDisplaySlot() {
-        return NativeBackedArgumentType.of(ScoreboardSlotArgument.displaySlot(), slot -> switch (slot) {
-            case 0 -> DisplaySlot.PLAYER_LIST;
-            case 1 -> DisplaySlot.SIDEBAR;
-            case 2 -> DisplaySlot.BELOW_NAME;
-            default -> throw UNKNOWN_SLOT.create(slot);
-        });
+        return NativeBackedArgumentType.of(ScoreboardSlotArgument.displaySlot(), CraftScoreboardTranslations::toBukkitSlot);
     }
 
     @Override
@@ -239,18 +246,19 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     @Override
     public ArgumentType<RangedNumber<Float>> floatRange() {
         return NativeBackedArgumentType.of(RangeArgument.floatRange(), bounds -> new RangedNumber<>(
-                bounds.getMin() == null ? Float.NEGATIVE_INFINITY : bounds.getMin().floatValue(),
-                bounds.getMax() == null ? Float.POSITIVE_INFINITY : bounds.getMax().floatValue()
+                bounds.min().map(Double::floatValue).orElse(Float.NEGATIVE_INFINITY),
+                bounds.max().map(Double::floatValue).orElse(Float.POSITIVE_INFINITY)
         ));
     }
 
     @Override
     public ArgumentType<World> world() {
-        return NativeBackedArgumentType.of(DimensionArgument.dimension(), id -> {
-            ServerLevel level = MinecraftServer.getServer().getLevel(ResourceKey.create(Registry.DIMENSION_REGISTRY, id));
+        return NativeBackedArgumentType.of(DimensionArgument.dimension(), worldId -> {
+            ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, worldId);
+            ServerLevel level = MinecraftServer.getServer().getLevel(key);
 
             if (level == null) {
-                throw UNKNOWN_DIMENSION.create(id);
+                throw DimensionArgument.ERROR_INVALID_VALUE.create(worldId);
             }
 
             return level.getWorld();
@@ -259,7 +267,13 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
 
     @Override
     public ArgumentType<GameMode> gameMode() {
-        return null;
+        return NativeBackedArgumentType.of(GameModeArgument.gameMode(), gameMode -> switch (gameMode.getId()) {
+            case 0 -> GameMode.SURVIVAL;
+            case 1 -> GameMode.CREATIVE;
+            case 2 -> GameMode.ADVENTURE;
+            case 3 -> GameMode.SPECTATOR;
+            default -> null;
+        });
     }
 
     @Override
@@ -269,62 +283,27 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
 
     @Override
     public ArgumentType<Integer> time(int minTicks) {
-        return NativeBackedArgumentType.of(TimeArgument.time(), ticks -> {
-            if (ticks < minTicks) {
-                throw TIME_TOO_SMALL.create(ticks, minTicks);
-            }
-
-            return ticks;
-        });
+        return NativeBackedArgumentType.of(TimeArgument.time(minTicks), type -> type);
     }
 
     @Override
     public ArgumentType<Mirror> templateMirror() {
-        return null;
+        return NativeBackedArgumentType.of(TemplateMirrorArgument.templateMirror(), mirror -> Mirror.valueOf(mirror.name()));
     }
 
     @Override
     public ArgumentType<StructureRotation> templateRotation() {
-        return null;
+        return NativeBackedArgumentType.of(TemplateRotationArgument.templateRotation(), rotation -> StructureRotation.valueOf(rotation.name()));
     }
 
-    private <N extends Number & Comparable<N>> @NotNull ArgumentType<RangedNumber<N>> range(ArgumentType<? extends MinMaxBounds<N>> nativeType, N lowest, N highest) {
-        return NativeBackedArgumentType.of(nativeType, bounds -> new RangedNumber<>(
-                bounds.getMin() == null ? lowest : bounds.getMin(),
-                bounds.getMax() == null ? highest : bounds.getMax()
-        ));
-    }
-
-    private static @NotNull Color parseHex(@NotNull String value) throws CommandSyntaxException {
-        String hex = value.startsWith("#") ? value.substring(1) : value;
-
-        if (hex.length() != 6) {
-            throw INVALID_HEX.create(value);
-        }
-
-        try {
-            return new Color(Integer.parseInt(hex, 16));
-        } catch (NumberFormatException exception) {
-            throw INVALID_HEX.create(value);
-        }
-    }
-
-    private static @NotNull CommandContext<CommandSourceStack> serverContext() {
-        return new CommandContext<>(
-                MinecraftServer.getServer().createCommandSourceStack(),
-                "",
-                new HashMap<>(),
-                null,
-                null,
-                List.of(),
-                StringRange.at(0),
-                null,
-                null,
-                false
+    @Contract(value = "_, _, _ -> new", pure = true)
+    private <N extends Number & Comparable<N>> @NotNull ArgumentType<RangedNumber<N>> range(ArgumentType<? extends MinMaxBounds<@NotNull N>> nativeType, N lowest, N highest) {
+        return NativeBackedArgumentType.of(nativeType, bounds ->
+                new RangedNumber<>(bounds.min().orElse(lowest), bounds.max().orElse(highest))
         );
     }
 
-    private static @NotNull List<Entity> entities(@NotNull EntitySelector selector, MinecraftCommandSource source) throws CommandSyntaxException {
+    private @NotNull List<Entity> entities(@NotNull EntitySelector selector, MinecraftCommandSource source) throws CommandSyntaxException {
         List<Entity> result = new ArrayList<>();
 
         for (net.minecraft.world.entity.Entity entity : selector.findEntities(stack(source))) {
@@ -334,7 +313,7 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
         return result;
     }
 
-    private static @NotNull List<Player> players(@NotNull EntitySelector selector, MinecraftCommandSource source) throws CommandSyntaxException {
+    private @NotNull List<Player> players(@NotNull EntitySelector selector, MinecraftCommandSource source) throws CommandSyntaxException {
         List<Player> result = new ArrayList<>();
 
         for (ServerPlayer player : selector.findPlayers(stack(source))) {
@@ -344,7 +323,7 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
         return result;
     }
 
-    private static CommandSourceStack stack(MinecraftCommandSource source) throws CommandSyntaxException {
+    private CommandSourceStack stack(MinecraftCommandSource source) throws CommandSyntaxException {
         if (source instanceof WrappedSourceStack wrapped) {
             return wrapped.getHandle();
         }

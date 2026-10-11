@@ -1,4 +1,4 @@
-package dev.gurwi.prism.brigadier.minecraft.V1_17;
+package dev.gurwi.prism.brigadier.minecraft.V1_18;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.tree.LiteralCommandNode;

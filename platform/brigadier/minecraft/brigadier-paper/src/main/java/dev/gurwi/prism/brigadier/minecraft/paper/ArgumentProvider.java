@@ -19,7 +19,8 @@ import dev.gurwi.prism.brigadier.minecraft.argument.resolver.PlayerProfileListRe
 import dev.gurwi.prism.brigadier.minecraft.argument.resolver.PlayerSelectorArgumentResolver;
 import dev.gurwi.prism.brigadier.minecraft.argument.resolver.RotationResolver;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
-import dev.gurwi.prism.brigadier.minecraft.wrapper.position.WrappedBlockPosition;
+import dev.gurwi.prism.brigadier.minecraft.wrapper.WrappedGameProfile;
+import dev.gurwi.prism.brigadier.minecraft.wrapper.position.*;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
@@ -65,15 +66,10 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
 
     @Override
     public ArgumentType<PlayerProfileListResolver> playerProfiles() {
-        return null;
+        return PaperBackedArgumentType.of(ArgumentTypes.playerProfiles(), paper -> source ->
+                paper.resolve(stack(source)).stream().map(profile -> new WrappedGameProfile(profile.getId(), profile.getName())).toList()
+        );
     }
-
-//    @Override
-//    public ArgumentType<PlayerProfileListResolver> playerProfiles() {
-//        return PaperBackedArgumentType.of(ArgumentTypes.playerProfiles(), paper -> source ->
-//                Collections.unmodifiableCollection(paper.resolve(stack(source)))
-//        );
-//    }
 
     @Override
     public ArgumentType<BlockPositionResolver> blockPosition() {
@@ -85,87 +81,52 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
 
     @Override
     public ArgumentType<ColumnBlockPositionResolver> columnBlockPosition() {
-        return null;
+        return PaperBackedArgumentType.of(ArgumentTypes.columnBlockPosition(), paper -> source -> {
+            var position = paper.resolve(stack(source));
+            return new WrappedColumnBlockPosition(position.blockX(), position.blockZ());
+        });
     }
 
     @Override
     public ArgumentType<BlockInWorldPredicate> blockInWorldPredicate() {
-        return null;
+        return PaperBackedArgumentType.of(ArgumentTypes.blockInWorldPredicate(), paper -> (block, loadChunk) ->
+                BlockInWorldPredicate.Result.valueOf(paper.testBlock(block, loadChunk).name())
+        );
     }
 
     @Override
     public ArgumentType<FinePositionResolver> finePosition(boolean centerIntegers) {
-        return null;
+        return PaperBackedArgumentType.of(ArgumentTypes.finePosition(centerIntegers), paper -> source -> {
+            var position = paper.resolve(stack(source));
+            return WrappedPosition.fine(position.x(), position.y(), position.z());
+        });
     }
 
     @Override
     public ArgumentType<ColumnFinePositionResolver> columnFinePosition(boolean centerIntegers) {
-        return null;
+        return PaperBackedArgumentType.of(ArgumentTypes.columnFinePosition(centerIntegers), paper -> source -> {
+            var position = paper.resolve(stack(source));
+            return new WrappedColumnFinePosition(position.x(), position.z());
+        });
     }
 
     @Override
     public ArgumentType<RotationResolver> rotation() {
-        return null;
+        return PaperBackedArgumentType.of(ArgumentTypes.rotation(), paper -> source -> {
+            var rotation = paper.resolve(stack(source));
+            return new WrappedRotation(rotation.yaw(), rotation.pitch());
+        });
     }
 
     @Override
     public ArgumentType<AngleResolver> angle() {
-        return null;
+        return PaperBackedArgumentType.of(ArgumentTypes.angle(), paper -> source -> paper.resolve(stack(source)));
     }
 
     @Override
     public ArgumentType<Set<Axis>> axes() {
-        return null;
+        return PaperBackedArgumentType.of(ArgumentTypes.axes(), axes -> axes);
     }
-
-//    @Override
-//    public ArgumentType<ColumnBlockPositionResolver> columnBlockPosition() {
-//        return PaperBackedArgumentType.of(ArgumentTypes.columnBlockPosition(), paper -> source -> {
-//            var position = paper.resolve(stack(source));
-//            return new WrappedColumnBlockPosition(position.blockX(), position.blockZ());
-//        });
-//    }
-//
-//    @Override
-//    public ArgumentType<BlockInWorldPredicate> blockInWorldPredicate() {
-//        return PaperBackedArgumentType.of(ArgumentTypes.blockInWorldPredicate(), paper -> (block, loadChunk) ->
-//                BlockInWorldPredicate.Result.valueOf(paper.testBlock(block, loadChunk).name())
-//        );
-//    }
-
-//    @Override
-//    public ArgumentType<FinePositionResolver> finePosition(boolean centerIntegers) {
-//        return PaperBackedArgumentType.of(ArgumentTypes.finePosition(centerIntegers), paper -> source -> {
-//            var position = paper.resolve(stack(source));
-//            return WrappedPosition.fine(position.x(), position.y(), position.z());
-//        });
-//    }
-
-//    @Override
-//    public ArgumentType<ColumnFinePositionResolver> columnFinePosition(boolean centerIntegers) {
-//        return PaperBackedArgumentType.of(ArgumentTypes.columnFinePosition(centerIntegers), paper -> source -> {
-//            var position = paper.resolve(stack(source));
-//            return new WrappedColumnFinePosition(position.x(), position.z());
-//        });
-//    }
-
-//    @Override
-//    public ArgumentType<RotationResolver> rotation() {
-//        return PaperBackedArgumentType.of(ArgumentTypes.rotation(), paper -> source -> {
-//            var rotation = paper.resolve(stack(source));
-//            return new WrappedRotation(rotation.yaw(), rotation.pitch());
-//        });
-//    }
-//
-//    @Override
-//    public ArgumentType<AngleResolver> angle() {
-//        return PaperBackedArgumentType.of(ArgumentTypes.angle(), paper -> source -> paper.resolve(stack(source)));
-//    }
-//
-//    @Override
-//    public ArgumentType<Set<Axis>> axes() {
-//        return PaperBackedArgumentType.of(ArgumentTypes.axes(), axes -> axes);
-//    }
 
     @Override
     public ArgumentType<BlockState> blockState() {
@@ -189,13 +150,8 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
 
     @Override
     public ArgumentType<Color> hexColor() {
-        return null;
+        return PaperBackedArgumentType.of(ArgumentTypes.hexColor(), color -> new Color(color.value()));
     }
-
-//    @Override
-//    public ArgumentType<Color> hexColor() {
-//        return PaperBackedArgumentType.of(ArgumentTypes.hexColor(), color -> new Color(color.value()));
-//    }
 
     @Override
     public ArgumentType<String> message() {
@@ -264,9 +220,9 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
         return ArgumentTypes.templateRotation();
     }
 
-    private <N extends Number & Comparable<N>> @NotNull ArgumentType<RangedNumber<N>> range(ArgumentType<? extends RangeProvider<N>> nativeType, N lowest, N highest) {
+    private <N extends Number & Comparable<N>> @NotNull ArgumentType<RangedNumber<N>> range(ArgumentType<? extends RangeProvider<@NotNull N>> nativeType, N lowest, N highest) {
         return PaperBackedArgumentType.of(nativeType, provider -> {
-            Range<N> range = provider.range();
+            Range<@NotNull N> range = provider.range();
 
             return new RangedNumber<>(
                     range.hasLowerBound() ? range.lowerEndpoint() : lowest,

@@ -2,7 +2,7 @@ package dev.gurwi.prism.spigot;
 
 import dev.gurwi.prism.brigadier.minecraft.BrigadierCommandRegistrar;
 import dev.gurwi.prism.brigadier.minecraft.BrigadierCompatibilityChecker;
-import dev.gurwi.prism.brigadier.minecraft.provider.MinecraftCommandDispatcherProvider;
+import dev.gurwi.prism.brigadier.minecraft.provider.MinecraftProviderLoader;
 import dev.gurwi.prism.bukkit.BukkitCommandsRegistry;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.registrar.BukkitCommandRegistrar;
@@ -55,7 +55,7 @@ public class SpigotCommandsRegistry implements BukkitCommandsRegistry<SpigotPlat
             AtomicReference<BukkitCommandRegistrar> registrar = new AtomicReference<>(new LegacyCommandRegistrar(platform.getPlugin()));
 
             if (!platform.getConfiguration().isBrigadierDisabled() && BrigadierCompatibilityChecker.isSupported()) {
-                MinecraftCommandDispatcherProvider.get(platform.getPlugin()).ifPresentOrElse(
+                MinecraftProviderLoader.dispatcherProvider(platform.getPlugin()).ifPresentOrElse(
                         provider -> registrar.set(new BrigadierCommandRegistrar(provider.getDispatcher())),
                         () -> platform.getPlugin().getLogger().warning(
                                 "Failed to initialize Brigadier. The Minecraft version may be unsupported. Falling back to legacy registration. If the issue persists on a supported version, report it on our Discord."

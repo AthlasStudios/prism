@@ -3,17 +3,7 @@ package dev.gurwi.prism.brigadier.minecraft.wrapper.position;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-public final class WrappedFinePosition implements WrappedPosition {
-
-    private final double x;
-    private final double y;
-    private final double z;
-
-    public WrappedFinePosition(double x, double y, double z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
+public record WrappedFinePosition(double x, double y, double z) implements WrappedPosition {
 
     @Override
     public int blockX() {
@@ -28,21 +18,6 @@ public final class WrappedFinePosition implements WrappedPosition {
     @Override
     public int blockZ() {
         return (int) Math.floor(z);
-    }
-
-    @Override
-    public double x() {
-        return x;
-    }
-
-    @Override
-    public double y() {
-        return y;
-    }
-
-    @Override
-    public double z() {
-        return z;
     }
 
     @Override

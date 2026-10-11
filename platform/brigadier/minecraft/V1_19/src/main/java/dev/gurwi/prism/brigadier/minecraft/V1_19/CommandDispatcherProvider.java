@@ -1,4 +1,4 @@
-package dev.gurwi.prism.brigadier.minecraft.V1_17;
+package dev.gurwi.prism.brigadier.minecraft.V1_19;
 
 import dev.gurwi.prism.brigadier.minecraft.provider.MinecraftCommandDispatcherProvider;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.dispatcher.MinecraftCommandDispatcher;

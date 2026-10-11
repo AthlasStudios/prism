@@ -1,8 +1,7 @@
-package dev.gurwi.prism.brigadier.minecraft.V1_17;
+package dev.gurwi.prism.brigadier.minecraft.V1_18;
 
 import com.google.common.collect.Collections2;
 import com.mojang.brigadier.arguments.ArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -17,58 +16,64 @@ import dev.gurwi.prism.brigadier.minecraft.wrapper.position.*;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
 import net.minecraft.advancements.critereon.MinMaxBounds;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.arguments.AngleArgument;
-import net.minecraft.commands.arguments.ColorArgument;
-import net.minecraft.commands.arguments.DimensionArgument;
-import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.commands.arguments.GameProfileArgument;
-import net.minecraft.commands.arguments.MessageArgument;
-import net.minecraft.commands.arguments.RangeArgument;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
-import net.minecraft.commands.arguments.ScoreboardSlotArgument;
-import net.minecraft.commands.arguments.TimeArgument;
-import net.minecraft.commands.arguments.UuidArgument;
+import net.minecraft.commands.arguments.*;
 import net.minecraft.commands.arguments.blocks.BlockPredicateArgument;
 import net.minecraft.commands.arguments.blocks.BlockStateArgument;
-import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
-import net.minecraft.commands.arguments.coordinates.ColumnPosArgument;
-import net.minecraft.commands.arguments.coordinates.RotationArgument;
-import net.minecraft.commands.arguments.coordinates.Vec2Argument;
-import net.minecraft.commands.arguments.coordinates.Vec3Argument;
+import net.minecraft.commands.arguments.coordinates.*;
 import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.commands.arguments.item.ItemPredicateArgument;
 import net.minecraft.commands.arguments.selector.EntitySelector;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.state.pattern.BlockInWorld;
+import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
-import org.bukkit.Axis;
-import org.bukkit.GameMode;
-import org.bukkit.NamespacedKey;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.BlockState;
-import org.bukkit.block.structure.Mirror;
-import org.bukkit.block.structure.StructureRotation;
-import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_17_R1.block.CraftBlockStates;
-import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_17_R1.util.CraftNamespacedKey;
+import org.bukkit.craftbukkit.v1_18_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_18_R2.block.CraftBlockStates;
+import org.bukkit.craftbukkit.v1_18_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_18_R2.util.CraftNamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.DisplaySlot;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.Color;
 import java.util.*;
+import java.util.List;
 import java.util.function.Predicate;
 
+/**
+ * Mojang-mapped provider for Minecraft 1.18.2 (CraftBukkit v1_18_R2).
+ * For 1.18.0 / 1.18.1 the CraftBukkit package is v1_18_R1; the rest is expected to match.
+ * <p>
+ * Removed because the argument types do not exist in 1.18 (interface defaults throw):
+ * hexColor (1.21.6+), templateMirror and templateRotation (added with /place in 1.19).
+ * <p>
+ * Differences from the 1.19 provider:
+ * <ul>
+ *     <li>No {@code CommandBuildContext}: block/item arguments are created without a context.</li>
+ *     <li>Block and item predicates are resolved lazily ({@code create(...)}) instead of being plain predicates.</li>
+ *     <li>{@code Registry.DIMENSION_REGISTRY} instead of {@code Registries.DIMENSION}.</li>
+ *     <li>{@code MessageArgument.Message#getText()} instead of {@code text()}.</li>
+ * </ul>
+ */
 public class ArgumentProvider implements MinecraftArgumentProvider {
+
+    private static final Map<String, DisplaySlot> DISPLAY_SLOTS = Map.ofEntries(
+            Map.entry("belowName", DisplaySlot.BELOW_NAME),
+            Map.entry("list", DisplaySlot.PLAYER_LIST),
+            Map.entry("sidebar", DisplaySlot.SIDEBAR)
+    );
 
     @Override
     public ArgumentType<EntitySelectorArgumentResolver> entity() {
@@ -84,9 +89,7 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
 
     @Override
     public ArgumentType<PlayerSelectorArgumentResolver> player() {
-        return NativeBackedArgumentType.of(EntityArgument.player(), selector -> source -> List.of(
-                selector.findSinglePlayer(stack(source)).getBukkitEntity()
-        ));
+        return NativeBackedArgumentType.of(EntityArgument.player(), selector -> source -> List.of(selector.findSinglePlayer(stack(source)).getBukkitEntity()));
     }
 
     @Override
@@ -99,7 +102,10 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
         return NativeBackedArgumentType.of(
                 GameProfileArgument.gameProfile(),
                 result -> source -> Collections.unmodifiableCollection(
-                        Collections2.transform(result.getNames(stack(source)), WrappedGameProfile::new)
+                        Collections2.transform(
+                                result.getNames(stack(source)),
+                                WrappedGameProfile::new
+                        )
                 )
         );
     }
@@ -123,7 +129,9 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     @Override
     public ArgumentType<BlockInWorldPredicate> blockInWorldPredicate() {
         return NativeBackedArgumentType.of(BlockPredicateArgument.blockPredicate(), result -> {
-            Predicate<BlockInWorld> predicate = result.create(MinecraftServer.getServer().getTags());
+            Predicate<BlockInWorld> predicate = result.create(
+                    MinecraftServer.getServer().registryAccess().registryOrThrow(Registry.BLOCK_REGISTRY)
+            );
 
             return (block, loadChunk) -> {
                 BlockInWorld blockInWorld = new BlockInWorld(
@@ -132,10 +140,7 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
                         loadChunk
                 );
 
-                if (blockInWorld.getState() == null) {
-                    return BlockInWorldPredicate.Result.UNLOADED_CHUNK;
-                }
-
+                if (blockInWorld.getState() == null) return BlockInWorldPredicate.Result.UNLOADED_CHUNK;
                 return predicate.test(blockInWorld) ? BlockInWorldPredicate.Result.TRUE : BlockInWorldPredicate.Result.FALSE;
             };
         });
@@ -171,7 +176,21 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     }
 
     @Override
+    public ArgumentType<Set<Axis>> axes() {
+        return NativeBackedArgumentType.of(SwizzleArgument.swizzle(), result -> {
+            EnumSet<Axis> bukkitAxes = EnumSet.noneOf(Axis.class);
+
+            for (Direction.Axis nmsAxis : result) {
+                bukkitAxes.add(Axis.valueOf(nmsAxis.name()));
+            }
+
+            return bukkitAxes;
+        });
+    }
+
+    @Override
     public ArgumentType<BlockState> blockState() {
+        // BlockInput#tag is private, so block-entity NBT (e.g. chest{...}) is not applied.
         return NativeBackedArgumentType.of(BlockStateArgument.block(), result ->
                 CraftBlockStates.getBlockState(BlockPos.ZERO, result.getState(), null)
         );
@@ -179,9 +198,13 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
 
     @Override
     public ArgumentType<ItemStack> itemStack() {
-        return NativeBackedArgumentType.of(ItemArgument.item(), result ->
-                CraftItemStack.asBukkitCopy(result.createItemStack(1, true))
-        );
+        return NativeBackedArgumentType.of(ItemArgument.item(), result -> {
+            try {
+                return CraftItemStack.asBukkitCopy(result.createItemStack(1, true));
+            } catch (CommandSyntaxException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     @Override
@@ -202,22 +225,20 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     }
 
     @Override
-    public ArgumentType<Color> hexColor() {
-        return NativeBackedArgumentType.of(StringArgumentType.word(), ArgumentProvider::parseHex);
-    }
-
-    @Override
     public ArgumentType<String> message() {
         return NativeBackedArgumentType.of(MessageArgument.message(), MessageArgument.Message::getText);
     }
 
     @Override
     public ArgumentType<DisplaySlot> scoreboardDisplaySlot() {
-        return NativeBackedArgumentType.of(ScoreboardSlotArgument.displaySlot(), slot -> switch (slot) {
-            case 0 -> DisplaySlot.PLAYER_LIST;
-            case 1 -> DisplaySlot.SIDEBAR;
-            case 2 -> DisplaySlot.BELOW_NAME;
-            default -> throw UNKNOWN_SLOT.create(slot);
+        return NativeBackedArgumentType.of(ScoreboardSlotArgument.displaySlot(), slot -> {
+            DisplaySlot bukkit = DISPLAY_SLOTS.get(Scoreboard.getDisplaySlotName(slot));
+
+            if (bukkit == null) {
+                throw UNKNOWN_SLOT.create(slot);
+            }
+
+            return bukkit;
         });
     }
 
@@ -246,20 +267,15 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
 
     @Override
     public ArgumentType<World> world() {
-        return NativeBackedArgumentType.of(DimensionArgument.dimension(), id -> {
-            ServerLevel level = MinecraftServer.getServer().getLevel(ResourceKey.create(Registry.DIMENSION_REGISTRY, id));
+        return NativeBackedArgumentType.of(DimensionArgument.dimension(), worldId -> {
+            ServerLevel level = MinecraftServer.getServer().getLevel(ResourceKey.create(Registry.DIMENSION_REGISTRY, worldId));
 
             if (level == null) {
-                throw UNKNOWN_DIMENSION.create(id);
+                throw UNKNOWN_DIMENSION.create(worldId);
             }
 
             return level.getWorld();
         });
-    }
-
-    @Override
-    public ArgumentType<GameMode> gameMode() {
-        return null;
     }
 
     @Override
@@ -278,35 +294,12 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
         });
     }
 
-    @Override
-    public ArgumentType<Mirror> templateMirror() {
-        return null;
-    }
-
-    @Override
-    public ArgumentType<StructureRotation> templateRotation() {
-        return null;
-    }
-
+    @Contract(value = "_, _, _ -> new", pure = true)
     private <N extends Number & Comparable<N>> @NotNull ArgumentType<RangedNumber<N>> range(ArgumentType<? extends MinMaxBounds<N>> nativeType, N lowest, N highest) {
         return NativeBackedArgumentType.of(nativeType, bounds -> new RangedNumber<>(
                 bounds.getMin() == null ? lowest : bounds.getMin(),
                 bounds.getMax() == null ? highest : bounds.getMax()
         ));
-    }
-
-    private static @NotNull Color parseHex(@NotNull String value) throws CommandSyntaxException {
-        String hex = value.startsWith("#") ? value.substring(1) : value;
-
-        if (hex.length() != 6) {
-            throw INVALID_HEX.create(value);
-        }
-
-        try {
-            return new Color(Integer.parseInt(hex, 16));
-        } catch (NumberFormatException exception) {
-            throw INVALID_HEX.create(value);
-        }
     }
 
     private static @NotNull CommandContext<CommandSourceStack> serverContext() {
@@ -324,7 +317,7 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
         );
     }
 
-    private static @NotNull List<Entity> entities(@NotNull EntitySelector selector, MinecraftCommandSource source) throws CommandSyntaxException {
+    private @NotNull List<Entity> entities(@NotNull EntitySelector selector, MinecraftCommandSource source) throws CommandSyntaxException {
         List<Entity> result = new ArrayList<>();
 
         for (net.minecraft.world.entity.Entity entity : selector.findEntities(stack(source))) {
@@ -334,7 +327,7 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
         return result;
     }
 
-    private static @NotNull List<Player> players(@NotNull EntitySelector selector, MinecraftCommandSource source) throws CommandSyntaxException {
+    private @NotNull List<Player> players(@NotNull EntitySelector selector, MinecraftCommandSource source) throws CommandSyntaxException {
         List<Player> result = new ArrayList<>();
 
         for (ServerPlayer player : selector.findPlayers(stack(source))) {
@@ -344,7 +337,7 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
         return result;
     }
 
-    private static CommandSourceStack stack(MinecraftCommandSource source) throws CommandSyntaxException {
+    private CommandSourceStack stack(MinecraftCommandSource source) throws CommandSyntaxException {
         if (source instanceof WrappedSourceStack wrapped) {
             return wrapped.getHandle();
         }
