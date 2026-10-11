@@ -11,7 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.command.VanillaCommandWrapper;
 import org.bukkit.entity.Entity;
 import org.jetbrains.annotations.Contract;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -57,16 +57,16 @@ final class BrigadierBukkitCommand extends VanillaCommandWrapper {
     }
 
     @Override
-    public List<String> tabComplete(CommandSender sender, String alias, String[] args, Location location) {
+    public @NotNull List<String> tabComplete(CommandSender sender, String alias, String[] args, Location location) {
         return tabComplete(sender, alias, args);
     }
 
-    private String input(String[] args) {
+    private String input(String @NotNull [] args) {
         return args.length == 0 ? root : root + " " + String.join(" ", args);
     }
 
     @Contract(value = "_ -> new", pure = true)
-    private @NonNull MinecraftCommandSource source(CommandSender sender) {
+    private @NotNull MinecraftCommandSource source(CommandSender sender) {
         return MinecraftCommandSource.create(() -> sender, () -> sender instanceof Entity ? (Entity) sender : null);
     }
 

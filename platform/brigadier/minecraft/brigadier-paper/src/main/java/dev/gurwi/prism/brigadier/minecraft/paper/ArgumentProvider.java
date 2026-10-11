@@ -6,7 +6,7 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import dev.gurwi.prism.brigadier.minecraft.argument.MinecraftArgumentProvider;
+import dev.gurwi.prism.brigadier.minecraft.provider.MinecraftArgumentProvider;
 import dev.gurwi.prism.brigadier.minecraft.argument.predicate.BlockInWorldPredicate;
 import dev.gurwi.prism.brigadier.minecraft.argument.predicate.ItemStackPredicate;
 import dev.gurwi.prism.brigadier.minecraft.argument.resolver.AngleResolver;
@@ -20,10 +20,6 @@ import dev.gurwi.prism.brigadier.minecraft.argument.resolver.PlayerSelectorArgum
 import dev.gurwi.prism.brigadier.minecraft.argument.resolver.RotationResolver;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.position.WrappedBlockPosition;
-import dev.gurwi.prism.brigadier.minecraft.wrapper.position.WrappedColumnBlockPosition;
-import dev.gurwi.prism.brigadier.minecraft.wrapper.position.WrappedColumnFinePosition;
-import dev.gurwi.prism.brigadier.minecraft.wrapper.position.WrappedPosition;
-import dev.gurwi.prism.brigadier.minecraft.wrapper.position.WrappedRotation;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
@@ -40,7 +36,6 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.Color;
-import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 

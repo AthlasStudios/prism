@@ -2,6 +2,7 @@ package dev.gurwi.prism.brigadier.minecraft.wrapper.dispatcher;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.LiteralMessage;
+import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
@@ -13,8 +14,10 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import dev.gurwi.prism.brigadier.minecraft.argument.NativeBackedArgumentType;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,20 +43,21 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
     public abstract void register(@NotNull LiteralCommandNode<MinecraftCommandSource> node, String description, @NotNull List<String> aliases);
 
     public @NotNull LiteralCommandNode<SourceStack> mirror(@NotNull LiteralCommandNode<MinecraftCommandSource> node, @NotNull String label) {
-        return (LiteralCommandNode<SourceStack>) mapNode(node, label);
+        return (LiteralCommandNode<SourceStack>) mapNode(node, label, Map.of());
     }
 
-    private CommandNode<SourceStack> mapNode(@NotNull CommandNode<MinecraftCommandSource> node, @Nullable String label) {
+    private CommandNode<SourceStack> mapNode(@NotNull CommandNode<MinecraftCommandSource> node, @Nullable String label, @NotNull Map<String, NativeBackedArgumentType<?, ?>> converters) {
         if (node.getRedirect() != null) {
             throw new UnsupportedOperationException("Redirects are not supported by the Minecraft mirror: " + node.getName());
         }
 
+        Map<String, NativeBackedArgumentType<?, ?>> scope = scopeFor(node, converters);
         ArgumentBuilder<SourceStack, ?> builder;
 
         if (node instanceof LiteralCommandNode<MinecraftCommandSource> literalNode) {
             builder = LiteralArgumentBuilder.literal(label == null ? literalNode.getLiteral() : label);
         } else if (node instanceof ArgumentCommandNode<MinecraftCommandSource, ?> argumentNode) {
-            builder = mapArgument(argumentNode);
+            builder = mapArgument(argumentNode, scope);
         } else {
             throw new IllegalArgumentException("Unsupported node type: " + node.getClass());
         }
@@ -70,7 +74,7 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
         if (node.getCommand() != null) {
             builder.executes(context -> {
                 try {
-                    return node.getCommand().run(mapContext(context));
+                    return node.getCommand().run(mapContext(context, scope));
                 } catch (CommandSyntaxException exception) {
                     throw exception;
                 } catch (Throwable throwable) {
@@ -81,19 +85,31 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
         }
 
         for (CommandNode<MinecraftCommandSource> child : node.getChildren()) {
-            builder.then(mapNode(child, null));
+            builder.then(mapNode(child, null, scope));
         }
 
         return builder.build();
     }
 
-    private <T> @NotNull RequiredArgumentBuilder<SourceStack, T> mapArgument(@NotNull ArgumentCommandNode<MinecraftCommandSource, T> node) {
-        RequiredArgumentBuilder<SourceStack, T> builder = RequiredArgumentBuilder.argument(node.getName(), node.getType());
+    private Map<String, NativeBackedArgumentType<?, ?>> scopeFor(@NotNull CommandNode<MinecraftCommandSource> node, @NotNull Map<String, NativeBackedArgumentType<?, ?>> converters) {
+        if (node instanceof ArgumentCommandNode<MinecraftCommandSource, ?> argumentNode && argumentNode.getType() instanceof NativeBackedArgumentType<?, ?> backed) {
+            Map<String, NativeBackedArgumentType<?, ?>> scope = new HashMap<>(converters);
+            scope.put(argumentNode.getName(), backed);
+
+            return scope;
+        }
+
+        return converters;
+    }
+
+    private @NotNull RequiredArgumentBuilder<SourceStack, ?> mapArgument(@NotNull ArgumentCommandNode<MinecraftCommandSource, ?> node, @NotNull Map<String, NativeBackedArgumentType<?, ?>> scope) {
+        ArgumentType<?> type = node.getType() instanceof NativeBackedArgumentType<?, ?> backed ? backed.nativeType() : node.getType();
+        RequiredArgumentBuilder<SourceStack, ?> builder = argument(node.getName(), type);
 
         if (node.getCustomSuggestions() != null) {
             builder.suggests((context, suggestions) -> {
                 try {
-                    return node.getCustomSuggestions().getSuggestions(mapContext(context), suggestions);
+                    return node.getCustomSuggestions().getSuggestions(mapContext(context, scope), suggestions);
                 } catch (Throwable throwable) {
                     report("suggestions " + node.getName(), throwable);
                     return suggestions.buildFuture();
@@ -104,17 +120,24 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
         return builder;
     }
 
-    private @NotNull CommandContext<MinecraftCommandSource> mapContext(@NotNull CommandContext<SourceStack> context) {
+    @Contract(value = "_, _ -> new", pure = true)
+    private <T> @NotNull RequiredArgumentBuilder<SourceStack, T> argument(String name, ArgumentType<T> type) {
+        return RequiredArgumentBuilder.argument(name, type);
+    }
+
+    private @NotNull CommandContext<MinecraftCommandSource> mapContext(@NotNull CommandContext<SourceStack> context, @NotNull Map<String, NativeBackedArgumentType<?, ?>> converters) throws CommandSyntaxException {
         Map<String, ParsedArgument<MinecraftCommandSource, ?>> arguments = new HashMap<>();
 
         for (ParsedCommandNode<SourceStack> parsed : context.getNodes()) {
             if (parsed.getNode() instanceof ArgumentCommandNode<SourceStack, ?> argumentNode) {
                 String name = argumentNode.getName();
+                Object value = context.getArgument(name, Object.class);
+                NativeBackedArgumentType<?, ?> backed = converters.get(name);
 
                 arguments.put(name, new ParsedArgument<>(
                         parsed.getRange().getStart(),
                         parsed.getRange().getEnd(),
-                        context.getArgument(name, Object.class)
+                        backed == null ? value : backed.convertNative(value)
                 ));
             }
         }
@@ -129,7 +152,7 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
                 getRoot(),
                 List.of(),
                 context.getRange(),
-                child == null ? null : mapContext(child),
+                child == null ? null : mapContext(child, converters),
                 null,
                 context.isForked()
         );

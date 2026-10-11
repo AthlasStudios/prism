@@ -12,6 +12,8 @@ import dev.gurwi.prism.brigadier.minecraft.argument.resolver.FinePositionResolve
 import dev.gurwi.prism.brigadier.minecraft.argument.resolver.PlayerProfileListResolver;
 import dev.gurwi.prism.brigadier.minecraft.argument.resolver.PlayerSelectorArgumentResolver;
 import dev.gurwi.prism.brigadier.minecraft.argument.resolver.RotationResolver;
+import dev.gurwi.prism.brigadier.minecraft.provider.MinecraftArgumentProvider;
+import dev.gurwi.prism.brigadier.minecraft.provider.MinecraftProviderLoader;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
 import org.bukkit.Axis;
 import org.bukkit.GameMode;
@@ -21,6 +23,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.structure.Mirror;
 import org.bukkit.block.structure.StructureRotation;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.DisplaySlot;
 
 import java.awt.Color;
@@ -34,7 +37,7 @@ public final class MinecraftArgumentType {
 
     private static final class Holder {
 
-        private static final MinecraftArgumentProvider INSTANCE = MinecraftArgumentProvider.get()
+        private static final MinecraftArgumentProvider INSTANCE = MinecraftProviderLoader.argumentProvider(JavaPlugin.getProvidingPlugin(MinecraftArgumentType.class))
                 .orElseThrow(() -> new IllegalStateException("No MinecraftArgumentProvider is available for this server version"));
 
     }

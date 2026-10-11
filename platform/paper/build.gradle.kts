@@ -6,11 +6,5 @@ dependencies {
     api(project(":platform:bukkit"))
     implementation(project(":platform:brigadier:minecraft:brigadier-paper"))
 
-    compileOnly("io.papermc.paper:paper-api:26.3.build.+")
-}
-
-java {
-    toolchain.languageVersion.set(
-        JavaLanguageVersion.of(25)
-    )
+    compileOnly("com.destroystokyo.paper:paper-api:1.13.2-R0.1-SNAPSHOT")
 }

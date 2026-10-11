@@ -9,7 +9,7 @@ pluginManagement {
 }
 
 plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
 rootProject.name = "prism"
@@ -21,8 +21,12 @@ include(":platform:bukkit")
 include(":platform:spigot")
 include(":platform:paper")
 include(":platform:brigadier")
-include("platform:jda")
+include(":platform:jda")
 
 include(":platform:brigadier:minecraft")
+include(":platform:brigadier:minecraft:V1_17")
+include(":platform:brigadier:minecraft:V1_18")
+include(":platform:brigadier:minecraft:V1_19")
+include(":platform:brigadier:minecraft:V1_20")
 include(":platform:brigadier:minecraft:V1_21")
 include(":platform:brigadier:minecraft:brigadier-paper")

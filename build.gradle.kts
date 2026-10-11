@@ -31,6 +31,10 @@ allprojects {
         maven("https://repo.papermc.io/repository/maven-snapshots/")
         maven("https://libraries.minecraft.net")
     }
+
+    configurations.configureEach {
+        exclude(group = "org.jspecify", module = "jspecify")
+    }
 }
 
 subprojects {

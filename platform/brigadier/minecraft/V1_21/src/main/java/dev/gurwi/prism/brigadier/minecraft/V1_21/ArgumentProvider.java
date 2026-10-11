@@ -3,11 +3,9 @@ package dev.gurwi.prism.brigadier.minecraft.V1_21;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ForwardingSet;
 import com.mojang.authlib.GameProfile;
-import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import dev.gurwi.prism.brigadier.minecraft.argument.MinecraftArgumentProvider;
+import dev.gurwi.prism.brigadier.minecraft.provider.MinecraftArgumentProvider;
 import dev.gurwi.prism.brigadier.minecraft.argument.NativeBackedArgumentType;
 import dev.gurwi.prism.brigadier.minecraft.argument.predicate.BlockInWorldPredicate;
 import dev.gurwi.prism.brigadier.minecraft.argument.predicate.ItemStackPredicate;
@@ -56,7 +54,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.jetbrains.annotations.Contract;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.Color;
 import java.util.*;
@@ -64,7 +62,6 @@ import java.util.List;
 
 public class ArgumentProvider implements MinecraftArgumentProvider {
 
-    private static final SimpleCommandExceptionType UNSUPPORTED_SOURCE = new SimpleCommandExceptionType(new LiteralMessage("This argument cannot be resolved for this sender"));
     private final CommandBuildContext context = CommandBuildContext.simple(MinecraftServer.getServer().registryAccess(), MinecraftServer.getServer().overworld().enabledFeatures());
 
     @Override
@@ -319,13 +316,13 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     }
 
     @Contract(value = "_, _, _ -> new", pure = true)
-    private <N extends Number & Comparable<N>> @NonNull ArgumentType<RangedNumber<N>> range(ArgumentType<? extends MinMaxBounds<@NonNull N>> nativeType, N lowest, N highest) {
+    private <N extends Number & Comparable<N>> @NotNull ArgumentType<RangedNumber<N>> range(ArgumentType<? extends MinMaxBounds<@NotNull N>> nativeType, N lowest, N highest) {
         return NativeBackedArgumentType.of(nativeType, bounds ->
                 new RangedNumber<>(bounds.min().orElse(lowest), bounds.max().orElse(highest))
         );
     }
 
-    private @NonNull List<Entity> entities(@NonNull EntitySelector selector, MinecraftCommandSource source) throws CommandSyntaxException {
+    private @NotNull List<Entity> entities(@NotNull EntitySelector selector, MinecraftCommandSource source) throws CommandSyntaxException {
         List<Entity> result = new ArrayList<>();
 
         for (net.minecraft.world.entity.Entity entity : selector.findEntities(stack(source))) {
@@ -335,7 +332,7 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
         return result;
     }
 
-    private @NonNull List<Player> players(@NonNull EntitySelector selector, MinecraftCommandSource source) throws CommandSyntaxException {
+    private @NotNull List<Player> players(@NotNull EntitySelector selector, MinecraftCommandSource source) throws CommandSyntaxException {
         List<Player> result = new ArrayList<>();
 
         for (ServerPlayer player : selector.findPlayers(stack(source))) {
