@@ -39,6 +39,7 @@ import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.structure.Mirror;
 import org.bukkit.block.structure.StructureRotation;
+import org.bukkit.craftbukkit.CraftParticle;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.block.CraftBlockEntityState;
 import org.bukkit.craftbukkit.block.data.CraftBlockData;
@@ -53,23 +54,9 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.Color;
 import java.util.*;
 import java.util.List;
 
-/**
- * Mojang-mapped provider for Paper 1.20.5 / 1.20.6.
- * <p>
- * Differences from the 1.21.x provider:
- * <ul>
- *     <li>{@code MinMaxBounds} lives in {@code advancements.critereon} (with the typo).</li>
- *     <li>{@code IdentifierArgument} is still {@code ResourceLocationArgument}.</li>
- *     <li>{@code Vec3} has public fields ({@code x}, {@code y}, {@code z}), no accessors.</li>
- *     <li>{@code GameProfileArgument.Result#getNames} returns plain {@code GameProfile}s.</li>
- *     <li>{@code HexColorArgument} does not exist (added in 1.21.6), so {@code hexColor()} is removed.</li>
- *     <li>No Paper {@code AxisSet}; a plain {@code EnumSet} is returned.</li>
- * </ul>
- */
 public class ArgumentProvider implements MinecraftArgumentProvider {
 
     private static final SimpleCommandExceptionType UNSUPPORTED_SOURCE = new SimpleCommandExceptionType(new LiteralMessage("This argument cannot be resolved for this sender"));
@@ -211,7 +198,7 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     public ArgumentType<Color> color() {
         return NativeBackedArgumentType.of(ColorArgument.color(), result -> {
             Integer rgb = result.getColor();
-            return rgb == null ? Color.WHITE : new Color(rgb);
+            return rgb == null ? Color.WHITE : Color.fromRGB(rgb);
         });
     }
 
@@ -274,6 +261,11 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
             case 3 -> GameMode.SPECTATOR;
             default -> null;
         });
+    }
+
+    @Override
+    public ArgumentType<Particle> particle() {
+        return NativeBackedArgumentType.of(ParticleArgument.particle(context), particle -> CraftParticle.minecraftToBukkit(particle.getType()));
     }
 
     @Override

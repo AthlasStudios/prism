@@ -36,6 +36,7 @@ import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.*;
 import org.bukkit.block.BlockState;
+import org.bukkit.craftbukkit.v1_18_R2.CraftParticle;
 import org.bukkit.craftbukkit.v1_18_R2.CraftWorld;
 import org.bukkit.craftbukkit.v1_18_R2.block.CraftBlockStates;
 import org.bukkit.craftbukkit.v1_18_R2.inventory.CraftItemStack;
@@ -47,26 +48,10 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.Color;
 import java.util.*;
 import java.util.List;
 import java.util.function.Predicate;
 
-/**
- * Mojang-mapped provider for Minecraft 1.18.2 (CraftBukkit v1_18_R2).
- * For 1.18.0 / 1.18.1 the CraftBukkit package is v1_18_R1; the rest is expected to match.
- * <p>
- * Removed because the argument types do not exist in 1.18 (interface defaults throw):
- * hexColor (1.21.6+), templateMirror and templateRotation (added with /place in 1.19).
- * <p>
- * Differences from the 1.19 provider:
- * <ul>
- *     <li>No {@code CommandBuildContext}: block/item arguments are created without a context.</li>
- *     <li>Block and item predicates are resolved lazily ({@code create(...)}) instead of being plain predicates.</li>
- *     <li>{@code Registry.DIMENSION_REGISTRY} instead of {@code Registries.DIMENSION}.</li>
- *     <li>{@code MessageArgument.Message#getText()} instead of {@code text()}.</li>
- * </ul>
- */
 public class ArgumentProvider implements MinecraftArgumentProvider {
 
     private static final Map<String, DisplaySlot> DISPLAY_SLOTS = Map.ofEntries(
@@ -190,7 +175,6 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
 
     @Override
     public ArgumentType<BlockState> blockState() {
-        // BlockInput#tag is private, so block-entity NBT (e.g. chest{...}) is not applied.
         return NativeBackedArgumentType.of(BlockStateArgument.block(), result ->
                 CraftBlockStates.getBlockState(BlockPos.ZERO, result.getState(), null)
         );
@@ -220,7 +204,7 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     public ArgumentType<Color> color() {
         return NativeBackedArgumentType.of(ColorArgument.color(), result -> {
             Integer rgb = result.getColor();
-            return rgb == null ? Color.WHITE : new Color(rgb);
+            return rgb == null ? Color.WHITE : Color.fromRGB(rgb);
         });
     }
 
@@ -276,6 +260,11 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
 
             return level.getWorld();
         });
+    }
+
+    @Override
+    public ArgumentType<Particle> particle() {
+        return NativeBackedArgumentType.of(ParticleArgument.particle(), particle -> CraftParticle.toBukkit(particle.getType()));
     }
 
     @Override

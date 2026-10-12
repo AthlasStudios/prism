@@ -5,13 +5,10 @@ import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.command.PrismBukkitCommand;
 import dev.gurwi.prism.paper.PaperPlatform;
-import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
+import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Collections;
 import java.util.List;
 
 public class TestPlugin extends JavaPlugin {
@@ -36,9 +33,10 @@ public class TestPlugin extends JavaPlugin {
         PaperPlatform platform = PaperPlatform.configure(this)
                 .init();
 
-        BukkitCommandDefinition build = new PrismBukkitCommand("testa", Collections.emptyList(), "Test command")
+        BukkitCommandDefinition build = new PrismBukkitCommand("testa", "pr")
+                .withDescription("Prism command tester")
                 .withArguments(
-                        new StringArgument("color")
+                        new ColorArgument("color")
                 )
                 .executes((sender, args) -> {
                     sender.sendMessage("This works");
@@ -97,11 +95,39 @@ public class TestPlugin extends JavaPlugin {
                                 .executes((sender, args) -> {
                                     RangedNumber<Integer> range = args.get("range");
                                     sender.sendMessage("Selected range " + range.getLowerBound() + " " + range.getUpperBound());
+                                }),
+
+                        new PrismBukkitCommand("hex")
+                                .withArguments(new HexColorArgument("hex"))
+                                .executes((sender, args) -> {
+                                    Color color = args.get("hex");
+
+                                    // Create a component with the RGB color
+                                    net.kyori.adventure.text.Component message = net.kyori.adventure.text.Component.text("This message is custom colored!")
+                                            .color(net.kyori.adventure.text.format.TextColor.color(color.asRGB()));
+
+                                    sender.sendMessage(message);
+                                }),
+
+                        new PrismBukkitCommand("material")
+                                .withArguments(new MaterialArgument("material"))
+                                .executes((sender, args) -> {
+                                    Material material = args.get("material");
+                                    sender.sendMessage("Selected material " + material);
+                                }),
+
+                        new PrismBukkitCommand("particle")
+                                .withArguments(new ParticleArgument("particle"))
+                                .executes((sender, args) -> {
+                                    Particle particle = args.get("particle");
+                                    sender.sendMessage("Selected particle " + particle);
                                 })
 
                 )
                 .executes((sender, args) -> {
-                    sender.sendMessage("Selected team color " + args.get("color"));
+                    Color color = args.get("color");
+
+                    ColorArgument.getNamed(color).ifPresentOrElse(name -> sender.sendMessage("Selected team color " + name), () -> sender.sendMessage("Selected team color unknown"));
                 }).build();
 
         platform.getCommandsRegistry().register(build);

@@ -9,9 +9,7 @@ dependencies {
     api(project(":core"))
     implementation(project(":reflection"))
 
-    compileOnly("org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT") {
-        exclude(group = "net.md-5", module = "bungeecord-chat")
-    }
+    compileOnly("org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT")
 
     testFixturesApi("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
     testFixturesApi("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.0.0")

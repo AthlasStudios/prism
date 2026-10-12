@@ -25,10 +25,7 @@ import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.range.RangeProvider;
-import org.bukkit.Axis;
-import org.bukkit.GameMode;
-import org.bukkit.NamespacedKey;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.structure.Mirror;
 import org.bukkit.block.structure.StructureRotation;
@@ -36,7 +33,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.Color;
 import java.util.Set;
 import java.util.UUID;
 
@@ -145,12 +141,12 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
 
     @Override
     public ArgumentType<Color> color() {
-        return PaperBackedArgumentType.of(ArgumentTypes.namedColor(), color -> new Color(color.value()));
+        return PaperBackedArgumentType.of(ArgumentTypes.namedColor(), color -> Color.fromRGB(color.value()));
     }
 
     @Override
     public ArgumentType<Color> hexColor() {
-        return PaperBackedArgumentType.of(ArgumentTypes.hexColor(), color -> new Color(color.value()));
+        return PaperBackedArgumentType.of(ArgumentTypes.hexColor(), color -> Color.fromRGB(color.value()));
     }
 
     @Override

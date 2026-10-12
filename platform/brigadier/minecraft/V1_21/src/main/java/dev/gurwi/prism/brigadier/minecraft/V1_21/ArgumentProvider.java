@@ -39,6 +39,7 @@ import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.structure.Mirror;
 import org.bukkit.block.structure.StructureRotation;
+import org.bukkit.craftbukkit.CraftParticle;
 import org.bukkit.craftbukkit.CraftRegistry;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.block.CraftBlockEntityState;
@@ -55,7 +56,6 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.Color;
 import java.util.*;
 import java.util.List;
 
@@ -209,13 +209,13 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     public ArgumentType<Color> color() {
         return NativeBackedArgumentType.of(ColorArgument.color(), result -> {
             Integer rgb = result.getColor();
-            return rgb == null ? Color.WHITE : new Color(rgb);
+            return rgb == null ? Color.WHITE : Color.fromRGB(rgb);
         });
     }
 
     @Override
     public ArgumentType<Color> hexColor() {
-        return NativeBackedArgumentType.of(HexColorArgument.hexColor(), Color::new);
+        return NativeBackedArgumentType.of(HexColorArgument.hexColor(), Color::fromRGB);
     }
 
     // TODO -> COMPONENT ARGUMENT
@@ -279,7 +279,12 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
         });
     }
 
-//    @Override
+    @Override
+    public ArgumentType<Particle> particle() {
+        return NativeBackedArgumentType.of(ParticleArgument.particle(context), particle -> CraftParticle.minecraftToBukkit(particle.getType()));
+    }
+
+    //    @Override
 //    public ArgumentType<HeightMap> heightMap() {
 //        return NativeBackedArgumentType.of(HeightmapTypeArgument.heightmap(), CraftHeightMap::fromNMS);
 //    }

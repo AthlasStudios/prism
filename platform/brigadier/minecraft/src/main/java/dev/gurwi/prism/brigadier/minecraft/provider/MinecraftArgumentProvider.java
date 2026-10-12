@@ -10,11 +10,7 @@ import dev.gurwi.prism.brigadier.minecraft.argument.predicate.ItemStackPredicate
 import dev.gurwi.prism.brigadier.minecraft.argument.resolver.*;
 import dev.gurwi.prism.brigadier.minecraft.exception.UnsupportedArgumentTypeException;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
-import dev.gurwi.prism.reflection.ReflectionUtil;
-import org.bukkit.Axis;
-import org.bukkit.GameMode;
-import org.bukkit.NamespacedKey;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.structure.Mirror;
 import org.bukkit.block.structure.StructureRotation;
@@ -23,9 +19,6 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.*;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -34,7 +27,6 @@ public interface MinecraftArgumentProvider {
     SimpleCommandExceptionType UNSUPPORTED_SOURCE = new SimpleCommandExceptionType(new LiteralMessage("This argument cannot be resolved for this sender"));
     DynamicCommandExceptionType UNKNOWN_DIMENSION = new DynamicCommandExceptionType(id -> new LiteralMessage("Unknown dimension '" + id + "'"));
     DynamicCommandExceptionType UNKNOWN_SLOT = new DynamicCommandExceptionType(slot -> new LiteralMessage("Unsupported display slot " + slot));
-    DynamicCommandExceptionType INVALID_HEX = new DynamicCommandExceptionType(value -> new LiteralMessage("Invalid hex color '" + value + "', expected RRGGBB"));
     Dynamic2CommandExceptionType TIME_TOO_SMALL = new Dynamic2CommandExceptionType((found, minimum) -> new LiteralMessage("Duration must not be less than " + minimum + " ticks, found " + found));
 
     @Contract("_ -> new")
@@ -144,6 +136,10 @@ public interface MinecraftArgumentProvider {
 
     default ArgumentType<GameMode> gameMode() {
         throw unsupported("gameMode");
+    }
+
+    default ArgumentType<Particle> particle() {
+        throw unsupported("particle");
     }
 
 //    ArgumentType<HeightMap> heightMap();

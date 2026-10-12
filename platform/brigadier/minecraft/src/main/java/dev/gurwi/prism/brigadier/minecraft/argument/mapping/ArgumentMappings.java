@@ -30,6 +30,10 @@ public class ArgumentMappings {
         register(BooleanArgument.class, ArgumentMapper.simple(arg -> BoolArgumentType.bool()));
 
         register(GameModeArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.gameMode()));
+        register(ParticleArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.particle()));
+        register(ColorArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.color()));
+        register(HexColorArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.hexColor()));
+        register(UUIDArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.uuid()));
         register(IntegerRangeArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.integerRange()));
         register(DoubleRangeArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.doubleRange()));
         register(FloatRangeArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.floatRange()));

@@ -14,6 +14,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.Plugin;
@@ -40,6 +41,7 @@ public abstract class ReflectiveCommandDispatcher<SourceStack> extends Minecraft
         listen(ServerLoadEvent.class);
 
         Bukkit.getPluginManager().registerEvents(new JoinListener(), plugin);
+        Bukkit.getPluginManager().registerEvents(new CommandInterceptor(), plugin);
 
         if (BrigadierCompatibilityChecker.has(RELOAD_EVENT)) {
             try {
@@ -189,6 +191,31 @@ public abstract class ReflectiveCommandDispatcher<SourceStack> extends Minecraft
                     report("updateCommands " + player.getName(), throwable);
                 }
             }, 1L);
+        }
+
+    }
+
+    private final class CommandInterceptor implements Listener {
+
+        @EventHandler(priority = EventPriority.LOWEST)
+        public void onCommand(@NotNull PlayerCommandPreprocessEvent event) {
+            String message = event.getMessage();
+            if (message.isEmpty() || message.charAt(0) != '/') return;
+
+            String[] parts = message.substring(1).split(" ", -1);
+            String label = parts[0].toLowerCase(Locale.ROOT);
+
+            for (Entry entry : entries) {
+                for (String own : entry.labels()) {
+                    if (label.equals(own) || label.equals(entry.prefix() + ":" + own)) {
+                        event.setCancelled(true);
+
+                        String[] args = java.util.Arrays.copyOfRange(parts, 1, parts.length);
+                        entry.command().execute(event.getPlayer(), label, args);
+                        return;
+                    }
+                }
+            }
         }
 
     }

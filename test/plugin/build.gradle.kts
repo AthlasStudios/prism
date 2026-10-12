@@ -14,7 +14,7 @@ dependencies {
     implementation(project(":platform:paper"))
     implementation(project(":platform:brigadier:minecraft"))
 
-    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.3.build.+")
 }
 
 tasks {
@@ -27,7 +27,7 @@ tasks {
     }
 
     runServer {
-        minecraftVersion("1.21.11")
+        minecraftVersion("26.3")
     }
 }
 

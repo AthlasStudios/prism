@@ -134,10 +134,18 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
                 Object value = context.getArgument(name, Object.class);
                 NativeBackedArgumentType<?, ?> backed = converters.get(name);
 
+                Object converted;
+
+                try {
+                    converted = backed == null ? value : backed.convertNative(value);
+                } catch (CommandSyntaxException exception) {
+                    throw withContext(exception, context.getInput(), parsed.getRange().getStart());
+                }
+
                 arguments.put(name, new ParsedArgument<>(
                         parsed.getRange().getStart(),
                         parsed.getRange().getEnd(),
-                        backed == null ? value : backed.convertNative(value)
+                        converted
                 ));
             }
         }
@@ -156,6 +164,14 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
                 null,
                 context.isForked()
         );
+    }
+
+    private static @NotNull CommandSyntaxException withContext(@NotNull CommandSyntaxException exception, String input, int cursor) {
+        if (exception.getInput() != null) {
+            return exception;
+        }
+
+        return new CommandSyntaxException(exception.getType(), exception.getRawMessage(), input, cursor);
     }
 
     protected void report(String where, Throwable throwable) {

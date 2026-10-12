@@ -2,7 +2,6 @@ package dev.gurwi.prism.brigadier.minecraft.V1_17;
 
 import com.google.common.collect.Collections2;
 import com.mojang.brigadier.arguments.ArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -17,17 +16,7 @@ import dev.gurwi.prism.brigadier.minecraft.wrapper.position.*;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
 import net.minecraft.advancements.critereon.MinMaxBounds;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.arguments.AngleArgument;
-import net.minecraft.commands.arguments.ColorArgument;
-import net.minecraft.commands.arguments.DimensionArgument;
-import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.commands.arguments.GameProfileArgument;
-import net.minecraft.commands.arguments.MessageArgument;
-import net.minecraft.commands.arguments.RangeArgument;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
-import net.minecraft.commands.arguments.ScoreboardSlotArgument;
-import net.minecraft.commands.arguments.TimeArgument;
-import net.minecraft.commands.arguments.UuidArgument;
+import net.minecraft.commands.arguments.*;
 import net.minecraft.commands.arguments.blocks.BlockPredicateArgument;
 import net.minecraft.commands.arguments.blocks.BlockStateArgument;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
@@ -47,9 +36,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.state.pattern.BlockInWorld;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
+import org.bukkit.Color;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.block.BlockState;
+import org.bukkit.craftbukkit.v1_17_R1.CraftParticle;
 import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_17_R1.block.CraftBlockStates;
 import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
@@ -60,7 +52,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.Color;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -193,13 +184,8 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     public ArgumentType<Color> color() {
         return NativeBackedArgumentType.of(ColorArgument.color(), result -> {
             Integer rgb = result.getColor();
-            return rgb == null ? Color.WHITE : new Color(rgb);
+            return rgb == null ? Color.WHITE : Color.fromRGB(rgb);
         });
-    }
-
-    @Override
-    public ArgumentType<Color> hexColor() {
-        return NativeBackedArgumentType.of(StringArgumentType.word(), ArgumentProvider::parseHex);
     }
 
     @Override
@@ -254,6 +240,11 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     }
 
     @Override
+    public ArgumentType<Particle> particle() {
+        return NativeBackedArgumentType.of(ParticleArgument.particle(), particle -> CraftParticle.toBukkit(particle.getType()));
+    }
+
+    @Override
     public ArgumentType<UUID> uuid() {
         return NativeBackedArgumentType.of(UuidArgument.uuid(), uuid -> uuid);
     }
@@ -274,20 +265,6 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
                 bounds.getMin() == null ? lowest : bounds.getMin(),
                 bounds.getMax() == null ? highest : bounds.getMax()
         ));
-    }
-
-    private static @NotNull Color parseHex(@NotNull String value) throws CommandSyntaxException {
-        String hex = value.startsWith("#") ? value.substring(1) : value;
-
-        if (hex.length() != 6) {
-            throw INVALID_HEX.create(value);
-        }
-
-        try {
-            return new Color(Integer.parseInt(hex, 16));
-        } catch (NumberFormatException exception) {
-            throw INVALID_HEX.create(value);
-        }
     }
 
     private static @NotNull CommandContext<CommandSourceStack> serverContext() {

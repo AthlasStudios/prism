@@ -1,11 +1,13 @@
 package dev.gurwi.prism.brigadier.minecraft.V1_19;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import net.minecraft.commands.CommandSourceStack;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -30,9 +32,9 @@ final class BrigadierBukkitCommand extends Command {
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String label, @NotNull String[] args) {
         try {
-            own.execute(input(args), source(sender));
+            run(own.parse(input(args), source(sender)));
         } catch (CommandSyntaxException exception) {
-            sender.sendMessage(exception.getMessage());
+            sender.sendMessage(describe(exception));
         }
 
         return true;
@@ -55,6 +57,35 @@ final class BrigadierBukkitCommand extends Command {
     @Override
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args, Location location) {
         return tabComplete(sender, alias, args);
+    }
+
+    private void run(@NotNull ParseResults<MinecraftCommandSource> parsed) throws CommandSyntaxException {
+        if (parsed.getReader().canRead()) {
+            CommandSyntaxException deepest = null;
+
+            for (CommandSyntaxException exception : parsed.getExceptions().values()) {
+                if (deepest == null || exception.getCursor() > deepest.getCursor()) {
+                    deepest = exception;
+                }
+            }
+
+            if (deepest != null) {
+                throw deepest;
+            }
+        }
+
+        own.execute(parsed);
+    }
+
+    private @NotNull String describe(@NotNull CommandSyntaxException exception) {
+        String message = ChatColor.RED + exception.getRawMessage().getString();
+        String context = exception.getContext();
+
+        if (context == null || exception.getCursor() < 0) {
+            return message;
+        }
+
+        return message + ChatColor.GRAY + " at position " + exception.getCursor() + ": " + context;
     }
 
     private String input(String @NotNull [] args) {

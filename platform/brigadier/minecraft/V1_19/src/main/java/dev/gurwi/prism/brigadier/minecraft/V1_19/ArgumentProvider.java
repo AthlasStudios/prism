@@ -38,6 +38,7 @@ import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.structure.Mirror;
 import org.bukkit.block.structure.StructureRotation;
+import org.bukkit.craftbukkit.v1_19_R3.CraftParticle;
 import org.bukkit.craftbukkit.v1_19_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_19_R3.block.CraftBlockStates;
 import org.bukkit.craftbukkit.v1_19_R3.inventory.CraftItemStack;
@@ -49,23 +50,9 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.Color;
 import java.util.*;
 import java.util.List;
 
-/**
- * Mojang-mapped provider for Minecraft 1.19.3 / 1.19.4 (CraftBukkit v1_19_R3).
- * Not valid for 1.19.0 - 1.19.2 (no CommandBuildContext there).
- * <p>
- * Differences from the 1.20.6 provider:
- * <ul>
- *     <li>{@code MinMaxBounds} is an abstract class with nullable {@code getMin()/getMax()}.</li>
- *     <li>{@code ScoreboardSlotArgument} yields an {@code int} slot id (the NMS DisplaySlot enum is 1.20.2+).</li>
- *     <li>{@code TimeArgument.time()} has no min-ticks overload, so the minimum is checked manually.</li>
- *     <li>{@code BlockInput.tag} is not accessible, so block-entity NBT in {@code blockState()} is not loaded.</li>
- *     <li>No {@code HexColorArgument}, so {@code hexColor()} is removed (interface default throws).</li>
- * </ul>
- */
 public class ArgumentProvider implements MinecraftArgumentProvider {
 
     private static final Map<String, DisplaySlot> DISPLAY_SLOTS = Map.ofEntries(
@@ -226,7 +213,7 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     public ArgumentType<Color> color() {
         return NativeBackedArgumentType.of(ColorArgument.color(), result -> {
             Integer rgb = result.getColor();
-            return rgb == null ? Color.WHITE : new Color(rgb);
+            return rgb == null ? Color.WHITE : Color.fromRGB(rgb);
         });
     }
 
@@ -297,6 +284,11 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
             case 3 -> GameMode.SPECTATOR;
             default -> null;
         });
+    }
+
+    @Override
+    public ArgumentType<Particle> particle() {
+        return NativeBackedArgumentType.of(ParticleArgument.particle(context), particle -> CraftParticle.toBukkit(particle.getType()));
     }
 
     @Override

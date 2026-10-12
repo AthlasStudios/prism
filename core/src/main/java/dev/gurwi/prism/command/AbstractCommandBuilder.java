@@ -26,25 +26,25 @@ public abstract class AbstractCommandBuilder<
 
     protected final String name;
     protected final List<String> aliases;
-    protected final String description;
+    protected String description = "";
 
     protected UsageRequirement<Source> requirement = UsageRequirement.none();
     protected Set<Permission> permissions = new HashSet<>();
 
     protected Impl parent = null;
 
-    public AbstractCommandBuilder(String name, List<String> aliases, String description) {
+    public AbstractCommandBuilder(String name, List<String> aliases) {
         this.name = name;
         this.aliases = aliases;
-        this.description = description;
-    }
-
-    public AbstractCommandBuilder(String name, String description, String... aliases) {
-        this(name, List.of(aliases), description);
     }
 
     public AbstractCommandBuilder(String name, String... aliases) {
-        this(name, List.of(aliases), "");
+        this(name, List.of(aliases));
+    }
+
+    public Impl withDescription(String description) {
+        this.description = description;
+        return self();
     }
 
     public Impl withArguments(Argument @NotNull ... args) {

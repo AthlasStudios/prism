@@ -13,11 +13,9 @@ public class MaterialArgument extends BukkitArgument<MaterialArgument, Material>
         super(name);
 
         replaceSuggestions(
-                BukkitSuggestionsSupplier.of(
-                        Arrays.stream(Material.values())
-                                .map(material -> material.name().toLowerCase())
-                                .toList()
-                )
+                Arrays.stream(Material.values())
+                        .map(material -> material.name().toLowerCase())
+                        .toList()
         );
     }
 

@@ -43,7 +43,7 @@ final class BrigadierBukkitCommand extends VanillaCommandWrapper {
     }
 
     @Override
-    public List<String> tabComplete(CommandSender sender, String alias, String[] args) {
+    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, String @NotNull [] args) {
         try {
             return own.getCompletionSuggestions(own.parse(input(args), source(sender)))
                     .get()

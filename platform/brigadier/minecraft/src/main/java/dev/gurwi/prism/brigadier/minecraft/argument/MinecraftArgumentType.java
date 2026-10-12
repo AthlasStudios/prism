@@ -15,10 +15,7 @@ import dev.gurwi.prism.brigadier.minecraft.argument.resolver.RotationResolver;
 import dev.gurwi.prism.brigadier.minecraft.provider.MinecraftArgumentProvider;
 import dev.gurwi.prism.brigadier.minecraft.provider.MinecraftProviderLoader;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
-import org.bukkit.Axis;
-import org.bukkit.GameMode;
-import org.bukkit.NamespacedKey;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.structure.Mirror;
 import org.bukkit.block.structure.StructureRotation;
@@ -26,7 +23,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.DisplaySlot;
 
-import java.awt.Color;
 import java.util.Set;
 import java.util.UUID;
 
@@ -156,6 +152,10 @@ public final class MinecraftArgumentType {
 
     public static ArgumentType<GameMode> gameMode() {
         return provider().gameMode();
+    }
+
+    public static ArgumentType<Particle> particle() {
+        return provider().particle();
     }
 
     public static ArgumentType<UUID> uuid() {

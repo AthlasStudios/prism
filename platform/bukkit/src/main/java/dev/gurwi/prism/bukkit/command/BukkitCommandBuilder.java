@@ -17,12 +17,8 @@ public abstract class BukkitCommandBuilder<Impl extends BukkitCommandBuilder<Imp
 
     protected LegacyCommandExecutionErrorHandler legacyCommandErrorHandler = LegacyCommandExecutionErrorHandler.defaultHandler();
 
-    public BukkitCommandBuilder(String name, List<String> aliases, String description) {
-        super(name, aliases, description);
-    }
-
-    public BukkitCommandBuilder(String name, String description, String... aliases) {
-        super(name, description, aliases);
+    public BukkitCommandBuilder(String name, List<String> aliases) {
+        super(name, aliases);
     }
 
     public BukkitCommandBuilder(String name, String... aliases) {
