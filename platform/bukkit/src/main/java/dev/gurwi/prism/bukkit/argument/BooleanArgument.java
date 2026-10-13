@@ -10,6 +10,7 @@ public class BooleanArgument extends BukkitArgument<BooleanArgument, Boolean> {
         super(name);
 
         replaceSuggestions("true", "false");
+        forceSuggestions(true);
     }
 
     @Override

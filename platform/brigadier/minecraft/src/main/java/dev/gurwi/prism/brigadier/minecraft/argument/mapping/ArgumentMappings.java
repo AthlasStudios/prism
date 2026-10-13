@@ -62,6 +62,11 @@ public class ArgumentMappings {
                 MinecraftArgumentType.finePosition(),
                 (argument, source, resolver) -> resolver.resolve(source).toLocation(source.getLocation().getWorld())
         ));
+
+        register(MaterialArgument.class, ArgumentMapper.constant(
+                MinecraftArgumentType.itemStack(),
+                (argument, source, item) -> item.getType()
+        ));
     }
 
     public <T, BrigadierType, Argument extends BukkitArgument<?, T>> void register(@NotNull Class<Argument> type, @NotNull ArgumentMapper<T, BrigadierType, Argument> mapper) {

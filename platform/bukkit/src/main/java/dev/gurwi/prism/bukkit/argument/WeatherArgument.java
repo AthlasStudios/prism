@@ -17,6 +17,8 @@ public class WeatherArgument extends BukkitArgument<WeatherArgument, WeatherType
                         .map(weatherType -> weatherType.name().toLowerCase())
                         .toList()
         );
+
+        forceSuggestions(true);
     }
 
     @Override

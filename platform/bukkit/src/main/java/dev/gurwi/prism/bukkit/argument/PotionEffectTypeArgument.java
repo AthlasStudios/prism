@@ -14,13 +14,14 @@ public class PotionEffectTypeArgument extends BukkitArgument<PotionEffectTypeArg
         super(name);
 
         replaceSuggestions(
-                BukkitSuggestionsSupplier.of(
-                        Arrays.stream(PotionEffectType.values())
-                                .filter(Objects::nonNull)
-                                .map(type -> type.getName().toLowerCase())
-                                .toList()
-                )
+                Arrays.stream(PotionEffectType.values())
+                        .filter(Objects::nonNull)
+                        .map(type -> type.getName().toLowerCase())
+                        .toList()
+
         );
+
+        forceSuggestions(true);
     }
 
     @Override

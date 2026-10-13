@@ -16,11 +16,13 @@ public class EnumArgument<E extends Enum<E>> extends BukkitArgument<EnumArgument
 
         this.enumClass = enumClass;
 
-        replaceSuggestions(BukkitSuggestionsSupplier.of(
+        replaceSuggestions(
                 Arrays.stream(enumClass.getEnumConstants())
                         .map(value -> value.name().toLowerCase())
                         .toList()
-        ));
+        );
+
+        forceSuggestions(true);
     }
 
     @Override

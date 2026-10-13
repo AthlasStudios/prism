@@ -52,6 +52,10 @@ public interface BrigadierAdapter<Source, Definition extends AbstractCommandDefi
         return command(definition, path);
     }
 
+    default @Nullable Command<Source> command(@NotNull Definition definition, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) {
+        return command(definition);
+    }
+
     default boolean accepts(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull Source source, @NotNull String word) {
         return true;
     }

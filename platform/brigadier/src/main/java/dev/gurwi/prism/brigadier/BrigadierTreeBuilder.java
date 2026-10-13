@@ -24,6 +24,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDefinition<Definition, ?, ?, ?, ?>> {
@@ -40,48 +41,117 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
     }
 
     public @NotNull LiteralCommandNode<S> build(@NotNull Definition definition, @NotNull String label) {
+        return build(definition, label, Map.of());
+    }
+
+    private @NotNull LiteralCommandNode<S> build(@NotNull Definition definition, @NotNull String label, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) {
         List<Slot> slots = slots(definition);
-        List<CommandNode<S>> children = new ArrayList<>();
-
-        for (Definition child : definition.getChildren()) {
-            for (String childLabel : labels(child)) {
-                children.add(build(child, childLabel));
-            }
-        }
-
-        children.addAll(buildBranches(definition, adapter.branches(definition), List.of(), Map.of()));
-
-        requireUnique(definition.getName(), children);
-
-        CommandNode<S> next = null;
-
-        for (int i = slots.size() - 1; i >= 0; i--) {
-            Slot slot = slots.get(i);
-            ArgumentBuilder<S, ?> builder = node(slot);
-
-            if (slot.terminal()) {
-                decorate(builder, definition, children, slot.greedy());
-            }
-
-            if (next != null) {
-                builder.then(next);
-            }
-
-            next = builder.build();
-        }
+        Supplier<List<CommandNode<S>>> children = memo(() -> children(definition, forced));
 
         LiteralArgumentBuilder<S> literal = LiteralArgumentBuilder.literal(label);
         literal.requires(source -> adapter.visible(definition, source));
 
         if (definition.getRequiredArguments().isEmpty()) {
-            decorate(literal, definition, children, false);
+            decorate(literal, definition, children.get(), false, forced);
         }
 
-        if (next != null) {
-            literal.then(next);
+        for (CommandNode<S> node : buildSlots(definition, slots, 0, forced, children)) {
+            literal.then(node);
         }
 
         return literal.build();
+    }
+
+    private @NotNull List<CommandNode<S>> children(@NotNull Definition definition, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) {
+        List<CommandNode<S>> children = new ArrayList<>();
+
+        for (Definition child : definition.getChildren()) {
+            for (String childLabel : labels(child)) {
+                children.add(build(child, childLabel, forced));
+            }
+        }
+
+        children.addAll(buildBranches(definition, adapter.branches(definition), List.of(), forced));
+
+        requireUnique(definition.getName(), children);
+
+        return children;
+    }
+
+    private @NotNull List<CommandNode<S>> buildSlots(@NotNull Definition definition, @NotNull List<Slot> slots, int index, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced, @NotNull Supplier<List<CommandNode<S>>> children) {
+        if (index >= slots.size()) {
+            return List.of();
+        }
+
+        Slot slot = slots.get(index);
+        AbstractArgument<?, ?, ?, ?> argument = slot.argument();
+
+        if (slot.literal() || !forcing(argument)) {
+            ArgumentBuilder<S, ?> builder = node(slot);
+
+            finishSlot(builder, definition, slots, index, forced, children);
+
+            return List.of(builder.build());
+        }
+
+        List<String> values = adapter.forcedValues(argument);
+
+        if (values.isEmpty()) {
+            throw new IllegalStateException("Argument '" + argument.getName() + "' of '" + definition.getName() + "' forces suggestions but provides none");
+        }
+
+        List<CommandNode<S>> nodes = new ArrayList<>(values.size());
+
+        for (String value : values) {
+            Map<AbstractArgument<?, ?, ?, ?>, String> next = new IdentityHashMap<>(forced);
+            next.put(argument, value);
+
+            LiteralArgumentBuilder<S> literal = forcedLiteral(argument, value);
+
+            finishSlot(literal, definition, slots, index, next, memo(() -> children(definition, next)));
+
+            nodes.add(literal.build());
+        }
+
+        return nodes;
+    }
+
+    private void finishSlot(@NotNull ArgumentBuilder<S, ?> builder, @NotNull Definition definition, @NotNull List<Slot> slots, int index, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced, @NotNull Supplier<List<CommandNode<S>>> children) {
+        Slot slot = slots.get(index);
+        List<CommandNode<S>> tail = buildSlots(definition, slots, index + 1, forced, children);
+
+        if (slot.terminal()) {
+            List<CommandNode<S>> attached = children.get();
+            List<CommandNode<S>> siblings = new ArrayList<>(attached);
+            siblings.addAll(tail);
+
+            requireUnique(definition.getName(), siblings);
+
+            decorate(builder, definition, attached, slot.greedy(), forced);
+        }
+
+        for (CommandNode<S> node : tail) {
+            builder.then(node);
+        }
+    }
+
+    private @NotNull LiteralArgumentBuilder<S> forcedLiteral(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull String value) {
+        LiteralArgumentBuilder<S> literal = LiteralArgumentBuilder.literal(value);
+        literal.requires(source -> adapter.available(argument, source));
+
+        return literal;
+    }
+
+    private @NotNull Supplier<List<CommandNode<S>>> memo(@NotNull Supplier<List<CommandNode<S>>> source) {
+        List<List<CommandNode<S>>> box = new ArrayList<>(1);
+
+        return () -> {
+            if (box.isEmpty()) {
+                box.add(source.get());
+            }
+
+            return box.get(0);
+        };
     }
 
     public @Nullable ArgumentType<?> resolveType(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
@@ -294,8 +364,7 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
 
         requireUnique(argument.getName(), children);
 
-        LiteralArgumentBuilder<S> literal = LiteralArgumentBuilder.literal(value);
-        literal.requires(source -> adapter.available(argument, source));
+        LiteralArgumentBuilder<S> literal = forcedLiteral(argument, value);
 
         Command<S> command = adapter.command(definition, List.copyOf(path), next);
 
@@ -406,8 +475,8 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         }
     }
 
-    private void decorate(@NotNull ArgumentBuilder<S, ?> builder, @NotNull Definition definition, @NotNull List<CommandNode<S>> children, boolean greedy) {
-        Command<S> command = adapter.command(definition);
+    private void decorate(@NotNull ArgumentBuilder<S, ?> builder, @NotNull Definition definition, @NotNull List<CommandNode<S>> children, boolean greedy, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) {
+        Command<S> command = adapter.command(definition, forced);
 
         if (command != null) {
             builder.executes(command);

@@ -13,12 +13,12 @@ public class EnchantmentArgument extends BukkitArgument<EnchantmentArgument, Enc
         super(name);
 
         replaceSuggestions(
-                BukkitSuggestionsSupplier.of(
-                        Arrays.stream(Enchantment.values())
-                                .map(enchantment -> enchantment.getName().toLowerCase())
-                                .toList()
-                )
+                Arrays.stream(Enchantment.values())
+                        .map(enchantment -> enchantment.getName().toLowerCase())
+                        .toList()
         );
+
+        forceSuggestions(true);
     }
 
     @Override

@@ -13,10 +13,12 @@ public class SoundArgument extends BukkitArgument<SoundArgument, Sound> {
         super(name);
 
         replaceSuggestions(
-                BukkitSuggestionsSupplier.of(Arrays.stream(Sound.values())
+                Arrays.stream(Sound.values())
                         .map(sound -> sound.name().toLowerCase())
-                        .toList())
+                        .toList()
         );
+
+        forceSuggestions(true);
     }
 
     @Override

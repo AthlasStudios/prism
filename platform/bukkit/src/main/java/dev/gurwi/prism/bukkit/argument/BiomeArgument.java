@@ -17,6 +17,8 @@ public class BiomeArgument extends BukkitArgument<BiomeArgument, Biome> {
                         .map(biome -> biome.name().toLowerCase())
                         .toList()
         );
+
+        forceSuggestions(true);
     }
 
     @Override

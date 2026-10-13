@@ -13,12 +13,13 @@ public class EntityTypeArgument extends BukkitArgument<EntityTypeArgument, Entit
         super(name);
 
         replaceSuggestions(
-                BukkitSuggestionsSupplier.of(
-                        Arrays.stream(EntityType.values())
-                                .map(entityType -> entityType.name().toLowerCase())
-                                .toList()
-                )
+                Arrays.stream(EntityType.values())
+                        .map(entityType -> entityType.name().toLowerCase())
+                        .toList()
+
         );
+
+        forceSuggestions(true);
     }
 
     @Override

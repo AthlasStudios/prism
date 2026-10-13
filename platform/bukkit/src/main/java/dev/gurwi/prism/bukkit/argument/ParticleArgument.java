@@ -17,6 +17,8 @@ public class ParticleArgument extends BukkitArgument<ParticleArgument, Particle>
                         .map(material -> material.name().toLowerCase())
                         .toList()
         );
+
+        forceSuggestions(true);
     }
 
     @Override

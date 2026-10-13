@@ -128,7 +128,12 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
 
     @Override
     public @Nullable Command<MinecraftCommandSource> command(@NotNull BukkitCommandDefinition definition) {
-        return ctx -> execute(definition, ctx);
+        return command(definition, Map.of());
+    }
+
+    @Override
+    public @Nullable Command<MinecraftCommandSource> command(@NotNull BukkitCommandDefinition definition, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) {
+        return ctx -> execute(definition, forced, ctx);
     }
 
     @Override
@@ -173,7 +178,7 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
         return builder;
     }
 
-    private int execute(@NotNull BukkitCommandDefinition target, @NotNull CommandContext<MinecraftCommandSource> context) throws CommandSyntaxException {
+    private int execute(@NotNull BukkitCommandDefinition target, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced, @NotNull CommandContext<MinecraftCommandSource> context) throws CommandSyntaxException {
         MinecraftCommandSource source = context.getSource();
         CommandSender sender = senderOf(source);
 
@@ -181,7 +186,7 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
             throw NO_EXECUTOR.create();
         }
 
-        CommandArguments<BukkitCommandDefinition, CommandSender> parsed = parseHierarchy(target, context, source, sender, List.of(), Map.of());
+        CommandArguments<BukkitCommandDefinition, CommandSender> parsed = parseHierarchy(target, context, source, sender, List.of(), forced);
 
         target.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
 
@@ -241,12 +246,13 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
             }
 
             boolean isOptional = slots.get(0).optional();
+            String fixed = forced.get(argument);
 
-            if (isOptional && !present(context, slots.get(0).name())) {
+            if (fixed == null && isOptional && !present(context, slots.get(0).name())) {
                 continue;
             }
 
-            Object value = read(argument, slots, context, source, sender);
+            Object value = fixed != null ? parseFixed(argument, sender, fixed) : read(argument, slots, context, source, sender);
 
             if (isOptional) {
                 optional.put(argument.getName(), value);
@@ -265,11 +271,7 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
             String fixed = forced.get(argument);
 
             if (fixed != null) {
-                try {
-                    required.put(argument.getName(), argument.parse(sender, fixed));
-                } catch (ArgumentParseException e) {
-                    throw new SimpleCommandExceptionType(new LiteralMessage(String.valueOf(e.getMessage()))).create();
-                }
+                required.put(argument.getName(), parseFixed(argument, sender, fixed));
 
                 continue;
             }
@@ -280,6 +282,14 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
         }
 
         return new CommandArguments<>(level, required, optional, parent);
+    }
+
+    private <T> @NotNull T parseFixed(@NotNull BukkitArgument<?, T> argument, @NotNull CommandSender sender, @NotNull String value) throws CommandSyntaxException {
+        try {
+            return argument.parse(sender, value);
+        } catch (ArgumentParseException e) {
+            throw new SimpleCommandExceptionType(new LiteralMessage(String.valueOf(e.getMessage()))).create();
+        }
     }
 
     @SuppressWarnings("unchecked")
