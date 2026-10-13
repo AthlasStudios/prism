@@ -2,10 +2,12 @@ package dev.gurwi.prism.bukkit.command;
 
 import dev.gurwi.prism.argument.CommandArguments;
 import dev.gurwi.prism.bukkit.argument.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.LiteralArgument;
 import dev.gurwi.prism.bukkit.argument.parser.ArgumentTokens;
 import dev.gurwi.prism.bukkit.argument.parser.LegacyArgumentsParser;
 import dev.gurwi.prism.bukkit.exception.BukkitArgumentsParseException;
 import dev.gurwi.prism.command.AbstractCommandDefinition;
+import dev.gurwi.prism.exception.ArgumentParseException;
 import dev.gurwi.prism.exception.NoExecutorException;
 import org.bukkit.command.*;
 import org.bukkit.command.defaults.BukkitCommand;
@@ -39,10 +41,14 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         List<Level> levels = resolve(sender, args);
 
         CommandArguments<BukkitCommandDefinition, CommandSender> parsed = null;
+        BukkitArgument<?, ?> node = null;
 
         for (Level level : levels) {
             try {
-                parsed = LegacyArgumentsParser.parse(sender, level.definition(), level.args(), args, level.start(), parsed);
+                LegacyArgumentsParser.TreeParseResult result = LegacyArgumentsParser.parseTree(sender, level.definition(), level.args(), args, level.start(), parsed);
+
+                parsed = result.arguments();
+                node = result.node();
             } catch (BukkitArgumentsParseException e) {
                 level.definition().getLegacyCommandErrorHandler().onArgumentsParseError(level.definition(), sender, e);
                 return false;
@@ -50,14 +56,23 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         }
 
         BukkitCommandDefinition target = levels.get(levels.size() - 1).definition();
+        CommandArguments<BukkitCommandDefinition, CommandSender> finalArguments = parsed;
 
-        if (!target.hasExecutor(sender)) {
+        if (node == null) {
+            if (!target.hasExecutor(sender)) {
+                throw new NoExecutorException(sender.getClass());
+            }
+
+            target.getExecutors().forEach(executor -> executor.tryInvoke(sender, finalArguments));
+
+            return true;
+        }
+
+        if (!node.hasExecutor(sender)) {
             throw new NoExecutorException(sender.getClass());
         }
 
-        CommandArguments<BukkitCommandDefinition, CommandSender> finalArguments = parsed;
-
-        target.getExecutors().forEach(executor -> executor.tryInvoke(sender, finalArguments));
+        node.getExecutors().forEach(executor -> executor.tryInvoke(sender, finalArguments));
 
         return true;
     }
@@ -177,6 +192,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
     private @NotNull List<String> complete(@NotNull BukkitCommandDefinition current, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int offset) {
         List<BukkitArgument<?, ?>> required = current.getRequiredArguments();
         List<BukkitArgument<?, ?>> optional = current.getOptionalArguments();
+        List<BukkitArgument<?, ?>> branches = nodes(current.getArgumentTreeBranches());
 
         int last = args.length - 1;
         String input = args[last];
@@ -203,7 +219,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
             }
 
             if (optionalIndex >= optional.size()) {
-                return List.of();
+                return completeBranches(branches, sender, args, position, last);
             }
 
             BukkitArgument<?, ?> next = optional.get(optionalIndex);
@@ -221,11 +237,65 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
 
         if (optionalIndex < optional.size()) {
             suggestions.addAll(suggest(optional.get(optionalIndex), sender, input));
+        } else {
+            suggestions.addAll(completeBranches(branches, sender, args, last, last));
         }
 
         suggestions.addAll(suggestChildren(current, sender, input));
 
         return List.copyOf(suggestions);
+    }
+
+    private @NotNull List<String> completeBranches(@NotNull List<BukkitArgument<?, ?>> candidates, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int from, int last) {
+        Set<String> result = new LinkedHashSet<>();
+
+        for (BukkitArgument<?, ?> candidate : candidates) {
+            if (!candidate.canUse(sender)) {
+                continue;
+            }
+
+            if (from == last) {
+                result.addAll(suggestNode(candidate, sender, args[last]));
+            } else {
+                result.addAll(completeNode(candidate, sender, args, from, last));
+            }
+        }
+
+        return List.copyOf(result);
+    }
+
+    private @NotNull List<String> completeNode(@NotNull BukkitArgument<?, ?> node, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int from, int last) {
+        int end;
+
+        if (node instanceof LiteralArgument) {
+            if (!args[from].equals(node.getName())) {
+                return List.of();
+            }
+
+            end = from + 1;
+        } else {
+            end = ArgumentTokens.advance(node, from, Integer.MAX_VALUE);
+
+            if (last < end) {
+                return suggestFrom(node, sender, args, from, last);
+            }
+
+            try {
+                node.parse(sender, joined(args, from, end - 1));
+            } catch (ArgumentParseException e) {
+                return List.of();
+            }
+        }
+
+        return completeBranches(nodes(node.getArguments()), sender, args, end, last);
+    }
+
+    private @NotNull List<String> suggestNode(@NotNull BukkitArgument<?, ?> node, @NotNull CommandSender sender, @NotNull String input) {
+        if (node instanceof LiteralArgument) {
+            return node.getName().toLowerCase().startsWith(input.toLowerCase()) ? List.of(node.getName()) : List.of();
+        }
+
+        return suggest(node, sender, input);
     }
 
     private @NotNull List<String> suggestFrom(@NotNull BukkitArgument<?, ?> argument, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int from, int last) {
@@ -244,7 +314,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
     }
 
     private @NotNull List<String> suggest(@NotNull BukkitArgument<?, ?> argument, @NotNull CommandSender sender, @NotNull String input) {
-        if (!argument.getRequirement().test(sender)) {
+        if (!argument.canUse(sender)) {
             return List.of();
         }
         return List.copyOf(argument.getSuggestionsSupplier().getSuggestions(sender, input));
@@ -259,6 +329,16 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
                 .map(AbstractCommandDefinition::getName)
                 .filter(name -> name.toLowerCase().startsWith(prefix))
                 .toList();
+    }
+
+    private static @NotNull List<BukkitArgument<?, ?>> nodes(@NotNull Collection<?> source) {
+        List<BukkitArgument<?, ?>> result = new ArrayList<>();
+
+        for (Object item : source) {
+            result.add((BukkitArgument<?, ?>) item);
+        }
+
+        return result;
     }
 
     private record Level(@NotNull BukkitCommandDefinition definition, @NotNull String @NotNull [] args, int start) {

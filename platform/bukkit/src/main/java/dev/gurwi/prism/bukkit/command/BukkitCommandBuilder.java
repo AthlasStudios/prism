@@ -4,8 +4,9 @@ import dev.gurwi.prism.bukkit.argument.BukkitArgument;
 import dev.gurwi.prism.bukkit.command.error.LegacyCommandExecutionErrorHandler;
 import dev.gurwi.prism.bukkit.command.executor.*;
 import dev.gurwi.prism.bukkit.permission.BukkitPermission;
-import dev.gurwi.prism.command.AbstractCommandBuilder;
-import dev.gurwi.prism.command.CommandChildrenFactory;
+import dev.gurwi.prism.bukkit.requirement.BukkitRequirementContainerBuilder;
+import dev.gurwi.prism.command.builder.AbstractTreeCommandBuilder;
+import dev.gurwi.prism.command.builder.CommandChildrenFactory;
 import dev.gurwi.prism.requirement.UsageRequirement;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
@@ -13,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public abstract class BukkitCommandBuilder<Impl extends BukkitCommandBuilder<Impl>> extends AbstractCommandBuilder<Impl, BukkitCommandDefinition, CommandSender, BukkitCommandExecutor<? extends CommandSender>, BukkitArgument<?, ?>, BukkitPermission> {
+public abstract class BukkitCommandBuilder<Impl extends BukkitCommandBuilder<Impl>> extends AbstractTreeCommandBuilder<Impl, BukkitCommandDefinition, CommandSender, BukkitCommandExecutor<? extends CommandSender>, BukkitArgument<?, ?>, BukkitPermission> implements BukkitExecutorContainerBuilder<Impl>, BukkitRequirementContainerBuilder<Impl> {
 
     protected LegacyCommandExecutionErrorHandler legacyCommandErrorHandler = LegacyCommandExecutionErrorHandler.defaultHandler();
 
@@ -25,15 +26,15 @@ public abstract class BukkitCommandBuilder<Impl extends BukkitCommandBuilder<Imp
         super(name, aliases);
     }
 
+    public Impl withPermissions(String... permissions) {
+        withPermissions(BukkitPermission.of(permissions));
+        return self();
+    }
+
     public <Sender extends CommandSender> Impl withRequirement(Class<Sender> type, UsageRequirement<Sender> requirement) {
         return withRequirement(sender ->
                 !type.isInstance(sender) || requirement.test(type.cast(sender))
         );
-    }
-
-    public Impl withPermissions(String... permissions) {
-        withPermissions(BukkitPermission.of(permissions));
-        return self();
     }
 
     public Impl withPlayerRequirement(UsageRequirement<Player> requirement) {
@@ -56,30 +57,6 @@ public abstract class BukkitCommandBuilder<Impl extends BukkitCommandBuilder<Imp
         return withRequirement(BlockCommandSender.class, requirement);
     }
 
-    public Impl executes(GenericCommandExecutor executor) {
-        return executes(GenericCommandExecutor.class, executor);
-    }
-
-    public Impl executesPlayer(PlayerCommandExecutor executor) {
-        return executes(PlayerCommandExecutor.class, executor);
-    }
-
-    public Impl executesConsole(ConsoleCommandExecutor executor) {
-        return executes(ConsoleCommandExecutor.class, executor);
-    }
-
-    public Impl executesRemoteConsole(RemoteConsoleCommandExecutor executor) {
-        return executes(RemoteConsoleCommandExecutor.class, executor);
-    }
-
-    public Impl executesProxy(ProxyCommandExecutor executor) {
-        return executes(ProxyCommandExecutor.class, executor);
-    }
-
-    public Impl executesBlock(BlockCommandExecutor executor) {
-        return executes(BlockCommandExecutor.class, executor);
-    }
-
     public Impl replaceErrorHandler(LegacyCommandExecutionErrorHandler handler) {
         this.legacyCommandErrorHandler = handler;
         return self();
@@ -98,6 +75,7 @@ public abstract class BukkitCommandBuilder<Impl extends BukkitCommandBuilder<Imp
                 optionalArguments,
                 executors,
                 CommandChildrenFactory.create(children),
+                argumentTreeBranches,
                 legacyCommandErrorHandler
         );
     }

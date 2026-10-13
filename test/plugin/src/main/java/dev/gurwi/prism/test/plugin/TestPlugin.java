@@ -4,6 +4,8 @@ import dev.gurwi.prism.bukkit.argument.*;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.command.PrismBukkitCommand;
+import dev.gurwi.prism.bukkit.command.executor.GenericCommandExecutor;
+import dev.gurwi.prism.bukkit.util.CommandHelp;
 import dev.gurwi.prism.paper.PaperPlatform;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
@@ -102,7 +104,6 @@ public class TestPlugin extends JavaPlugin {
                                 .executes((sender, args) -> {
                                     Color color = args.get("hex");
 
-                                    // Create a component with the RGB color
                                     net.kyori.adventure.text.Component message = net.kyori.adventure.text.Component.text("This message is custom colored!")
                                             .color(net.kyori.adventure.text.format.TextColor.color(color.asRGB()));
 
@@ -128,7 +129,28 @@ public class TestPlugin extends JavaPlugin {
                     Color color = args.get("color");
 
                     ColorArgument.getNamed(color).ifPresentOrElse(name -> sender.sendMessage("Selected team color " + name), () -> sender.sendMessage("Selected team color unknown"));
-                }).build();
+                })
+                .build();
+
+        StringArgument string = new StringArgument("string");
+
+        new PrismBukkitCommand("prism", "pri")
+                .then(
+                        new MaterialArgument("material")
+                                .executes((sender, args) -> {
+                                    Material material = args.get("material");
+                                    sender.sendMessage("Selected material " + material);
+                                })
+                )
+                .then(
+                        new GameModeArgument("gamemode")
+                                .executes((sender, args) -> {
+                                    GameMode gameMode = args.get("gamemode");
+                                    sender.sendMessage("Selected game mode " + gameMode);
+                                })
+                )
+                .executes(CommandHelp::help)
+                .register(platform);
 
         platform.getCommandsRegistry().register(build);
     }

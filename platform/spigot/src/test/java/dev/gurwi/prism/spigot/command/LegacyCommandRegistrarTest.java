@@ -46,9 +46,10 @@ class LegacyCommandRegistrarTest extends BukkitTest {
                 .register(
                         new PrismBukkitCommand(
                                 "prism",
-                                List.of("pr"),
-                                "Prism command"
-                        ).build()
+                                "pr"
+                        )
+                                .withDescription("Prism command")
+                                .build()
                 );
 
         Command command = server.getCommandMap().getCommand("prism");

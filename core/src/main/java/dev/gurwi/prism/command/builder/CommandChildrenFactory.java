@@ -1,5 +1,6 @@
-package dev.gurwi.prism.command;
+package dev.gurwi.prism.command.builder;
 
+import dev.gurwi.prism.command.AbstractCommandDefinition;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 

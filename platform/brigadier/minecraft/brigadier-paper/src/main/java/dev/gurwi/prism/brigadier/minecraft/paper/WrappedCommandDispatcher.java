@@ -1,5 +1,8 @@
 package dev.gurwi.prism.brigadier.minecraft.paper;
 
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.tree.ArgumentCommandNode;
+import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.dispatcher.MinecraftCommandDispatcher;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
@@ -24,6 +27,9 @@ public class WrappedCommandDispatcher extends MinecraftCommandDispatcher<Command
 
             for (Entry entry : entries) {
                 String name = entry.root().getName();
+
+                LiteralCommandNode<CommandSourceStack> mirror = mirror(entry.root(), name);
+                dump(mirror, name);
 
                 try {
                     registrar.register(mirror(entry.root(), name), entry.description(), entry.aliases());
@@ -54,6 +60,18 @@ public class WrappedCommandDispatcher extends MinecraftCommandDispatcher<Command
     }
 
     private record Entry(LiteralCommandNode<MinecraftCommandSource> root, String description, List<String> aliases) {
+    }
+
+    private static void dump(CommandNode<?> node, String indent) {
+        System.out.println(indent + node.getName() + " [" + node.getClass().getSimpleName() + "]"
+                + (node.getCommand() != null ? " executes" : ""));
+
+        if (node instanceof ArgumentCommandNode<?, ?> arg) {
+            System.out.println(indent + "  type=" + arg.getType().getClass().getSimpleName()
+                    + " customSuggestions=" + (arg.getCustomSuggestions() != null));
+        }
+
+        node.getChildren().forEach(child -> dump(child, indent + "  "));
     }
 
 }

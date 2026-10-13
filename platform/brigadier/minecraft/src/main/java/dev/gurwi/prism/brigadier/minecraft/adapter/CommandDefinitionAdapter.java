@@ -17,6 +17,7 @@ import dev.gurwi.prism.brigadier.minecraft.argument.mapping.BoundArgumentMapper;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import dev.gurwi.prism.bukkit.argument.BukkitArgument;
 import dev.gurwi.prism.bukkit.argument.GreedyArgument;
+import dev.gurwi.prism.bukkit.argument.LiteralArgument;
 import dev.gurwi.prism.bukkit.argument.parser.ArgumentTokens;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.exception.ArgumentParseException;
@@ -40,7 +41,7 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
     @Override
     public boolean available(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull MinecraftCommandSource source) {
         if (argument instanceof BukkitArgument<?, ?> bukkitArgument) {
-            return bukkitArgument.getRequirement().test(senderOf(source));
+            return bukkitArgument.canUse(senderOf(source));
         }
 
         return false;
@@ -72,8 +73,34 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
     }
 
     @Override
+    public boolean literal(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
+        return argument instanceof LiteralArgument;
+    }
+
+    @Override
+    public @NotNull List<? extends AbstractArgument<?, ?, ?, ?>> branches(@NotNull BukkitCommandDefinition definition) {
+        return arguments(definition.getArgumentTreeBranches());
+    }
+
+    @Override
+    public @NotNull List<? extends AbstractArgument<?, ?, ?, ?>> children(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
+        return arguments(((BukkitArgument<?, ?>) argument).getArguments());
+    }
+
+    @Override
     public @Nullable Command<MinecraftCommandSource> command(@NotNull BukkitCommandDefinition definition) {
         return ctx -> execute(definition, ctx);
+    }
+
+    @Override
+    public @Nullable Command<MinecraftCommandSource> command(@NotNull BukkitCommandDefinition definition, @NotNull List<AbstractArgument<?, ?, ?, ?>> path) {
+        BukkitArgument<?, ?> last = (BukkitArgument<?, ?>) path.get(path.size() - 1);
+
+        if (last.getExecutors().isEmpty()) {
+            return null;
+        }
+
+        return ctx -> executeNode(definition, path, ctx);
     }
 
     @Override
@@ -110,6 +137,30 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
             throw NO_EXECUTOR.create();
         }
 
+        CommandArguments<BukkitCommandDefinition, CommandSender> parsed = parseHierarchy(target, context, source, sender, List.of());
+
+        target.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int executeNode(@NotNull BukkitCommandDefinition definition, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull CommandContext<MinecraftCommandSource> context) throws CommandSyntaxException {
+        MinecraftCommandSource source = context.getSource();
+        CommandSender sender = senderOf(source);
+        BukkitArgument<?, ?> last = (BukkitArgument<?, ?>) path.get(path.size() - 1);
+
+        if (!last.hasExecutor(sender)) {
+            throw NO_EXECUTOR.create();
+        }
+
+        CommandArguments<BukkitCommandDefinition, CommandSender> parsed = parseHierarchy(definition, context, source, sender, path);
+
+        last.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private @Nullable CommandArguments<BukkitCommandDefinition, CommandSender> parseHierarchy(@NotNull BukkitCommandDefinition target, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender, @NotNull List<AbstractArgument<?, ?, ?, ?>> path) throws CommandSyntaxException {
         Deque<BukkitCommandDefinition> hierarchy = new ArrayDeque<>();
         BukkitCommandDefinition current = target;
 
@@ -121,17 +172,13 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
         CommandArguments<BukkitCommandDefinition, CommandSender> parsed = null;
 
         for (BukkitCommandDefinition level : hierarchy) {
-            parsed = parseLevel(level, context, source, sender, parsed);
+            parsed = parseLevel(level, context, source, sender, parsed, level == target ? path : List.of());
         }
 
-        CommandArguments<BukkitCommandDefinition, CommandSender> finalArguments = parsed;
-
-        target.getExecutors().forEach(executor -> executor.tryInvoke(sender, finalArguments));
-
-        return Command.SINGLE_SUCCESS;
+        return parsed;
     }
 
-    private @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parseLevel(@NotNull BukkitCommandDefinition level, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender, CommandArguments<BukkitCommandDefinition, CommandSender> parent) throws CommandSyntaxException {
+    private @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parseLevel(@NotNull BukkitCommandDefinition level, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender, CommandArguments<BukkitCommandDefinition, CommandSender> parent, @NotNull List<AbstractArgument<?, ?, ?, ?>> path) throws CommandSyntaxException {
         Map<AbstractArgument<?, ?, ?, ?>, List<BrigadierTreeBuilder.Slot>> grouped = new LinkedHashMap<>();
 
         for (BrigadierTreeBuilder.Slot slot : builder.slots(level)) {
@@ -144,6 +191,11 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
         for (Map.Entry<AbstractArgument<?, ?, ?, ?>, List<BrigadierTreeBuilder.Slot>> entry : grouped.entrySet()) {
             BukkitArgument<?, ?> argument = (BukkitArgument<?, ?>) entry.getKey();
             List<BrigadierTreeBuilder.Slot> slots = entry.getValue();
+
+            if (slots.get(0).literal() || !argument.isListed()) {
+                continue;
+            }
+
             boolean isOptional = slots.get(0).optional();
 
             if (isOptional && !present(context, slots.get(0).name())) {
@@ -157,6 +209,18 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
             } else {
                 required.put(argument.getName(), value);
             }
+        }
+
+        for (int index = 0; index < path.size(); index++) {
+            BukkitArgument<?, ?> argument = (BukkitArgument<?, ?>) path.get(index);
+
+            if (literal(argument) || !argument.isListed()) {
+                continue;
+            }
+
+            List<BrigadierTreeBuilder.Slot> slots = builder.treeSlots(level, path.subList(0, index + 1));
+
+            required.put(argument.getName(), read(argument, slots, context, source, sender));
         }
 
         return new CommandArguments<>(level, required, optional, parent);
@@ -202,13 +266,49 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
     }
 
     private boolean visible(@NotNull BukkitCommandDefinition definition, @NotNull CommandSender sender) {
-        boolean usable = definition.canExecute(sender);
-
-        if (!usable) {
+        if (!definition.canExecute(sender)) {
             return false;
         }
 
-        return definition.hasExecutor(sender) || definition.getChildren().stream().anyMatch(child -> visible(child, sender));
+        if (definition.hasExecutor(sender)) {
+            return true;
+        }
+
+        for (AbstractArgument<?, ?, ?, ?> branch : branches(definition)) {
+            if (usable((BukkitArgument<?, ?>) branch, sender)) {
+                return true;
+            }
+        }
+
+        return definition.getChildren().stream().anyMatch(child -> visible(child, sender));
+    }
+
+    private boolean usable(@NotNull BukkitArgument<?, ?> node, @NotNull CommandSender sender) {
+        if (!node.canUse(sender)) {
+            return false;
+        }
+
+        if (node.hasExecutor(sender)) {
+            return true;
+        }
+
+        for (AbstractArgument<?, ?, ?, ?> child : children(node)) {
+            if (usable((BukkitArgument<?, ?>) child, sender)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static @NotNull List<AbstractArgument<?, ?, ?, ?>> arguments(@NotNull Collection<?> source) {
+        List<AbstractArgument<?, ?, ?, ?>> result = new ArrayList<>();
+
+        for (Object item : source) {
+            result.add((AbstractArgument<?, ?, ?, ?>) item);
+        }
+
+        return result;
     }
 
     private @NotNull CommandSender senderOf(@NotNull MinecraftCommandSource source) {

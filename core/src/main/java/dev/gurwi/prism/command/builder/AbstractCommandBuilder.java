@@ -1,6 +1,8 @@
-package dev.gurwi.prism.command;
+package dev.gurwi.prism.command.builder;
 
 import dev.gurwi.prism.argument.AbstractArgument;
+import dev.gurwi.prism.command.AbstractCommandDefinition;
+import dev.gurwi.prism.command.CommandExecutor;
 import dev.gurwi.prism.permission.PermissionNode;
 import dev.gurwi.prism.platform.CommandsRegistry;
 import dev.gurwi.prism.platform.Platform;
@@ -17,7 +19,7 @@ public abstract class AbstractCommandBuilder<
         Executor extends CommandExecutor<? extends Source, Definition>,
         Argument extends AbstractArgument<?, ?, Source, ?>,
         Permission extends PermissionNode<?, Source>
-> {
+> implements ExecutorContainerBuilder<Impl, Executor>, RequirementContainerBuilder<Impl, UsageRequirement<Source>> {
 
     protected final List<Argument> requiredArguments = new ArrayList<>();
     protected final List<Argument> optionalArguments = new ArrayList<>();
@@ -57,13 +59,15 @@ public abstract class AbstractCommandBuilder<
         return self();
     }
 
-    public Impl withRequirement(@NotNull UsageRequirement<Source> requirement) {
-        this.requirement = this.requirement.and(requirement);
-        return self();
-    }
 
     public Impl withPermissions(Permission... permissions) {
         this.permissions.addAll(Arrays.asList(permissions));
+        return self();
+    }
+
+    @Override
+    public Impl withRequirement(@NotNull UsageRequirement<Source> requirement) {
+        this.requirement = this.requirement.and(requirement);
         return self();
     }
 
@@ -75,8 +79,15 @@ public abstract class AbstractCommandBuilder<
         return self();
     }
 
+    @Override
     public <E extends Executor> Impl executes(Class<E> type, E executor) {
         executors.put(type, executor);
+        return self();
+    }
+
+    @Override
+    public Impl clearExecutors() {
+        executors.clear();
         return self();
     }
 

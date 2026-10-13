@@ -1,7 +1,7 @@
 package dev.gurwi.prism.jda.command;
 
 import dev.gurwi.prism.command.AbstractCommandDefinition;
-import dev.gurwi.prism.command.CommandChildrenFactory;
+import dev.gurwi.prism.command.builder.CommandChildrenFactory;
 import dev.gurwi.prism.jda.argument.JDAArgument;
 import dev.gurwi.prism.jda.executor.JDACommandExecutor;
 import dev.gurwi.prism.jda.permission.CommandPermission;

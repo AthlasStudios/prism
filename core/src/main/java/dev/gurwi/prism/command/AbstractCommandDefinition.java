@@ -1,6 +1,7 @@
 package dev.gurwi.prism.command;
 
 import dev.gurwi.prism.argument.AbstractArgument;
+import dev.gurwi.prism.command.builder.CommandChildrenFactory;
 import dev.gurwi.prism.permission.PermissionNode;
 import dev.gurwi.prism.requirement.UsageRequirement;
 import org.jetbrains.annotations.NotNull;

@@ -167,7 +167,7 @@ public class CommandArguments<Definition extends AbstractCommandDefinition<Defin
         return local(key);
     }
 
-    public <T> @NotNull Optional<T> find(@NotNull AbstractArgument<?, T, Source, ?> argument) {
+    public <T> @NotNull Optional<T> find(@NotNull AbstractArgument<?, T, ? extends Source, ?> argument) {
         CommandArguments<Definition, Source> current = this;
 
         while (current != null) {
@@ -185,7 +185,7 @@ public class CommandArguments<Definition extends AbstractCommandDefinition<Defin
         return this.<T>find(key).orElseThrow(() -> new IllegalArgumentException("Unknown argument: " + key));
     }
 
-    public <T> T get(@NotNull AbstractArgument<?, T, Source, ?> argument) {
+    public <T> T get(@NotNull AbstractArgument<?, T, ? extends Source, ?> argument) {
         return find(argument).orElseThrow(() -> new IllegalArgumentException("Argument not present: " + argument.getName()));
     }
 
@@ -193,7 +193,7 @@ public class CommandArguments<Definition extends AbstractCommandDefinition<Defin
         return find(key);
     }
 
-    public <T> @NotNull Optional<T> getOptional(@NotNull AbstractArgument<?, T, Source, ?> argument) {
+    public <T> @NotNull Optional<T> getOptional(@NotNull AbstractArgument<?, T, ? extends Source, ?> argument) {
         return find(argument);
     }
 
@@ -201,7 +201,7 @@ public class CommandArguments<Definition extends AbstractCommandDefinition<Defin
         return this.<T>find(key).orElse(defaultValue);
     }
 
-    public <T> T getOptional(@NotNull AbstractArgument<?, T, Source, ?> argument, T defaultValue) {
+    public <T> T getOptional(@NotNull AbstractArgument<?, T, ? extends Source, ?> argument, T defaultValue) {
         return find(argument).orElse(defaultValue);
     }
 
@@ -218,7 +218,7 @@ public class CommandArguments<Definition extends AbstractCommandDefinition<Defin
         return Optional.ofNullable((T) optionalArgumentValues.get(key));
     }
 
-    private boolean owns(@NotNull AbstractArgument<?, ?, Source, ?> argument) {
+    private boolean owns(@NotNull AbstractArgument<?, ?, ? extends Source, ?> argument) {
         return definition.getRequiredArguments().contains(argument) || definition.getOptionalArguments().contains(argument);
     }
 
