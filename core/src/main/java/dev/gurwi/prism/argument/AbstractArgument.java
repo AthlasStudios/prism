@@ -11,6 +11,7 @@ public abstract class AbstractArgument<Impl extends AbstractArgument<Impl, T, So
     private final String name;
 
     protected boolean listed = true;
+    protected boolean forceSuggestions = false;
     private Suggestions suggestionsSupplier;
     private UsageRequirement<Source> requirement = UsageRequirement.none();
 
@@ -29,6 +30,11 @@ public abstract class AbstractArgument<Impl extends AbstractArgument<Impl, T, So
         return self();
     }
 
+    public Impl forceSuggestions(boolean forceSuggestions) {
+        this.forceSuggestions = forceSuggestions;
+        return self();
+    }
+
     @Override
     public Impl withRequirement(@NotNull UsageRequirement<Source> requirement) {
         this.requirement = this.requirement.and(requirement);
@@ -41,6 +47,10 @@ public abstract class AbstractArgument<Impl extends AbstractArgument<Impl, T, So
 
     public boolean isListed() {
         return listed;
+    }
+
+    public boolean isForceSuggestions() {
+        return forceSuggestions;
     }
 
     public Suggestions getSuggestionsSupplier() {

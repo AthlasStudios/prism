@@ -10,6 +10,8 @@ import java.util.concurrent.CompletableFuture;
 
 public interface SuggestionsSupplier {
 
+    // TODO -> ADD TOOLTIPS
+
     @Contract(pure = true)
     static SuggestionsSupplier.@NotNull Sync<?, ?> empty() {
         return (source, input) -> Collections.emptyList();

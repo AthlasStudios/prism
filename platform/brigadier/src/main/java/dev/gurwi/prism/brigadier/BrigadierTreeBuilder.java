@@ -1,11 +1,13 @@
 package dev.gurwi.prism.brigadier;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
@@ -16,14 +18,18 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
 public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDefinition<Definition, ?, ?, ?, ?>> {
 
     private final BrigadierAdapter<S, Definition> adapter;
+    private final Map<AbstractArgument<?, ?, ?, ?>, String> merged = new IdentityHashMap<>();
 
     public BrigadierTreeBuilder(@NotNull BrigadierAdapter<S, Definition> adapter) {
         this.adapter = adapter;
@@ -43,9 +49,7 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
             }
         }
 
-        for (AbstractArgument<?, ?, ?, ?> branch : adapter.branches(definition)) {
-            children.add(buildBranch(definition, branch, List.of()));
-        }
+        children.addAll(buildBranches(definition, adapter.branches(definition), List.of(), Map.of()));
 
         requireUnique(definition.getName(), children);
 
@@ -125,6 +129,11 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
 
     private @NotNull String treeNodeName(@NotNull Definition definition, @NotNull List<? extends AbstractArgument<?, ?, ?, ?>> path) {
         AbstractArgument<?, ?, ?, ?> argument = path.get(path.size() - 1);
+        String override = merged.get(argument);
+
+        if (override != null) {
+            return override;
+        }
 
         if (adapter.literal(argument)) {
             return argument.getName();
@@ -141,7 +150,167 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         return occurrences > 1 ? argument.getName() + "_t" + path.size() : argument.getName();
     }
 
-    private @Nullable CommandNode<S> buildBranch(@NotNull Definition definition, @NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull List<AbstractArgument<?, ?, ?, ?>> ancestors) {
+    private boolean forcing(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
+        return adapter.forced(argument)
+                && resolveType(argument) == null
+                && !adapter.literal(argument)
+                && !adapter.greedy(argument)
+                && adapter.tokens(argument) == 1;
+    }
+
+    private boolean mergeable(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
+        return !adapter.literal(argument)
+                && !forcing(argument)
+                && !adapter.greedy(argument)
+                && resolveType(argument) == null
+                && adapter.tokens(argument) == 1
+                && adapter.children(argument).isEmpty();
+    }
+
+    private @NotNull List<CommandNode<S>> buildBranches(@NotNull Definition definition, @NotNull List<? extends AbstractArgument<?, ?, ?, ?>> siblings, @NotNull List<AbstractArgument<?, ?, ?, ?>> ancestors, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) {
+        List<AbstractArgument<?, ?, ?, ?>> ordered = new ArrayList<>(siblings);
+        ordered.sort(Comparator.comparingInt(argument -> !adapter.literal(argument) && !forcing(argument) && resolveType(argument) == null ? 1 : 0));
+
+        List<AbstractArgument<?, ?, ?, ?>> group = new ArrayList<>();
+
+        for (AbstractArgument<?, ?, ?, ?> sibling : ordered) {
+            if (mergeable(sibling)) {
+                group.add(sibling);
+            }
+        }
+
+        boolean merge = group.size() >= 2;
+        List<CommandNode<S>> nodes = new ArrayList<>();
+
+        for (AbstractArgument<?, ?, ?, ?> sibling : ordered) {
+            if (forcing(sibling)) {
+                List<String> values = adapter.forcedValues(sibling);
+
+                if (values.isEmpty()) {
+                    throw new IllegalStateException("Argument '" + sibling.getName() + "' of '" + definition.getName() + "' forces suggestions but provides none");
+                }
+
+                for (String value : values) {
+                    nodes.add(buildForcedBranch(definition, sibling, value, ancestors, forced));
+                }
+            } else if (!merge || !group.contains(sibling)) {
+                CommandNode<S> node = buildBranch(definition, sibling, ancestors, forced);
+
+                if (node != null) {
+                    nodes.add(node);
+                }
+            }
+        }
+
+        if (merge) {
+            nodes.add(buildMerged(definition, group, ancestors, forced));
+        }
+
+        return nodes;
+    }
+
+    private @NotNull CommandNode<S> buildMerged(@NotNull Definition definition, @NotNull List<AbstractArgument<?, ?, ?, ?>> group, @NotNull List<AbstractArgument<?, ?, ?, ?>> ancestors, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) {
+        List<String> names = new ArrayList<>();
+
+        for (AbstractArgument<?, ?, ?, ?> argument : group) {
+            names.add(argument.getName());
+        }
+
+        String name = String.join("|", names);
+
+        for (AbstractArgument<?, ?, ?, ?> argument : group) {
+            merged.put(argument, name);
+        }
+
+        Map<AbstractArgument<?, ?, ?, ?>, Command<S>> commands = new IdentityHashMap<>();
+
+        for (AbstractArgument<?, ?, ?, ?> argument : group) {
+            List<AbstractArgument<?, ?, ?, ?>> path = new ArrayList<>(ancestors);
+            path.add(argument);
+
+            Command<S> command = adapter.command(definition, List.copyOf(path), forced);
+
+            if (command != null) {
+                commands.put(argument, command);
+            }
+        }
+
+        RequiredArgumentBuilder<S, String> builder = RequiredArgumentBuilder.argument(name, StringArgumentType.word());
+        builder.requires(source -> {
+            for (AbstractArgument<?, ?, ?, ?> argument : group) {
+                if (adapter.available(argument, source)) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+
+        builder.suggests((context, suggestions) -> {
+            for (AbstractArgument<?, ?, ?, ?> argument : group) {
+                if (!adapter.available(argument, context.getSource())) {
+                    continue;
+                }
+
+                SuggestionProvider<S> provider = adapter.suggestions(argument, null);
+
+                if (provider != null) {
+                    provider.getSuggestions(context, suggestions);
+                }
+            }
+
+            return suggestions.buildFuture();
+        });
+
+        if (!commands.isEmpty()) {
+            builder.executes(context -> {
+                String word = context.getArgument(name, String.class);
+
+                for (AbstractArgument<?, ?, ?, ?> argument : group) {
+                    Command<S> command = commands.get(argument);
+
+                    if (command != null
+                            && adapter.available(argument, context.getSource())
+                            && adapter.accepts(argument, context.getSource(), word)) {
+                        return command.run(context);
+                    }
+                }
+
+                throw new SimpleCommandExceptionType(new LiteralMessage("Invalid value: " + word)).create();
+            });
+        }
+
+        return builder.build();
+    }
+
+    private @NotNull CommandNode<S> buildForcedBranch(@NotNull Definition definition, @NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull String value, @NotNull List<AbstractArgument<?, ?, ?, ?>> ancestors, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) {
+        List<AbstractArgument<?, ?, ?, ?>> path = new ArrayList<>(ancestors);
+        path.add(argument);
+
+        Map<AbstractArgument<?, ?, ?, ?>, String> next = new IdentityHashMap<>(forced);
+        next.put(argument, value);
+
+        List<CommandNode<S>> children = buildBranches(definition, adapter.children(argument), path, next);
+
+        requireUnique(argument.getName(), children);
+
+        LiteralArgumentBuilder<S> literal = LiteralArgumentBuilder.literal(value);
+        literal.requires(source -> adapter.available(argument, source));
+
+        Command<S> command = adapter.command(definition, List.copyOf(path), next);
+
+        if (command != null) {
+            literal.executes(command);
+        }
+
+        for (CommandNode<S> child : children) {
+            literal.then(child);
+        }
+
+        return literal.build();
+    }
+
+    private @Nullable CommandNode<S> buildBranch(@NotNull Definition definition, @NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull List<AbstractArgument<?, ?, ?, ?>> ancestors, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) {
         List<AbstractArgument<?, ?, ?, ?>> path = new ArrayList<>(ancestors);
         path.add(argument);
 
@@ -159,13 +328,11 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
 
         List<CommandNode<S>> children = new ArrayList<>();
 
-        for (AbstractArgument<?, ?, ?, ?> child : childArguments) {
-            children.add(buildBranch(definition, child, path));
-        }
+        children.addAll(buildBranches(definition, childArguments, path, forced));
 
         requireUnique(argument.getName(), children);
 
-        Command<S> command = adapter.command(definition, List.copyOf(path));
+        Command<S> command = adapter.command(definition, List.copyOf(path), forced);
         CommandNode<S> next = null;
 
         for (int i = slots.size() - 1; i >= 0; i--) {

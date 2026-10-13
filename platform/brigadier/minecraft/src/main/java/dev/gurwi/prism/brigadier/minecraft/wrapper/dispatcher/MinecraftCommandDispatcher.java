@@ -71,6 +71,15 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
             }
         });
 
+        builder.requires(stack -> {
+            try {
+                return node.getRequirement().test(toMinecraftSource(stack));
+            } catch (Throwable throwable) {
+                report("requirement " + node.getName(), throwable);
+                return false;
+            }
+        });
+
         if (node.getCommand() != null) {
             builder.executes(context -> {
                 try {

@@ -17,6 +17,8 @@ public class MaterialArgument extends BukkitArgument<MaterialArgument, Material>
                         .map(material -> material.name().toLowerCase())
                         .toList()
         );
+
+        forceSuggestions(true);
     }
 
     @Override

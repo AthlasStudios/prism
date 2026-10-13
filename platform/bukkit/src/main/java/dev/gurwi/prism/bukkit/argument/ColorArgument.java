@@ -36,6 +36,12 @@ public class ColorArgument extends BukkitArgument<ColorArgument, Color> {
 
     public ColorArgument(String name) {
         super(name);
+
+        replaceSuggestions(
+            NAMED.keySet()
+        );
+
+        forceSuggestions(true);
     }
 
     @Override

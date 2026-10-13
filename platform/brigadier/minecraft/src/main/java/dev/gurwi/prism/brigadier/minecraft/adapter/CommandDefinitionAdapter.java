@@ -21,6 +21,7 @@ import dev.gurwi.prism.bukkit.argument.LiteralArgument;
 import dev.gurwi.prism.bukkit.argument.parser.ArgumentTokens;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.exception.ArgumentParseException;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,10 +42,48 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
     @Override
     public boolean available(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull MinecraftCommandSource source) {
         if (argument instanceof BukkitArgument<?, ?> bukkitArgument) {
-            return bukkitArgument.canUse(senderOf(source));
+            return bukkitArgument.getRequirement().test(senderOf(source));
         }
 
         return false;
+    }
+
+    @Override
+    public boolean forced(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
+        return argument instanceof BukkitArgument<?, ?> bukkitArgument
+                && !(argument instanceof LiteralArgument)
+                && bukkitArgument.isForceSuggestions();
+    }
+
+    @Override
+    public @NotNull List<String> forcedValues(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
+        if (!(argument instanceof BukkitArgument<?, ?> bukkitArgument)) {
+            return List.of();
+        }
+
+        Set<String> values = new LinkedHashSet<>();
+
+        for (String suggestion : bukkitArgument.getSuggestionsSupplier().getSuggestions(Bukkit.getConsoleSender(), "")) {
+            if (suggestion != null && !suggestion.isEmpty() && suggestion.indexOf(' ') < 0) {
+                values.add(suggestion);
+            }
+        }
+
+        return List.copyOf(values);
+    }
+
+    @Override
+    public boolean accepts(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull MinecraftCommandSource source, @NotNull String word) {
+        if (!(argument instanceof BukkitArgument<?, ?> bukkitArgument)) {
+            return false;
+        }
+
+        try {
+            bukkitArgument.parse(senderOf(source), word);
+            return true;
+        } catch (ArgumentParseException e) {
+            return false;
+        }
     }
 
     @Override
@@ -94,13 +133,18 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
 
     @Override
     public @Nullable Command<MinecraftCommandSource> command(@NotNull BukkitCommandDefinition definition, @NotNull List<AbstractArgument<?, ?, ?, ?>> path) {
+        return command(definition, path, Map.of());
+    }
+
+    @Override
+    public @Nullable Command<MinecraftCommandSource> command(@NotNull BukkitCommandDefinition definition, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) {
         BukkitArgument<?, ?> last = (BukkitArgument<?, ?>) path.get(path.size() - 1);
 
         if (last.getExecutors().isEmpty()) {
             return null;
         }
 
-        return ctx -> executeNode(definition, path, ctx);
+        return ctx -> executeNode(definition, path, forced, ctx);
     }
 
     @Override
@@ -137,14 +181,14 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
             throw NO_EXECUTOR.create();
         }
 
-        CommandArguments<BukkitCommandDefinition, CommandSender> parsed = parseHierarchy(target, context, source, sender, List.of());
+        CommandArguments<BukkitCommandDefinition, CommandSender> parsed = parseHierarchy(target, context, source, sender, List.of(), Map.of());
 
         target.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
 
         return Command.SINGLE_SUCCESS;
     }
 
-    private int executeNode(@NotNull BukkitCommandDefinition definition, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull CommandContext<MinecraftCommandSource> context) throws CommandSyntaxException {
+    private int executeNode(@NotNull BukkitCommandDefinition definition, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced, @NotNull CommandContext<MinecraftCommandSource> context) throws CommandSyntaxException {
         MinecraftCommandSource source = context.getSource();
         CommandSender sender = senderOf(source);
         BukkitArgument<?, ?> last = (BukkitArgument<?, ?>) path.get(path.size() - 1);
@@ -153,14 +197,14 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
             throw NO_EXECUTOR.create();
         }
 
-        CommandArguments<BukkitCommandDefinition, CommandSender> parsed = parseHierarchy(definition, context, source, sender, path);
+        CommandArguments<BukkitCommandDefinition, CommandSender> parsed = parseHierarchy(definition, context, source, sender, path, forced);
 
         last.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
 
         return Command.SINGLE_SUCCESS;
     }
 
-    private @Nullable CommandArguments<BukkitCommandDefinition, CommandSender> parseHierarchy(@NotNull BukkitCommandDefinition target, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender, @NotNull List<AbstractArgument<?, ?, ?, ?>> path) throws CommandSyntaxException {
+    private @Nullable CommandArguments<BukkitCommandDefinition, CommandSender> parseHierarchy(@NotNull BukkitCommandDefinition target, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {
         Deque<BukkitCommandDefinition> hierarchy = new ArrayDeque<>();
         BukkitCommandDefinition current = target;
 
@@ -172,13 +216,13 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
         CommandArguments<BukkitCommandDefinition, CommandSender> parsed = null;
 
         for (BukkitCommandDefinition level : hierarchy) {
-            parsed = parseLevel(level, context, source, sender, parsed, level == target ? path : List.of());
+            parsed = parseLevel(level, context, source, sender, parsed, level == target ? path : List.of(), forced);
         }
 
         return parsed;
     }
 
-    private @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parseLevel(@NotNull BukkitCommandDefinition level, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender, CommandArguments<BukkitCommandDefinition, CommandSender> parent, @NotNull List<AbstractArgument<?, ?, ?, ?>> path) throws CommandSyntaxException {
+    private @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parseLevel(@NotNull BukkitCommandDefinition level, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender, CommandArguments<BukkitCommandDefinition, CommandSender> parent, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {
         Map<AbstractArgument<?, ?, ?, ?>, List<BrigadierTreeBuilder.Slot>> grouped = new LinkedHashMap<>();
 
         for (BrigadierTreeBuilder.Slot slot : builder.slots(level)) {
@@ -215,6 +259,18 @@ public class CommandDefinitionAdapter implements BrigadierAdapter<MinecraftComma
             BukkitArgument<?, ?> argument = (BukkitArgument<?, ?>) path.get(index);
 
             if (literal(argument) || !argument.isListed()) {
+                continue;
+            }
+
+            String fixed = forced.get(argument);
+
+            if (fixed != null) {
+                try {
+                    required.put(argument.getName(), argument.parse(sender, fixed));
+                } catch (ArgumentParseException e) {
+                    throw new SimpleCommandExceptionType(new LiteralMessage(String.valueOf(e.getMessage()))).create();
+                }
+
                 continue;
             }
 

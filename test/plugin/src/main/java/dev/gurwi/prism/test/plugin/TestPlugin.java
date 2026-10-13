@@ -149,6 +149,13 @@ public class TestPlugin extends JavaPlugin {
                                     sender.sendMessage("Selected game mode " + gameMode);
                                 })
                 )
+                .then(
+                        new DifficultyArgument("difficulty")
+                                .executes((sender, args) -> {
+                                    Difficulty difficulty = args.get("difficulty");
+                                    sender.sendMessage("Selected difficulty " + difficulty);
+                                })
+                )
                 .executes(CommandHelp::help)
                 .register(platform);
 

@@ -14,6 +14,8 @@ import java.util.Collection;
 
 public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> extends AbstractTreeArgument<Impl, T, BukkitCommandDefinition, CommandSender, BukkitCommandExecutor<? extends CommandSender>, BukkitArgument<?, ?>, BukkitPermission, BukkitSuggestionsSupplier> implements BukkitExecutorContainerBuilder<Impl>, BukkitRequirementContainerBuilder<Impl> {
 
+    // TODO -> FORCE SPECIFIC VALUES
+
     public BukkitArgument(String name) {
         super(name, BukkitSuggestionsSupplier.empty());
     }

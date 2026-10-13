@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 
 public interface BrigadierAdapter<Source, Definition extends AbstractCommandDefinition<Definition, ?, ?, ?, ?>> {
 
@@ -37,6 +38,22 @@ public interface BrigadierAdapter<Source, Definition extends AbstractCommandDefi
 
     default @Nullable Command<Source> command(@NotNull Definition definition, @NotNull List<AbstractArgument<?, ?, ?, ?>> path) {
         return null;
+    }
+
+    default boolean forced(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
+        return false;
+    }
+
+    default @NotNull List<String> forcedValues(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
+        return List.of();
+    }
+
+    default @Nullable Command<Source> command(@NotNull Definition definition, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) {
+        return command(definition, path);
+    }
+
+    default boolean accepts(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull Source source, @NotNull String word) {
+        return true;
     }
 
     @Nullable Command<Source> command(@NotNull Definition definition);

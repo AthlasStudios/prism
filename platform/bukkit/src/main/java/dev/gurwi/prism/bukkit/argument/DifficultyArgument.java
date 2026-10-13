@@ -17,6 +17,8 @@ public class DifficultyArgument extends BukkitArgument<DifficultyArgument, Diffi
                         .map(difficulty -> difficulty.name().toLowerCase())
                         .toList()
         ));
+
+        forceSuggestions(true);
     }
 
     @Override

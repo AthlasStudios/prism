@@ -19,6 +19,8 @@ public class GameModeArgument extends BukkitArgument<GameModeArgument, GameMode>
                                 .toList()
                 )
         );
+
+        forceSuggestions(true);
     }
 
     @Override
