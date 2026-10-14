@@ -38,7 +38,7 @@ public class ColorArgument extends BukkitArgument<ColorArgument, Color> {
         super(name);
 
         replaceSuggestions(
-            NAMED.keySet()
+                NAMED.keySet()
         );
 
         forceSuggestions(true);
@@ -75,8 +75,14 @@ public class ColorArgument extends BukkitArgument<ColorArgument, Color> {
     }
 
     public static @NotNull Optional<String> getNamed(Color color) {
+        if (color == null) {
+            return Optional.empty();
+        }
+
+        int rgb = color.asRGB();
+
         for (Map.Entry<String, Color> entry : NAMED.entrySet()) {
-            if (entry.getValue().equals(color)) {
+            if (entry.getValue().asRGB() == rgb) {
                 return Optional.of(entry.getKey());
             }
         }
