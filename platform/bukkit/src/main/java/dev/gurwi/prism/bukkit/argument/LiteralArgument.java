@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 public class LiteralArgument extends BukkitArgument<LiteralArgument, Void> {
 
     // TODO -> ADD ALIASES?
+    // TODO -> ADD DESCRIPTION
 
     public LiteralArgument(String name) {
         super(name);

@@ -147,7 +147,7 @@ public final class LegacyArgumentsParser {
             end = ArgumentTokens.advance(node, position, rawArgs.length);
 
             if (end > rawArgs.length) {
-                return Attempt.fail(BukkitArgumentsParseException.missing(node, 0, 0), rawArgs.length);
+                return Attempt.fail(missingAt(node, originalArgs), rawArgs.length);
             }
 
             String input = String.join(" ", Arrays.copyOfRange(rawArgs, position, end));
@@ -197,7 +197,7 @@ public final class LegacyArgumentsParser {
 
             if (position >= rawArgs.length) {
                 if (required) {
-                    throw BukkitArgumentsParseException.missing(argument, 0, 0);
+                    throw missingAt(argument, originalArgs);
                 }
 
                 break;
@@ -219,7 +219,7 @@ public final class LegacyArgumentsParser {
             int end = ArgumentTokens.advance(argument, position, rawArgs.length);
 
             if (end > rawArgs.length) {
-                throw BukkitArgumentsParseException.missing(argument, 0, 0);
+                throw missingAt(argument, originalArgs);
             }
 
             String input = String.join(" ", Arrays.copyOfRange(rawArgs, position, end));
@@ -251,6 +251,12 @@ public final class LegacyArgumentsParser {
                 throw new GreedyArgumentException("A greedy argument must be the last argument.");
             }
         }
+    }
+
+    private static @NotNull BukkitArgumentsParseException missingAt(@NotNull BukkitArgument<?, ?> argument, @NotNull String @NotNull [] originalArgs) {
+        String input = String.join(" ", originalArgs);
+
+        return BukkitArgumentsParseException.missing(argument, input, input.length(), input.length());
     }
 
     private static @NotNull BukkitArgumentsParseException unknownAt(@NotNull String @NotNull [] originalArgs, int offset, @NotNull String @NotNull [] rawArgs, int position) {

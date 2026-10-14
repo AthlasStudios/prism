@@ -14,7 +14,7 @@ import java.util.Collection;
 
 public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> extends AbstractTreeArgument<Impl, T, BukkitCommandDefinition, CommandSender, BukkitCommandExecutor<? extends CommandSender>, BukkitArgument<?, ?>, BukkitPermission, BukkitSuggestionsSupplier> implements BukkitExecutorContainerBuilder<Impl>, BukkitRequirementContainerBuilder<Impl> {
 
-    // TODO -> FORCE SPECIFIC VALUES
+    // TODO -> FORCE SPECIFIC VALUES IN LEGACY EXECUTOR
 
     public BukkitArgument(String name) {
         super(name, BukkitSuggestionsSupplier.empty());
@@ -42,11 +42,6 @@ public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> ex
 
     public boolean hasExecutor(@NotNull CommandSender sender) {
         return executors.values().stream().anyMatch(executor -> executor.getSourceType().isInstance(sender));
-    }
-
-    @Override
-    public boolean canUse(@NotNull CommandSender sender) {
-        return super.canUse(sender) && hasExecutor(sender);
     }
 
 }

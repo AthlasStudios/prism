@@ -4,7 +4,6 @@ import dev.gurwi.prism.bukkit.argument.*;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.command.PrismBukkitCommand;
-import dev.gurwi.prism.bukkit.command.executor.GenericCommandExecutor;
 import dev.gurwi.prism.bukkit.util.CommandHelp;
 import dev.gurwi.prism.paper.PaperPlatform;
 import org.bukkit.*;

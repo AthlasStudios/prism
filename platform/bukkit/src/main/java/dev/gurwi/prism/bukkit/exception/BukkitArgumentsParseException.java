@@ -55,16 +55,17 @@ public class BukkitArgumentsParseException extends IllegalArgumentException {
         );
     }
 
-    @Contract("_, _, _ -> new")
+    @Contract("_, _, _, _ -> new")
     public static @NotNull BukkitArgumentsParseException missing(
             AbstractArgument<?, ?, ?, ?> argument,
+            String input,
             int start,
             int end
     ) {
         return new BukkitArgumentsParseException(
                 Type.MISSING_ARGUMENT,
                 argument,
-                null,
+                input,
                 start,
                 end,
                 "Missing argument: <" + argument.getName() + ">",
