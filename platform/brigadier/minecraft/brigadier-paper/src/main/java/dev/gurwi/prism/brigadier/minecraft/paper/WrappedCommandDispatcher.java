@@ -1,8 +1,5 @@
 package dev.gurwi.prism.brigadier.minecraft.paper;
 
-import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.tree.ArgumentCommandNode;
-import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.dispatcher.MinecraftCommandDispatcher;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
@@ -21,6 +18,8 @@ public class WrappedCommandDispatcher extends MinecraftCommandDispatcher<Command
 
     protected WrappedCommandDispatcher(@NotNull Plugin plugin) {
         super(plugin);
+
+        plugin.getLogger().info("[prism] Using paper Lifecycle Manager.");
 
         plugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             Commands registrar = event.registrar();

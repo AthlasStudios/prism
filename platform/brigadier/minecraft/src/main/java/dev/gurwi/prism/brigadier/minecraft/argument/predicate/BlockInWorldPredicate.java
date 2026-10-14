@@ -1,6 +1,7 @@
 package dev.gurwi.prism.brigadier.minecraft.argument.predicate;
 
 import org.bukkit.block.Block;
+import org.jetbrains.annotations.NotNull;
 
 public interface BlockInWorldPredicate {
 
@@ -18,6 +19,10 @@ public interface BlockInWorldPredicate {
         public boolean asBoolean() {
             return this == TRUE;
         }
+    }
+
+    default @NotNull dev.gurwi.prism.bukkit.argument.type.BlockInWorldPredicate toBukkit() {
+        return (block, loadChunk) -> dev.gurwi.prism.bukkit.argument.type.BlockInWorldPredicate.Result.valueOf(this.testBlock(block, loadChunk).name());
     }
 
 }

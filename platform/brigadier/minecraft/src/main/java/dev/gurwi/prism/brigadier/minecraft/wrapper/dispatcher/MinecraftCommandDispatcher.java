@@ -185,7 +185,7 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
 
     protected void report(String where, Throwable throwable) {
         if (reported.add(where)) {
-            plugin.getLogger().warning("Brigadier provider: " + where + " failed, continuing without it: " + throwable);
+            plugin.getLogger().warning("[prism] Brigadier provider: " + where + " failed, continuing without it: " + throwable);
             throwable.printStackTrace();
         }
     }

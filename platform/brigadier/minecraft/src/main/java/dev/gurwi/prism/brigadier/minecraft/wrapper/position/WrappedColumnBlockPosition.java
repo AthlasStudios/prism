@@ -14,4 +14,12 @@ public class WrappedColumnBlockPosition {
         return WrappedPosition.block(blockX, y, blockZ);
     }
 
+    public int getBlockX() {
+        return blockX;
+    }
+
+    public int getBlockZ() {
+        return blockZ;
+    }
+
 }

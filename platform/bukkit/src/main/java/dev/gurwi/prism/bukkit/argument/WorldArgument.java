@@ -16,8 +16,6 @@ public class WorldArgument extends BukkitArgument<WorldArgument, World> {
                 .map(World::getName)
                 .toList()
         );
-
-        forceSuggestions(true);
     }
 
     @Override

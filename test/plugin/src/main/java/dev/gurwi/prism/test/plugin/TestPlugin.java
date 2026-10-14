@@ -134,6 +134,9 @@ public class TestPlugin extends JavaPlugin {
         StringArgument string = new StringArgument("string");
 
         new PrismBukkitCommand("prism", "pri")
+                .withArguments(
+                        new ItemStackPredicateArgument("predicate")
+                )
                 .then(
                         new MaterialArgument("material")
                                 .executes((sender, args) -> {

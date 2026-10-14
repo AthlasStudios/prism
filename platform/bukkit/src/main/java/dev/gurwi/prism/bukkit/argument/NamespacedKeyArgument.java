@@ -13,7 +13,7 @@ public class NamespacedKeyArgument extends BukkitArgument<NamespacedKeyArgument,
 
     @Override
     public NamespacedKey parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
-        return NamespacedKey.minecraft(value);
+        return NamespacedKey.minecraft(value.toLowerCase());
     }
 
 }

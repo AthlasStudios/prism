@@ -4,9 +4,16 @@ import com.mojang.brigadier.arguments.*;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.gurwi.prism.brigadier.minecraft.argument.MinecraftArgumentType;
+import dev.gurwi.prism.brigadier.minecraft.argument.resolver.ColumnFinePositionResolver;
+import dev.gurwi.prism.brigadier.minecraft.argument.resolver.FinePositionResolver;
 import dev.gurwi.prism.brigadier.minecraft.exception.UnsupportedArgumentTypeException;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
+import dev.gurwi.prism.brigadier.minecraft.wrapper.position.WrappedColumnBlockPosition;
+import dev.gurwi.prism.brigadier.minecraft.wrapper.position.WrappedColumnFinePosition;
+import dev.gurwi.prism.bukkit.AngleArgument;
 import dev.gurwi.prism.bukkit.argument.*;
+import dev.gurwi.prism.bukkit.argument.type.Rotation;
+import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,6 +44,14 @@ public class ArgumentMappings {
         register(IntegerRangeArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.integerRange()));
         register(DoubleRangeArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.doubleRange()));
         register(FloatRangeArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.floatRange()));
+        register(AxesArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.axes()));
+        register(MessageArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.message()));
+        register(DisplaySlotArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.scoreboardDisplaySlot()));
+        register(NamespacedKeyArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.namespacedKey()));
+        register(WorldArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.world()));
+        register(TimeArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.time(arg.getMin())));
+        register(MirrorArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.templateMirror()));
+        register(StructureRotationArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.templateRotation()));
 
         register(EntitySelectorArgument.OneEntity.class, ArgumentMapper.constant(
                 MinecraftArgumentType.entity(),
@@ -58,14 +73,68 @@ public class ArgumentMappings {
                 (argument, source, resolver) -> resolver.resolve(source)
         ));
 
-        register(LocationArgument.class, ArgumentMapper.constant(
-                MinecraftArgumentType.finePosition(),
+//        register(PlayerProfilesArgument.class, ArgumentMapper.constant(
+//                MinecraftArgumentType.playerProfiles(),
+//                (argument, source, resolver) -> resolver.resolve(source)
+//        ));
+
+        register(LocationArgument.class, ArgumentMapper.<Location, FinePositionResolver, LocationArgument>create(
+                argument -> MinecraftArgumentType.finePosition(argument.isCenterIntegers()),
                 (argument, source, resolver) -> resolver.resolve(source).toLocation(source.getLocation().getWorld())
         ));
 
         register(MaterialArgument.class, ArgumentMapper.constant(
                 MinecraftArgumentType.itemStack(),
                 (argument, source, item) -> item.getType()
+        ));
+
+        register(BlockPositionArgument.class, ArgumentMapper.constant(
+                MinecraftArgumentType.blockPosition(),
+                (argument, source, resolver) -> resolver.resolve(source).toLocation(source.getLocation().getWorld())
+        ));
+
+        register(RotationArgument.class, ArgumentMapper.constant(
+                MinecraftArgumentType.rotation(),
+                (argument, source, resolver) -> {
+                    var rotation = resolver.resolve(source);
+                    return new Rotation(rotation.yaw(), rotation.pitch());
+                }
+        ));
+
+        register(AngleArgument.class, ArgumentMapper.constant(
+                MinecraftArgumentType.angle(),
+                (argument, source, resolver) -> resolver.resolve(source)
+        ));
+
+        register(BlockStateArgument.class, ArgumentMapper.constant(
+                MinecraftArgumentType.blockState(),
+                (argument, source, state) -> state.getBlockData()
+        ));
+
+        register(ItemStackPredicateArgument.class, ArgumentMapper.constant(
+                MinecraftArgumentType.itemStackPredicate(),
+                (argument, source, predicate) -> predicate
+        ));
+
+        register(BlockPredicateArgument.class, ArgumentMapper.constant(
+                MinecraftArgumentType.blockInWorldPredicate(),
+                (argument, source, predicate) -> predicate.toBukkit()
+        ));
+
+        register(ColumnLocationArgument.class, ArgumentMapper.<Location, ColumnFinePositionResolver, ColumnLocationArgument>create(
+                argument -> MinecraftArgumentType.columnFinePosition(argument.isCenterIntegers()),
+                (argument, source, resolver) -> {
+                    WrappedColumnFinePosition position = resolver.resolve(source);
+                    return new Location(source.getLocation().getWorld(), position.getX(), 0, position.getZ());
+                }
+        ));
+
+        register(ColumnBlockPositionArgument.class, ArgumentMapper.constant(
+                MinecraftArgumentType.columnBlockPosition(),
+                (argument, source, resolver) -> {
+                    WrappedColumnBlockPosition position = resolver.resolve(source);
+                    return new Location(source.getLocation().getWorld(), position.getBlockX(), 0, position.getBlockZ());
+                }
         ));
     }
 

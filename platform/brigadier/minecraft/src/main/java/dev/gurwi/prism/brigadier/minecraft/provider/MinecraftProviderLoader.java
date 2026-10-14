@@ -46,7 +46,7 @@ public final class MinecraftProviderLoader {
 
     private static <T> @NotNull Optional<T> resolve(@NotNull Plugin plugin, @NotNull String label, @NotNull String className, @NotNull Class<T> type, @NotNull Class<?>[] parameterTypes, Object... arguments) {
         if (!BrigadierCompatibilityChecker.isSupported()) {
-            plugin.getLogger().warning("Brigadier is not available on this server, so the " + label + " cannot be loaded");
+            plugin.getLogger().warning("[prism] Brigadier is not available on this server, so the " + label + " cannot be loaded");
             return Optional.empty();
         }
 
@@ -65,7 +65,7 @@ public final class MinecraftProviderLoader {
                 T instance = ReflectionUtil.instantiate(implementation, parameterTypes, arguments);
 
                 if (candidate.kind() == Kind.OLDER) {
-                    plugin.getLogger().warning("No " + label + " implementation exists for Minecraft " + describe(version) + ", using the closest older one (" + candidate.name() + "). It may not work correctly. " + SUPPORT_HINT);
+                    plugin.getLogger().warning("[prism] No " + label + " implementation exists for Minecraft " + describe(version) + ", using the closest older one (" + candidate.name() + "). It may not work correctly. " + SUPPORT_HINT);
                 }
 
                 return Optional.of(instance);
@@ -81,7 +81,7 @@ public final class MinecraftProviderLoader {
             }
         }
 
-        plugin.getLogger().warning("No suitable " + label + " implementation was found for Minecraft " + describe(version) + " (tried " + tried + "). " + SUPPORT_HINT);
+        plugin.getLogger().warning("[prism] No suitable " + label + " implementation was found for Minecraft " + describe(version) + " (tried " + tried + "). " + SUPPORT_HINT);
 
         return Optional.empty();
     }
@@ -90,7 +90,7 @@ public final class MinecraftProviderLoader {
         boolean keepTrying = candidate.kind() == Kind.PLATFORM;
         String suffix = keepTrying ? ", trying the next implementation" : ", not trying older implementations because they would be less compatible. " + SUPPORT_HINT;
 
-        plugin.getLogger().log(Level.WARNING, "The " + label + " implementation " + name + " failed to load" + suffix, cause);
+        plugin.getLogger().log(Level.WARNING, "[prism] The " + label + " implementation " + name + " failed to load" + suffix, cause);
 
         return keepTrying;
     }

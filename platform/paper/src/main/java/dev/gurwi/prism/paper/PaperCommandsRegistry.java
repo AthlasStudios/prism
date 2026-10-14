@@ -24,7 +24,7 @@ public class PaperCommandsRegistry implements BukkitCommandsRegistry<PaperPlatfo
         this.registrar = getRegistrar();
 
         platform.getPlugin().getLogger().info(
-                "Command registration initialized using " + registrar.getType().name() + "."
+                "[prism] Command registration initialized using " + registrar.getType().name() + "."
         );
     }
 
@@ -58,7 +58,7 @@ public class PaperCommandsRegistry implements BukkitCommandsRegistry<PaperPlatfo
                 MinecraftProviderLoader.dispatcherProvider(platform.getPlugin()).ifPresentOrElse(
                         provider -> registrar.set(new BrigadierCommandRegistrar(provider.getDispatcher())),
                         () -> platform.getPlugin().getLogger().warning(
-                                "Failed to initialize Brigadier. The Minecraft version may be unsupported. Falling back to legacy registration. If the issue persists on a supported version, report it on our Discord."
+                                "[prism] Failed to initialize Brigadier. The Minecraft version may be unsupported. Falling back to legacy registration. If the issue persists on a supported version, report it on our Discord."
                         )
                 );
             }
