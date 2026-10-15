@@ -22,8 +22,6 @@ public final class ParsedFlags {
         return EMPTY;
     }
 
-    // --- Flag Object Lookups ---
-
     public boolean has(@NotNull Flag<?> flag) {
         return has(flag.getName());
     }
