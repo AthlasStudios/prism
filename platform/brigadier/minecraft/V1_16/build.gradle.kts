@@ -6,10 +6,8 @@ plugins {
 dependencies {
     implementation(project(":reflection"))
     compileOnly(project(":platform:brigadier:minecraft"))
-}
 
-spigotNms {
-    version.set("1.16.5-R0.1-SNAPSHOT")
+    spigotNms("1.16.5-R0.1-SNAPSHOT")
 }
 
 configurations.configureEach {

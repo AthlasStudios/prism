@@ -3,7 +3,9 @@ plugins {
 }
 
 val nms = extensions.create<SpigotNmsExtension>("spigotNms")
-nms.mappings.convention(NmsMappings.NONE)
+nms.mappings.convention(NMSMapping.SPIGOT)
+
+dependencies.extensions.add("spigotNms", nms)
 
 val specialSource = configurations.create("specialSource")
 
@@ -14,7 +16,7 @@ repositories {
 
 fun mojangOnly(coordinates: (String) -> String): Provider<String> =
     nms.mappings.flatMap { mappings ->
-        if (mappings == NmsMappings.MOJANG) {
+        if (mappings == NMSMapping.MOJANG) {
             nms.version.map(coordinates)
         } else {
             providers.provider<String> { null }
@@ -23,7 +25,7 @@ fun mojangOnly(coordinates: (String) -> String): Provider<String> =
 
 dependencies {
     addProvider("compileOnly", nms.version.zip(nms.mappings) { version, mappings ->
-        if (mappings == NmsMappings.MOJANG) {
+        if (mappings == NMSMapping.MOJANG) {
             "org.spigotmc:spigot:$version:remapped-mojang"
         } else {
             "org.spigotmc:spigot:$version"
@@ -94,7 +96,7 @@ val reobfJar = tasks.register<JavaExec>("reobfJar") {
 }
 
 afterEvaluate {
-    if (nms.mappings.get() == NmsMappings.MOJANG) {
+    if (nms.mappings.get() == NMSMapping.MOJANG) {
         tasks.assemble {
             dependsOn(reobfJar)
         }

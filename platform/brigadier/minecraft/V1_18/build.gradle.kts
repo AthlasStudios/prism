@@ -6,11 +6,8 @@ plugins {
 dependencies {
     implementation(project(":reflection"))
     compileOnly(project(":platform:brigadier:minecraft"))
-}
 
-spigotNms {
-    version.set("1.18.2-R0.1-SNAPSHOT")
-    mappings.set(NmsMappings.MOJANG)
+    spigotNms("1.18.2-R0.1-SNAPSHOT", NMSMapping.MOJANG)
 }
 
 configurations.configureEach {

@@ -1,18 +1,13 @@
 plugins {
     id("java")
     id("prism.spigot-reobf")
-//    id("io.papermc.paperweight.userdev") version "2.0.0-beta.24"
 }
 
 dependencies {
     implementation(project(":reflection"))
     compileOnly(project(":platform:brigadier:minecraft"))
-//    paperweight.paperDevBundle("1.17.1-R0.1-SNAPSHOT")
-}
 
-spigotNms {
-    version.set("1.17.1-R0.1-SNAPSHOT")
-    mappings.set(NmsMappings.MOJANG)
+    spigotNms("1.17.1-R0.1-SNAPSHOT", NMSMapping.MOJANG)
 }
 
 configurations.configureEach {
