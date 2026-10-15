@@ -1,6 +1,6 @@
 package dev.gurwi.prism.brigadier.minecraft;
 
-import dev.gurwi.prism.brigadier.minecraft.adapter.CommandDefinitionAdapter;
+import dev.gurwi.prism.brigadier.minecraft.adapter.BukkitCommandDefinitionAdapter;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.dispatcher.MinecraftCommandDispatcher;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.registrar.BukkitCommandRegistrar;
@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class BrigadierCommandRegistrar implements BukkitCommandRegistrar {
 
-    private final CommandDefinitionAdapter adapter = new CommandDefinitionAdapter();
+    private final BukkitCommandDefinitionAdapter adapter = new BukkitCommandDefinitionAdapter();
     private final MinecraftCommandDispatcher<?> dispatcher;
 
     public BrigadierCommandRegistrar(MinecraftCommandDispatcher<?> dispatcher) {

@@ -53,6 +53,11 @@ public class ArgumentMappings {
         register(MirrorArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.templateMirror()));
         register(StructureRotationArgument.class, ArgumentMapper.simple(arg -> MinecraftArgumentType.templateRotation()));
 
+        register(PlayerArgument.class, ArgumentMapper.constant(
+                MinecraftArgumentType.player(),
+                (argument, source, resolver) -> resolver.resolve(source).get(0)
+        ));
+
         register(EntitySelectorArgument.OneEntity.class, ArgumentMapper.constant(
                 MinecraftArgumentType.entity(),
                 (argument, source, resolver) -> resolver.resolve(source).get(0)

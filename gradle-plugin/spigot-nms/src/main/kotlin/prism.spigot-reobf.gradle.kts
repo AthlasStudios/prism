@@ -3,6 +3,8 @@ plugins {
 }
 
 val nms = extensions.create<SpigotNmsExtension>("spigotNms")
+nms.mappings.convention(NmsMappings.NONE)
+
 val specialSource = configurations.create("specialSource")
 
 repositories {
@@ -10,12 +12,27 @@ repositories {
     maven("https://repo.codemc.io/repository/nms/")
 }
 
+fun mojangOnly(coordinates: (String) -> String): Provider<String> =
+    nms.mappings.flatMap { mappings ->
+        if (mappings == NmsMappings.MOJANG) {
+            nms.version.map(coordinates)
+        } else {
+            providers.provider<String> { null }
+        }
+    }
+
 dependencies {
-    addProvider("compileOnly", nms.version.map { "org.spigotmc:spigot:$it:remapped-mojang" })
+    addProvider("compileOnly", nms.version.zip(nms.mappings) { version, mappings ->
+        if (mappings == NmsMappings.MOJANG) {
+            "org.spigotmc:spigot:$version:remapped-mojang"
+        } else {
+            "org.spigotmc:spigot:$version"
+        }
+    })
 
     specialSource("net.md-5:SpecialSource:1.11.4:shaded")
-    addProvider("specialSource", nms.version.map { "org.spigotmc:minecraft-server:$it:maps-mojang@txt" })
-    addProvider("specialSource", nms.version.map { "org.spigotmc:minecraft-server:$it:maps-spigot@csrg" })
+    addProvider("specialSource", mojangOnly { "org.spigotmc:minecraft-server:$it:maps-mojang@txt" })
+    addProvider("specialSource", mojangOnly { "org.spigotmc:minecraft-server:$it:maps-spigot@csrg" })
 }
 
 configurations.configureEach {
@@ -76,13 +93,17 @@ val reobfJar = tasks.register<JavaExec>("reobfJar") {
     }
 }
 
-tasks.assemble {
-    dependsOn(reobfJar)
-}
+afterEvaluate {
+    if (nms.mappings.get() == NmsMappings.MOJANG) {
+        tasks.assemble {
+            dependsOn(reobfJar)
+        }
 
-configurations.named("runtimeElements") {
-    outgoing.artifacts.clear()
-    outgoing.artifact(reobfOutput) {
-        builtBy(reobfJar)
+        configurations.named("runtimeElements") {
+            outgoing.artifacts.clear()
+            outgoing.artifact(reobfOutput) {
+                builtBy(reobfJar)
+            }
+        }
     }
 }

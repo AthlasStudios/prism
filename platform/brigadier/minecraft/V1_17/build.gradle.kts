@@ -12,6 +12,7 @@ dependencies {
 
 spigotNms {
     version.set("1.17.1-R0.1-SNAPSHOT")
+    mappings.set(NmsMappings.MOJANG)
 }
 
 configurations.configureEach {

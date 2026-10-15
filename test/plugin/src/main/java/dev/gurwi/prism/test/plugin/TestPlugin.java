@@ -1,6 +1,8 @@
 package dev.gurwi.prism.test.plugin;
 
 import dev.gurwi.prism.bukkit.argument.*;
+import dev.gurwi.prism.bukkit.argument.parser.ParsedFlags;
+import dev.gurwi.prism.bukkit.argument.type.Flag;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.command.PrismBukkitCommand;
@@ -12,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 public class TestPlugin extends JavaPlugin {
@@ -164,6 +167,22 @@ public class TestPlugin extends JavaPlugin {
                     sender.sendMessage("Help command executed " + predicate.test(sender.getInventory().getItemInMainHand()));
 
                     CommandHelp.help(sender, args);
+                })
+                .register(platform);
+
+        new PrismBukkitCommand("flagger")
+                .withArguments(
+                        new FlagArgument("flags")
+                                .flags(
+                                        Flag.valued(new ColorArgument("color")  , 'c'),
+                                        Flag.presence("enable", 'e')
+                                )
+                )
+                .executesPlayer((player, args) -> {
+                    ParsedFlags flags = args.get("flags");
+                    Optional<ChatColor> color = flags.get("color");
+
+                    color.ifPresent(c -> player.sendMessage("Color: " + c.name()));
                 })
                 .register(platform);
 
