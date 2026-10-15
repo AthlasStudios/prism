@@ -8,9 +8,11 @@ import dev.gurwi.prism.bukkit.util.CommandHelp;
 import dev.gurwi.prism.paper.PaperPlatform;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 public class TestPlugin extends JavaPlugin {
 
@@ -125,10 +127,9 @@ public class TestPlugin extends JavaPlugin {
 
                 )
                 .executes((sender, args) -> {
-                    Color color = args.get("color");
-
-                    ColorArgument.getNamed(color).ifPresentOrElse(name -> sender.sendMessage("Selected team color " + name), () -> sender.sendMessage("Selected team color unknown"));
-                })
+                    ChatColor color = args.get("color");
+                    sender.sendMessage("Selected team color " + color.name());
+                 })
                 .build();
 
         StringArgument string = new StringArgument("string");
@@ -158,7 +159,12 @@ public class TestPlugin extends JavaPlugin {
                                     sender.sendMessage("Selected difficulty " + difficulty);
                                 })
                 )
-                .executes(CommandHelp::help)
+                .executesPlayer((sender, args) -> {
+                    Predicate<ItemStack> predicate = args.get("predicate");
+                    sender.sendMessage("Help command executed " + predicate.test(sender.getInventory().getItemInMainHand()));
+
+                    CommandHelp.help(sender, args);
+                })
                 .register(platform);
 
         platform.getCommandsRegistry().register(build);

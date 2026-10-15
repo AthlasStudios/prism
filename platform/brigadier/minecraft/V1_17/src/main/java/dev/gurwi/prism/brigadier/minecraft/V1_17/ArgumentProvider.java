@@ -36,10 +36,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.state.pattern.BlockInWorld;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
-import org.bukkit.Color;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Particle;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.v1_17_R1.CraftParticle;
 import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
@@ -181,11 +178,8 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     }
 
     @Override
-    public ArgumentType<Color> color() {
-        return NativeBackedArgumentType.of(ColorArgument.color(), result -> {
-            Integer rgb = result.getColor();
-            return rgb == null ? Color.WHITE : Color.fromRGB(rgb);
-        });
+    public ArgumentType<ChatColor> color() {
+        return NativeBackedArgumentType.of(ColorArgument.color(), result -> ChatColor.valueOf(result.name().toUpperCase()));
     }
 
     @Override

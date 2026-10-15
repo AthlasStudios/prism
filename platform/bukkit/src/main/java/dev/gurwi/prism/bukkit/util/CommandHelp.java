@@ -27,17 +27,17 @@ public class CommandHelp {
     private static final ChatColor DEFAULT_PRIMARY_COLOR = parseColor("#00E5FF", ChatColor.AQUA);
     private static final ChatColor DEFAULT_SECONDARY_COLOR = parseColor("#01737d", ChatColor.DARK_AQUA);
 
-    public static void help(CommandSender sender, @NotNull CommandArguments<BukkitCommandDefinition, ? super CommandSender> args) {
+    public static void help(CommandSender sender, @NotNull CommandArguments<BukkitCommandDefinition, ?> args) {
         help(sender, args, DEFAULT_PRIMARY_COLOR, DEFAULT_SECONDARY_COLOR);
     }
 
-    public static void help(CommandSender sender, @NotNull CommandArguments<BukkitCommandDefinition, ? super CommandSender> args, ChatColor primaryColor, ChatColor secondaryColor) {
+    public static void help(CommandSender sender, @NotNull CommandArguments<BukkitCommandDefinition, ?> args, ChatColor primaryColor, ChatColor secondaryColor) {
         BukkitCommandDefinition definition = args.getDefinition();
 
-        List<? extends CommandArguments<BukkitCommandDefinition, ? super CommandSender>> chain = args.getChain();
+        List<? extends CommandArguments<BukkitCommandDefinition, ?>> chain = args.getChain();
         List<String> pathSegments = new ArrayList<>();
 
-        for (CommandArguments<BukkitCommandDefinition, ? super CommandSender> node : chain) {
+        for (CommandArguments<BukkitCommandDefinition, ?> node : chain) {
             BukkitCommandDefinition nodeDef = node.getDefinition();
             pathSegments.add(nodeDef.getName());
 
@@ -47,11 +47,8 @@ public class CommandHelp {
                     continue;
                 }
 
-                node.find(arg.getName())
-                        .ifPresentOrElse(
-                                val -> pathSegments.add(String.valueOf(val)),
-                                () -> pathSegments.add("<" + arg.getName() + ">")
-                        );
+                String fallback = "<" + arg.getName() + ">";
+                pathSegments.add(node.find(arg.getName()).map(val -> display(val, fallback)).orElse(fallback));
             }
 
             for (var arg : nodeDef.getOptionalArguments()) {
@@ -60,11 +57,8 @@ public class CommandHelp {
                     continue;
                 }
 
-                node.find(arg.getName())
-                        .ifPresentOrElse(
-                                val -> pathSegments.add(String.valueOf(val)),
-                                () -> pathSegments.add("[" + arg.getName() + "]")
-                        );
+                String fallback = "[" + arg.getName() + "]";
+                pathSegments.add(node.find(arg.getName()).map(val -> display(val, fallback)).orElse(fallback));
             }
         }
 
@@ -134,6 +128,18 @@ public class CommandHelp {
         }
 
         sender.sendMessage("");
+    }
+
+    private static @NotNull String display(@Nullable Object value, @NotNull String fallback) {
+        if (value instanceof CharSequence
+                || value instanceof Number
+                || value instanceof Boolean
+                || value instanceof Character
+                || value instanceof Enum<?>) {
+            return String.valueOf(value);
+        }
+
+        return fallback;
     }
 
     private static boolean accessible(@NotNull BukkitCommandDefinition definition, @NotNull CommandSender sender) {

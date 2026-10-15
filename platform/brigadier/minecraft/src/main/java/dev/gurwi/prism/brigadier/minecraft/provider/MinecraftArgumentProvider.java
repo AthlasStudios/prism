@@ -98,7 +98,7 @@ public interface MinecraftArgumentProvider {
         throw unsupported("itemStackPredicate");
     }
 
-    default ArgumentType<Color> color() {
+    default ArgumentType<ChatColor> color() {
         throw unsupported("color");
     }
 

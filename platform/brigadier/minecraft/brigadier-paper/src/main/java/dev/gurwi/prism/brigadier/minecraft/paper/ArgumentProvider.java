@@ -140,8 +140,8 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     }
 
     @Override
-    public ArgumentType<Color> color() {
-        return PaperBackedArgumentType.of(ArgumentTypes.namedColor(), color -> Color.fromRGB(color.value()));
+    public ArgumentType<ChatColor> color() {
+        return PaperBackedArgumentType.of(ArgumentTypes.namedColor(), color -> ChatColor.valueOf(color.name().toUpperCase()));
     }
 
     @Override

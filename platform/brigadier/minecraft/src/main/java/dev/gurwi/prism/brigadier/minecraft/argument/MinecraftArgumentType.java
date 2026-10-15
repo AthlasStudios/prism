@@ -114,7 +114,7 @@ public final class MinecraftArgumentType {
         return provider().itemStackPredicate();
     }
 
-    public static ArgumentType<Color> color() {
+    public static ArgumentType<ChatColor> color() {
         return provider().color();
     }
 

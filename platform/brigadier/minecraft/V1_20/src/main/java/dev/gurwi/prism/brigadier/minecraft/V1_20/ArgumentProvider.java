@@ -195,11 +195,8 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     }
 
     @Override
-    public ArgumentType<Color> color() {
-        return NativeBackedArgumentType.of(ColorArgument.color(), result -> {
-            Integer rgb = result.getColor();
-            return rgb == null ? Color.WHITE : Color.fromRGB(rgb);
-        });
+    public ArgumentType<ChatColor> color() {
+        return NativeBackedArgumentType.of(ColorArgument.color(), result -> ChatColor.valueOf(result.name().toUpperCase()));
     }
 
     // TODO -> COMPONENT ARGUMENT

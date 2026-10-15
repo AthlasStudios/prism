@@ -65,6 +65,7 @@ public abstract class PositionArgument<Impl extends PositionArgument<Impl>> exte
         for (String part : parts) {
             if (part.startsWith("~")) {
                 usesRelativeOrLocal = true;
+                break;
             }
         }
 
