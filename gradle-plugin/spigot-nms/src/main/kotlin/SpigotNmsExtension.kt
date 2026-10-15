@@ -13,6 +13,7 @@ abstract class SpigotNmsExtension {
 
 fun DependencyHandler.spigotNms(version: String, mappings: NMSMapping = NMSMapping.SPIGOT) {
     val nms = extensions.getByType(SpigotNmsExtension::class.java)
+
     nms.version.set(version)
     nms.mappings.set(mappings)
 }
