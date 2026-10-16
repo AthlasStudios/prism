@@ -42,6 +42,9 @@ jobs:
             echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
       - name: Publish
         run: >
           ./gradlew publishAndReleaseToMavenCentral
