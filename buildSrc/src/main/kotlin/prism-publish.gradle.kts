@@ -11,13 +11,9 @@ plugins {
 val aggregator = path.startsWith(":publish:")
 val prismArtifactId = "prism-${project.name}"
 
-// The Maven group everything is published under (dev.gurwi).
 val publishGroup = rootProject.group.toString()
 
 if (aggregator) {
-    // ":publish:paper" shades ":platform:paper" (same for spigot). Both projects are called
-    // the same, so give the bundle its own Gradle group to keep their module ids distinct.
-    // This does not affect the published coordinates, see coordinates(...) below.
     group = "$publishGroup.bundle"
 }
 
@@ -28,6 +24,9 @@ val shade = configurations.create("shade") {
         attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
         attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
         attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+        // Same as every normal Java consumer. Without it, projects that expose extra variants
+        // (paperweight's "reobf", shadow's "shadowRuntimeElements") are ambiguous.
+        attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.EXTERNAL))
         attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 25)
     }
 }
