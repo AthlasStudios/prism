@@ -42,24 +42,6 @@ jobs:
             echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Cache Spigot artifacts
-        id: spigot-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository/org/spigotmc
-          key: spigot-${{ hashFiles('.github/spigot-revs.txt') }}
-
-      - name: Build Spigot
-        if: steps.spigot-cache.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p build-tools
-          cd build-tools
-          curl -fsSL -o BuildTools.jar https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar
-          while read -r rev; do
-            [ -z "$rev" ] && continue
-            java -jar BuildTools.jar --rev "$rev" --remapped
-          done < ../.github/spigot-revs.txt
-
       - name: Publish
         run: >
           ./gradlew publishAndReleaseToMavenCentral
