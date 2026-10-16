@@ -2,12 +2,10 @@ import com.vanniktech.maven.publish.JavaLibrary
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
-import org.gradle.api.publish.PublishingExtension
-import org.gradle.api.publish.maven.MavenPublication
 
 plugins {
     id("java-library")
-    id("com.vanniktech.maven.publish")
+    id("com.vanniktech.maven.publish.base")
 }
 
 val aggregator = path.startsWith(":publish:")
@@ -45,20 +43,6 @@ tasks.withType<Javadoc>().configureEach {
     isFailOnError = false
 }
 
-// The bundles have no sources of their own (they only repackage other modules), so they get a
-// single, explicit sources jar instead of the one the publish plugin would generate.
-if (aggregator) {
-    val bundleSourcesJar = tasks.register<Jar>("bundleSourcesJar") {
-        archiveClassifier.set("sources")
-    }
-
-    extensions.configure<PublishingExtension> {
-        publications.withType<MavenPublication>().configureEach {
-            artifact(bundleSourcesJar)
-        }
-    }
-}
-
 extensions.configure<MavenPublishBaseExtension> {
     publishToMavenCentral()
     signAllPublications()
@@ -66,7 +50,7 @@ extensions.configure<MavenPublishBaseExtension> {
     configure(
         JavaLibrary(
             javadocJar = if (aggregator) JavadocJar.Empty() else JavadocJar.Javadoc(),
-            sourcesJar = !aggregator
+            sourcesJar = true
         )
     )
     pom {
