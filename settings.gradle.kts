@@ -40,3 +40,5 @@ include(":platform:brigadier:minecraft:V1_20")
 include(":platform:brigadier:minecraft:V1_21")
 include(":platform:brigadier:minecraft:V26")
 include(":platform:brigadier:minecraft:brigadier-paper")
+
+include("publish:paper", "publish:spigot")
