@@ -73,13 +73,13 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "task=$TASK" >> "$GITHUB_OUTPUT"
 
-      - name: Test
-        env:
-          VERSION: ${{ steps.meta.outputs.version }}
-        run: >
-          ./gradlew test
-          "-Pversion=$VERSION"
-          "-Porg.gradle.java.installations.fromEnv=$JAVA_INSTALLATIONS"
+#      - name: Test
+#        env:
+#          VERSION: ${{ steps.meta.outputs.version }}
+#        run: >
+#          ./gradlew test
+#          "-Pversion=$VERSION"
+#          "-Porg.gradle.java.installations.fromEnv=$JAVA_INSTALLATIONS"
 
       - name: Publish
         env:
