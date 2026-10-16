@@ -100,3 +100,4 @@ jobs:
           "-Pversion=$VERSION"
           "-Porg.gradle.java.installations.fromEnv=$JAVA_INSTALLATIONS"
           --no-configuration-cache
+          --stacktrace

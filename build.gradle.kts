@@ -11,7 +11,7 @@ rootProject.extra["targetJavaVersion"] = targetJavaVersion
 rootProject.extra["testJavaVersion"] = testJavaVersion
 
 allprojects {
-    group = "dev.gurwi"
+    group = project.rootProject.group
     version = project.rootProject.version
 
     plugins.apply("java-library")

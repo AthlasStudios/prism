@@ -42,3 +42,5 @@ include(":platform:brigadier:minecraft:V26")
 include(":platform:brigadier:minecraft:brigadier-paper")
 
 include("publish:paper", "publish:spigot")
+project(":publish:paper").name = "paper-bundle"
+project(":publish:spigot").name = "spigot-bundle"

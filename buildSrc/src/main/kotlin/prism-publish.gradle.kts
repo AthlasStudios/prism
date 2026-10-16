@@ -2,6 +2,8 @@ import com.vanniktech.maven.publish.JavaLibrary
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPublication
 
 plugins {
     id("java-library")
@@ -9,13 +11,7 @@ plugins {
 }
 
 val aggregator = path.startsWith(":publish:")
-val prismArtifactId = "prism-${project.name}"
-
-val publishGroup = rootProject.group.toString()
-
-if (aggregator) {
-    group = "$publishGroup.bundle"
-}
+val prismArtifactId = "prism-" + project.name.removeSuffix("-bundle")
 
 val shade = configurations.create("shade") {
     isCanBeConsumed = false
@@ -24,8 +20,7 @@ val shade = configurations.create("shade") {
         attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
         attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
         attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
-        // Same as every normal Java consumer. Without it, projects that expose extra variants
-        // (paperweight's "reobf", shadow's "shadowRuntimeElements") are ambiguous.
+
         attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.EXTERNAL))
         attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 25)
     }
@@ -50,19 +45,33 @@ tasks.withType<Javadoc>().configureEach {
     isFailOnError = false
 }
 
+// The bundles have no sources of their own (they only repackage other modules), so they get a
+// single, explicit sources jar instead of the one the publish plugin would generate.
+if (aggregator) {
+    val bundleSourcesJar = tasks.register<Jar>("bundleSourcesJar") {
+        archiveClassifier.set("sources")
+    }
+
+    extensions.configure<PublishingExtension> {
+        publications.withType<MavenPublication>().configureEach {
+            artifact(bundleSourcesJar)
+        }
+    }
+}
+
 extensions.configure<MavenPublishBaseExtension> {
     publishToMavenCentral()
     signAllPublications()
-    coordinates(publishGroup, prismArtifactId, project.version.toString())
+    coordinates(project.group.toString(), prismArtifactId, project.version.toString())
     configure(
         JavaLibrary(
             javadocJar = if (aggregator) JavadocJar.Empty() else JavadocJar.Javadoc(),
-            sourcesJar = true
+            sourcesJar = !aggregator
         )
     )
     pom {
         name.set(prismArtifactId)
-        description.set("Prism command library (${project.name})")
+        description.set("Prism command library ($prismArtifactId)")
         inceptionYear.set("2026")
         url.set("https://github.com/AthlasStudios/prism")
         licenses {
