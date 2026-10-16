@@ -1,46 +1,46 @@
 package dev.gurwi.prism.spigot;
 
-import dev.gurwi.prism.argument.AbstractArgument;
-import dev.gurwi.prism.brigadier.PrismBrigadier;
-import dev.gurwi.prism.bukkit.argument.Argument;
-import dev.gurwi.prism.command.definition.CommandDefinition;
-import dev.gurwi.prism.CommandsRegistry;
-import dev.gurwi.prism.spigot.executor.SpigotCommandExecutor;
-import dev.gurwi.prism.spigot.registrar.BrigadierCommandsRegistrar;
-import dev.gurwi.prism.spigot.registrar.CommandsRegistrar;
-import dev.gurwi.prism.spigot.registrar.SpigotCommandsRegistrar;
+import dev.gurwi.prism.brigadier.minecraft.BrigadierCommandRegistrar;
+import dev.gurwi.prism.brigadier.minecraft.BrigadierCompatibilityChecker;
+import dev.gurwi.prism.brigadier.minecraft.provider.MinecraftProviderLoader;
+import dev.gurwi.prism.bukkit.BukkitCommandsRegistry;
+import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
+import dev.gurwi.prism.bukkit.registrar.BukkitCommandRegistrar;
+import dev.gurwi.prism.bukkit.registrar.LegacyCommandRegistrar;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class SpigotCommandsRegistry implements CommandsRegistry<SpigotCommandsRegistry, SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>> {
+public class SpigotCommandsRegistry implements BukkitCommandsRegistry<SpigotPlatform> {
 
     private final SpigotPlatform platform;
-    private final CommandsRegistrar registrar;
+    private final BukkitCommandRegistrar registrar;
 
-    public SpigotCommandsRegistry(SpigotPlatform platform) {
+    public SpigotCommandsRegistry(@NotNull SpigotPlatform platform) {
         this.platform = platform;
         this.registrar = getRegistrar();
+
+        platform.getPlugin().getLogger().info(
+                "[prism] Command registration initialized using " + registrar.getType().name() + "."
+        );
     }
 
     @Override
-    public SpigotCommandsRegistry register(@NotNull Collection<CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>>> commandDefinitions) {
-        commandDefinitions.forEach(registrar::register);
-        return this;
+    public void register(BukkitCommandDefinition definition) {
+        if (getRegisteredCommands().contains(definition)) throw new IllegalStateException("Command " + definition.getName() + " is already registered!");
+        registrar.register(definition);
     }
 
     @Override
-    public SpigotCommandsRegistry unregister(@NotNull Collection<CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>>> commandDefinitions) {
-        commandDefinitions.forEach(registrar::unregister);
-        return this;
+    public void unregister(BukkitCommandDefinition definition) {
+        registrar.unregister(definition);
     }
 
     @Override
-    @Unmodifiable
-    public List<CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>>> getRegisteredCommands() {
+    public @Unmodifiable Set<BukkitCommandDefinition> getRegisteredCommands() {
         return registrar.getRegisteredCommands();
     }
 
@@ -49,19 +49,21 @@ public class SpigotCommandsRegistry implements CommandsRegistry<SpigotCommandsRe
         return platform;
     }
 
-    @Override
-    public SpigotCommandsRegistry instance() {
-        return this;
-    }
-
     @Contract(" -> new")
-    private @NotNull CommandsRegistrar getRegistrar() {
-        if (!platform.getConfiguration().isBrigadierDisabled() && PrismBrigadier.isCompatible()) {
-            return new BrigadierCommandsRegistrar();
-        }
-
+    private @NotNull BukkitCommandRegistrar getRegistrar() {
         try {
-            return new SpigotCommandsRegistrar(platform.getOwningPlugin());
+            AtomicReference<BukkitCommandRegistrar> registrar = new AtomicReference<>(new LegacyCommandRegistrar(platform.getPlugin()));
+
+            if (!platform.getConfiguration().isBrigadierDisabled() && BrigadierCompatibilityChecker.isSupported()) {
+                MinecraftProviderLoader.dispatcherProvider(platform.getPlugin()).ifPresentOrElse(
+                        provider -> registrar.set(new BrigadierCommandRegistrar(provider.getDispatcher())),
+                        () -> platform.getPlugin().getLogger().warning(
+                                "[prism] Failed to initialize Brigadier. The Minecraft version may be unsupported. Falling back to legacy registration. If the issue persists on a supported version, report it on our Discord."
+                        )
+                );
+            }
+
+            return registrar.get();
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }

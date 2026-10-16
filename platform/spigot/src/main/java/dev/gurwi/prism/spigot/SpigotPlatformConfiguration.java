@@ -1,29 +1,42 @@
 package dev.gurwi.prism.spigot;
 
-import dev.gurwi.prism.brigadier.PrismBrigadier;
+import dev.gurwi.prism.bukkit.command.error.LegacyCommandExecutionErrorHandler;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-public final class SpigotPlatformConfiguration {
+import java.util.Optional;
+
+public class SpigotPlatformConfiguration {
 
     private final boolean disableBrigadier;
     private final boolean disableLegacyRegistrar;
     private final boolean registerPermissions;
+    private final LegacyCommandExecutionErrorHandler legacyCommandErrorHandle;
 
     @Contract(pure = true)
     private SpigotPlatformConfiguration(@NotNull Builder builder) {
         this.disableBrigadier = builder.disableBrigadier;
         this.registerPermissions = builder.registerPermissions;
         this.disableLegacyRegistrar = builder.disableLegacyRegistrar;
+        this.legacyCommandErrorHandle = builder.legacyCommandErrorHandle;
     }
 
     public boolean isBrigadierDisabled() {
         return disableBrigadier;
     }
 
+    public boolean isLegacyRegistrarDisabled() {
+        return disableLegacyRegistrar;
+    }
+
     public boolean isPermissionRegistrationEnabled() {
         return registerPermissions;
+    }
+
+    @Contract(pure = true)
+    public @NotNull Optional<LegacyCommandExecutionErrorHandler> getGlobalLegacyCommandErrorHandler() {
+        return Optional.ofNullable(legacyCommandErrorHandle);
     }
 
     public static class Builder {
@@ -33,6 +46,7 @@ public final class SpigotPlatformConfiguration {
         private boolean disableBrigadier = false;
         private boolean registerPermissions = true;
         private boolean disableLegacyRegistrar = false;
+        private LegacyCommandExecutionErrorHandler legacyCommandErrorHandle = null;
 
         public Builder(JavaPlugin plugin) {
             this.plugin = plugin;
@@ -53,8 +67,13 @@ public final class SpigotPlatformConfiguration {
             return this;
         }
 
+        public Builder withGlobalLegacyCommandErrorHandler(LegacyCommandExecutionErrorHandler legacyCommandErrorHandle) {
+            this.legacyCommandErrorHandle = legacyCommandErrorHandle;
+            return this;
+        }
+
         public SpigotPlatform init() {
-            if (disableLegacyRegistrar && (disableBrigadier || !PrismBrigadier.isCompatible())) throw new IllegalStateException("Cannot disable both legacy registrar and brigadier");
+            //if (disableLegacyRegistrar && (disableBrigadier || !PrismBrigadier.isCompatible())) throw new IllegalStateException("Cannot disable both legacy registrar and brigadier");
             return new SpigotPlatform(plugin, new SpigotPlatformConfiguration(this));
         }
 

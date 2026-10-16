@@ -1,77 +1,201 @@
 package dev.gurwi.prism.test.plugin;
 
-import dev.gurwi.prism.bukkit.argument.Argument;
-import dev.gurwi.prism.bukkit.argument.IntegerArgument;
-import dev.gurwi.prism.bukkit.argument.StringArgument;
-import dev.gurwi.prism.command.definition.CommandDefinition;
-import dev.gurwi.prism.spigot.SpigotPlatform;
-import dev.gurwi.prism.spigot.command.Command;
-import dev.gurwi.prism.spigot.executor.SpigotCommandExecutor;
-import org.bukkit.Bukkit;
+import dev.gurwi.prism.bukkit.argument.*;
+import dev.gurwi.prism.bukkit.argument.parser.ParsedFlags;
+import dev.gurwi.prism.bukkit.argument.type.Flag;
+import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
+import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
+import dev.gurwi.prism.bukkit.command.PrismBukkitCommand;
+import dev.gurwi.prism.bukkit.util.CommandHelp;
+import dev.gurwi.prism.paper.PaperPlatform;
+import org.bukkit.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 public class TestPlugin extends JavaPlugin {
 
     @Override
+    public void onLoad() {
+//        ArgumentMappings.INSTANCE.register(
+//                LocationArgument.class,
+//                ArgumentMapper.<Location, FinePositionResolver, LocationArgument>create(
+//                        argument -> ArgumentTypes.finePosition(),
+//                        (argument, source, resolver) -> {
+//                            var stack = ((WrappedSourceStack) source).getHandle();
+//
+//                            return resolver.resolve(stack).toLocation(stack.getLocation().getWorld());
+//                        }
+//                )
+//        );
+    }
+
+    @Override
     public void onEnable() {
-        SpigotPlatform platform = SpigotPlatform.configure(this)
-                .disableBrigadier()
+        PaperPlatform platform = PaperPlatform.configure(this)
                 .init();
 
-        CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>> prismCommand = new Command("prism", "pr")
-                .withArguments(new StringArgument("arg1"), new IntegerArgument("arg2"))
-                .executes(((sender, args) -> {
-                    String arg1 = args.get("arg1");
-                    Integer arg2 = args.get("arg2");
-
-                    sender.sendMessage("arg1: " + arg1);
-                    sender.sendMessage("arg2: " + arg2);
-                }))
-                .register(platform);
-
-        new Command("unregister")
+        BukkitCommandDefinition build = new PrismBukkitCommand("testa", "pr")
+                .withDescription("Prism command tester")
                 .withArguments(
-                        new StringArgument("command")
-                                .replaceSuggestions(platform.getRegistry().getRegisteredCommands().stream().map(CommandDefinition::getName).collect(Collectors.toList()))
+                        new ColorArgument("color")
                 )
-                .executes(((sender, args) -> {
-                    String commandId = args.get("command");
-                    platform.getRegistry().getRegisteredCommands().stream().filter(def -> def.getName().equals(commandId)).findFirst().ifPresent(def -> def.unregister(platform));
-                    sender.sendMessage("Command unregistered");
-                }))
-                .register(platform);
-
-        new Command("unregisterAll")
                 .executes((sender, args) -> {
-                    Set<CommandDefinition<SpigotPlatform, SpigotCommandExecutor<?>, Argument<?, ?>>> unregisteredCommands = new HashSet<>();
-                    platform.getRegistry().getRegisteredCommands().forEach(def -> {
-                        def.unregister(platform);
-                        unregisteredCommands.add(def);
-                    });
-                    sender.sendMessage("All commands unregistered");
+                    sender.sendMessage("This works");
+                })
+                .withSubCommands(
+                        new PrismBukkitCommand("call")
+                                .executes((sender, args) -> {
+                                    sender.sendMessage("Called team " + args.getAt("../", "color"));
+                                }),
 
-                    Bukkit.getScheduler().runTaskLater(this, () -> {
-                        unregisteredCommands.forEach(def -> def.register(platform));
-                        sender.sendMessage("All commands registered back");
-                    }, 20L * 3);
+                        new PrismBukkitCommand("teleport")
+                                .withArguments(
+                                        new LocationArgument("location")
+                                )
+                                .executesPlayer((player, args) -> {
+                                    Location location = args.get("location");
+                                    player.teleport(location);
+                                    player.sendMessage("Teleported to " + location);
+                                }),
+
+                        new PrismBukkitCommand("number")
+                                .withArguments(
+                                        new IntegerArgument("number", 0, 10)
+                                                .replaceSuggestions("5", "10")
+                                )
+                                .withOptionalArguments(
+                                        new FloatArgument("float", 0.1f, 9.9f)
+                                )
+                                .executes((sender, args) -> {
+                                    Integer number = args.get("number");
+                                    sender.sendMessage("Number is " + number);
+                                }),
+
+                        new PrismBukkitCommand("gamemode")
+                                .withArguments(
+                                        new GameModeArgument("gamemode")
+                                )
+                                .executes((sender, args) -> {
+                                    GameMode gameMode = args.get("gamemode");
+                                    sender.sendMessage("Selected game mode " + gameMode);
+                                }),
+
+                        new PrismBukkitCommand("select")
+                                .withArguments(
+                                        new EntitySelectorArgument.ManyEntities("entities")
+                                )
+                                .executes((sender, args) -> {
+                                    List<Entity> entities = args.get("entities");
+                                    sender.sendMessage("Selected entities " + entities);
+                                }),
+
+                        new PrismBukkitCommand("range")
+                                .withArguments(
+                                        new IntegerRangeArgument("range")
+                                )
+                                .executes((sender, args) -> {
+                                    RangedNumber<Integer> range = args.get("range");
+                                    sender.sendMessage("Selected range " + range.getLowerBound() + " " + range.getUpperBound());
+                                }),
+
+                        new PrismBukkitCommand("hex")
+                                .withArguments(new HexColorArgument("hex"))
+                                .executes((sender, args) -> {
+                                    Color color = args.get("hex");
+
+                                    net.kyori.adventure.text.Component message = net.kyori.adventure.text.Component.text("This message is custom colored!")
+                                            .color(net.kyori.adventure.text.format.TextColor.color(color.asRGB()));
+
+                                    sender.sendMessage(message);
+                                }),
+
+                        new PrismBukkitCommand("material")
+                                .withArguments(new MaterialArgument("material"))
+                                .executes((sender, args) -> {
+                                    Material material = args.get("material");
+                                    sender.sendMessage("Selected material " + material);
+                                }),
+
+                        new PrismBukkitCommand("particle")
+                                .withArguments(new ParticleArgument("particle"))
+                                .executes((sender, args) -> {
+                                    Particle particle = args.get("particle");
+                                    sender.sendMessage("Selected particle " + particle);
+                                })
+
+                )
+                .executes((sender, args) -> {
+                    ChatColor color = args.get("color");
+                    sender.sendMessage("Selected team color " + color.name());
+                })
+                .build();
+
+        StringArgument string = new StringArgument("string");
+
+        new PrismBukkitCommand("prism", "pri")
+                .withArguments(
+                        new ItemStackPredicateArgument("predicate")
+                )
+                .then(
+                        new MaterialArgument("material")
+                                .executes((sender, args) -> {
+                                    Material material = args.get("material");
+                                    sender.sendMessage("Selected material " + material);
+                                })
+                )
+                .then(
+                        new GameModeArgument("gamemode")
+                                .executes((sender, args) -> {
+                                    GameMode gameMode = args.get("gamemode");
+                                    sender.sendMessage("Selected game mode " + gameMode);
+                                })
+                )
+                .then(
+                        new DifficultyArgument("difficulty")
+                                .executes((sender, args) -> {
+                                    Difficulty difficulty = args.get("difficulty");
+                                    sender.sendMessage("Selected difficulty " + difficulty);
+                                })
+                )
+                .executesPlayer((sender, args) -> {
+                    Predicate<ItemStack> predicate = args.get("predicate");
+                    sender.sendMessage("Help command executed " + predicate.test(sender.getInventory().getItemInMainHand()));
+
+                    CommandHelp.help(sender, args);
                 })
                 .register(platform);
 
-        new Command("test")
-                .executes(CustomExecutor.class, ((source, args) -> {
-                    source.sendMessage("Hello world");
-                }))
+        BukkitCommandDefinition definition = new PrismBukkitCommand("flagger")
+                .withArguments(
+                        new FlagArgument("flags")
+                                .flags(
+                                        Flag.valued(new ColorArgument("color"), 'c'),
+                                        Flag.presence("enable", 'e')
+                                )
+                )
                 .executesPlayer((player, args) -> {
-                    player.sendMessage("Hello player");
-                })
-                .executesConsole((console, args) -> {
-                    console.sendMessage("Hello console");
+                    ParsedFlags flags = args.get("flags");
+                    Optional<ChatColor> color = flags.get("color");
+
+                    color.ifPresent(c -> player.sendMessage("Color: " + c.name()));
                 })
                 .register(platform);
+
+        platform.getCommandsRegistry().register(build);
+        Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> {
+            platform.getCommandsRegistry().unregister(build);
+            getLogger().info("Unregistered build command");
+        }, 20 * 5);
+
+        Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> {
+            platform.getCommandsRegistry().register(build);
+            getLogger().info("Registered build command");
+        }, 20 * 10);
     }
 
 }

@@ -1,49 +1,75 @@
 package dev.gurwi.prism.argument;
 
-import dev.gurwi.prism.ChainableBuilder;
+import dev.gurwi.prism.command.builder.RequirementContainerBuilder;
+import dev.gurwi.prism.exception.ArgumentParseException;
+import dev.gurwi.prism.requirement.UsageRequirement;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
-
-public abstract class AbstractArgument<Impl, T, S extends SuggestionSupplier<T, ?>> implements ChainableBuilder<Impl> {
+@SuppressWarnings("unchecked")
+public abstract class AbstractArgument<Impl extends AbstractArgument<Impl, T, Source, Suggestions>, T, Source, Suggestions extends SuggestionsSupplier> implements RequirementContainerBuilder<Impl, UsageRequirement<Source>> {
 
     private final String name;
 
-    private SuggestionSupplier<T, S> suggestions = SuggestionSupplier.empty();
+    protected boolean listed = true;
+    protected boolean forceSuggestions = false;
+    private Suggestions suggestionsSupplier;
+    private UsageRequirement<Source> requirement = UsageRequirement.none();
 
-    public AbstractArgument(String name) {
+    public AbstractArgument(String name, Suggestions defaultSuggestions) {
         this.name = name;
+        this.suggestionsSupplier = defaultSuggestions;
     }
 
-    public abstract Class<T> getPrimitiveType();
-
-    public Impl replaceSuggestions(SuggestionSupplier<T, S> suggestions) {
-        this.suggestions = suggestions;
-        return instance();
+    public Impl setListed(boolean listed) {
+        this.listed = listed;
+        return self();
     }
 
-    public Impl replaceSuggestions(Collection<T> suggestions) {
-        replaceSuggestions(SuggestionSupplier.sync(suggestions));
-        return instance();
+    public Impl replaceSuggestions(Suggestions suggestionsSupplier) {
+        this.suggestionsSupplier = suggestionsSupplier;
+        return self();
     }
 
-    public Impl replaceSuggestions(T... suggestions) {
-        replaceSuggestions(SuggestionSupplier.sync(suggestions));
-        return instance();
+    public Impl forceSuggestions(boolean forceSuggestions) {
+        this.forceSuggestions = forceSuggestions;
+        return self();
     }
 
-    public Impl replaceSuggestions(CompletableFuture<Collection<T>> suggestions) {
-        replaceSuggestions(SuggestionSupplier.async(suggestions));
-        return instance();
+    @Override
+    public Impl withRequirement(@NotNull UsageRequirement<Source> requirement) {
+        this.requirement = this.requirement.and(requirement);
+        return self();
     }
-
 
     public String getName() {
         return name;
     }
 
-    public SuggestionSupplier<T, S> getSuggestionsSupplier() {
-        return suggestions;
+    public boolean isListed() {
+        return listed;
+    }
+
+    public boolean isForceSuggestions() {
+        return forceSuggestions;
+    }
+
+    public Suggestions getSuggestionsSupplier() {
+        return suggestionsSupplier;
+    }
+
+    public UsageRequirement<Source> getRequirement() {
+        return requirement;
+    }
+
+    public boolean canUse(@NotNull Source source) {
+        return requirement.test(source);
+    }
+
+    public abstract T parse(@NotNull Source source, @NotNull String value) throws ArgumentParseException;
+
+    @SuppressWarnings("unchecked")
+    protected Impl self() {
+        return (Impl) this;
     }
 
 }

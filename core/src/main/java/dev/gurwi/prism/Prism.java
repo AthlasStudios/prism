@@ -8,5 +8,6 @@ public interface Prism {
 
     String SPIGOT_PLATFORM_IDENTIFIER = "spigot";
     String PAPER_PLATFORM_IDENTIFIER = "paper";
+    String JDA_PLATFORM_IDENTIFIER = "jda";
 
 }

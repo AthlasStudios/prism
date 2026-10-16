@@ -1,44 +1,45 @@
 package dev.gurwi.prism.spigot;
 
-import dev.gurwi.prism.Platform;
 import dev.gurwi.prism.Prism;
+import dev.gurwi.prism.bukkit.BukkitPlatform;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-public final class SpigotPlatform implements Platform<SpigotCommandsRegistry> {
+public class SpigotPlatform implements BukkitPlatform<SpigotCommandsRegistry> {
 
     private final JavaPlugin plugin;
-    private final SpigotCommandsRegistry commandsRegistry;
     private final SpigotPlatformConfiguration configuration;
+    private final SpigotCommandsRegistry commandsRegistry;
 
-    SpigotPlatform(JavaPlugin plugin, SpigotPlatformConfiguration configuration) {
+    protected SpigotPlatform(JavaPlugin plugin, SpigotPlatformConfiguration configuration) {
         this.plugin = plugin;
         this.configuration = configuration;
         this.commandsRegistry = new SpigotCommandsRegistry(this);
     }
 
-    @Contract("_ -> new")
+    @Contract(value = "_ -> new", pure = true)
     public static @NotNull SpigotPlatformConfiguration.Builder configure(JavaPlugin plugin) {
         return new SpigotPlatformConfiguration.Builder(plugin);
     }
 
     @Override
-    public @NotNull String getIdentifier() {
+    public String getIdentifier() {
         return Prism.SPIGOT_PLATFORM_IDENTIFIER;
     }
 
     @Override
-    public @NotNull SpigotCommandsRegistry getRegistry() {
+    public SpigotCommandsRegistry getCommandsRegistry() {
         return commandsRegistry;
     }
 
-    public @NotNull SpigotPlatformConfiguration getConfiguration() {
-        return configuration;
+    @Override
+    public JavaPlugin getPlugin() {
+        return plugin;
     }
 
-    public JavaPlugin getOwningPlugin() {
-        return plugin;
+    public SpigotPlatformConfiguration getConfiguration() {
+        return configuration;
     }
 
 }

@@ -1,1 +1,2 @@
-# 💫 Athlas Development Plugin Template
+# 🌟 Prism THE Command Framework
+![Prism Hero Image](.github/assets/hero.png)

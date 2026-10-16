@@ -1,9 +1,9 @@
 package dev.gurwi.prism.permission;
 
-public interface PermissionNode<P, S> {
+public interface PermissionNode<Permission, Source> {
 
-    P getPermission();
+    Permission permission();
 
-    boolean hasPermission(S source);
+    boolean hasPermission(Source source);
 
 }

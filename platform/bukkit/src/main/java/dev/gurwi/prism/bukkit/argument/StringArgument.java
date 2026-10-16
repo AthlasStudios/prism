@@ -1,31 +1,18 @@
 package dev.gurwi.prism.bukkit.argument;
 
+import dev.gurwi.prism.exception.ArgumentParseException;
+import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-public class StringArgument extends Argument<StringArgument, String> {
+public class StringArgument extends BukkitArgument<StringArgument, String> {
 
     public StringArgument(String name) {
         super(name);
     }
 
     @Override
-    public boolean validate(String rawArg) {
-        return true;
-    }
-
-    @Override
-    public String parse(String @NotNull [] args, int index) {
-        return args[index];
-    }
-
-    @Override
-    public Class<String> getPrimitiveType() {
-        return String.class;
-    }
-
-    @Override
-    public StringArgument instance() {
-        return this;
+    public String parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
+        return value;
     }
 
 }

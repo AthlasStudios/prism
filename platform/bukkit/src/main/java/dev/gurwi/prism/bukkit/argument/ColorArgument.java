@@ -1,0 +1,34 @@
+package dev.gurwi.prism.bukkit.argument;
+
+import dev.gurwi.prism.exception.ArgumentParseException;
+import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.*;
+
+public class ColorArgument extends BukkitArgument<ColorArgument, ChatColor> {
+
+    public ColorArgument(String name) {
+        super(name);
+
+        replaceSuggestions(
+                Arrays.stream(ChatColor.values())
+                        .map(color -> color.name().toLowerCase())
+                        .toList()
+        );
+
+        forceSuggestions(true);
+    }
+
+    @Override
+    public ChatColor parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
+        try {
+            return ChatColor.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        throw new ArgumentParseException(this, value, "Invalid color '" + value + "'. Use a name like dark_red, gold, aqua.");
+    }
+
+}
