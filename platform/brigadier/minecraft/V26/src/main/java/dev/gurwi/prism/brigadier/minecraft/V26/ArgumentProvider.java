@@ -128,7 +128,7 @@ public class ArgumentProvider implements MinecraftArgumentProvider {
     public ArgumentType<BlockInWorldPredicate> blockInWorldPredicate() {
         return NativeBackedArgumentType.of(BlockPredicateArgument.blockPredicate(context), result -> (block, loadChunk) -> {
             BlockInWorld blockInWorld = new BlockInWorld(((CraftWorld) block.getWorld()).getHandle(), CraftLocation.toBlockPosition(block.getLocation()), loadChunk);
-            if (blockInWorld.getState() == null) return BlockInWorldPredicate.Result.UNLOADED_CHUNK;
+            blockInWorld.getState();
             return result.test(blockInWorld) ? BlockInWorldPredicate.Result.TRUE : BlockInWorldPredicate.Result.FALSE;
         });
     }
