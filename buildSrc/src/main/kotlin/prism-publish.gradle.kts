@@ -11,6 +11,16 @@ plugins {
 val aggregator = path.startsWith(":publish:")
 val prismArtifactId = "prism-${project.name}"
 
+// The Maven group everything is published under (dev.gurwi).
+val publishGroup = rootProject.group.toString()
+
+if (aggregator) {
+    // ":publish:paper" shades ":platform:paper" (same for spigot). Both projects are called
+    // the same, so give the bundle its own Gradle group to keep their module ids distinct.
+    // This does not affect the published coordinates, see coordinates(...) below.
+    group = "$publishGroup.bundle"
+}
+
 val shade = configurations.create("shade") {
     isCanBeConsumed = false
     isCanBeResolved = true
@@ -44,7 +54,7 @@ tasks.withType<Javadoc>().configureEach {
 extensions.configure<MavenPublishBaseExtension> {
     publishToMavenCentral()
     signAllPublications()
-    coordinates(project.group.toString(), prismArtifactId, project.version.toString())
+    coordinates(publishGroup, prismArtifactId, project.version.toString())
     configure(
         JavaLibrary(
             javadocJar = if (aggregator) JavadocJar.Empty() else JavadocJar.Javadoc(),
