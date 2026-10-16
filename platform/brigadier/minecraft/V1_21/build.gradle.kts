@@ -4,7 +4,6 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":reflection"))
     compileOnly(project(":platform:brigadier:minecraft"))
 
     spigotNms("1.21.11-R0.1-SNAPSHOT", NMSMapping.MOJANG)
