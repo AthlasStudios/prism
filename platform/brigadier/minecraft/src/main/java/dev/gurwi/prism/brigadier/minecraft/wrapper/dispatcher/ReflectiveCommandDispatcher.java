@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.gurwi.prism.brigadier.minecraft.BrigadierCompatibilityChecker;
+import dev.gurwi.prism.brigadier.minecraft.bukkit.BrigadierBukkitCommand;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import dev.gurwi.prism.bukkit.wrapper.WrappedCommandMap;
 import dev.gurwi.prism.reflection.ReflectionUtil;
@@ -53,7 +54,9 @@ public abstract class ReflectiveCommandDispatcher<SourceStack> extends Minecraft
 
     public abstract CommandDispatcher<SourceStack> getVanillaDispatcher();
 
-    public abstract Command createBukkitCommand(MinecraftCommandDispatcher<SourceStack> own, LiteralCommandNode<SourceStack> mirrored, String description, List<String> aliases);
+    public Command createBukkitCommand(MinecraftCommandDispatcher<SourceStack> own, LiteralCommandNode<SourceStack> mirrored, String description, List<String> aliases) {
+        return new BrigadierBukkitCommand<>(own, mirrored, description, aliases);
+    }
 
     public WrappedCommandMap getCommandMap() {
         return commandMap;
@@ -83,6 +86,59 @@ public abstract class ReflectiveCommandDispatcher<SourceStack> extends Minecraft
             queue();
         } catch (Throwable throwable) {
             report("register " + node.getName(), throwable);
+        }
+    }
+
+    @Override
+    public void unregister(@NotNull LiteralCommandNode<MinecraftCommandSource> node) {
+        try {
+            Entry target = null;
+
+            for (Entry entry : entries) {
+                if (entry.root() == node || entry.root().getName().equals(node.getName())) {
+                    target = entry;
+                    break;
+                }
+            }
+
+            if (target == null) {
+                removeChild(getRoot(), node.getName());
+                return;
+            }
+
+            entries.remove(target);
+
+            Map<String, Command> known = getCommandMap().getKnownCommands();
+            CommandNode<SourceStack> vanillaRoot = getVanillaDispatcher().getRoot();
+
+            for (String label : target.labels()) {
+                release(known, vanillaRoot, label, target);
+                release(known, vanillaRoot, target.prefix() + ":" + label, target);
+            }
+
+            removeChild(getRoot(), target.root().getName());
+        } catch (Throwable throwable) {
+            report("unregister " + node.getName(), throwable);
+        }
+
+        refreshPlayers();
+    }
+
+    private void release(Map<String, Command> known, CommandNode<SourceStack> vanillaRoot, String name, Entry entry) {
+        try {
+            if (known.get(name) != entry.command()) return;
+
+            known.remove(name);
+            removeChild(vanillaRoot, name);
+        } catch (Throwable throwable) {
+            report("release " + name, throwable);
+        }
+    }
+
+    private void removeChild(CommandNode<?> parent, String name) throws ReflectiveOperationException {
+        for (String field : NODE_MAPS) {
+            Map<String, ?> map = ReflectionUtil.accessFieldFromType(CommandNode.class, parent, field);
+            map.remove(name);
         }
     }
 
@@ -181,7 +237,7 @@ public abstract class ReflectiveCommandDispatcher<SourceStack> extends Minecraft
     private final class JoinListener implements Listener {
 
         @EventHandler
-        public void onJoin(PlayerJoinEvent event) {
+        public void onJoin(@NotNull PlayerJoinEvent event) {
             Player player = event.getPlayer();
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {

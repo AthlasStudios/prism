@@ -132,7 +132,7 @@ public class TestPlugin extends JavaPlugin {
                 .executes((sender, args) -> {
                     ChatColor color = args.get("color");
                     sender.sendMessage("Selected team color " + color.name());
-                 })
+                })
                 .build();
 
         StringArgument string = new StringArgument("string");
@@ -170,11 +170,11 @@ public class TestPlugin extends JavaPlugin {
                 })
                 .register(platform);
 
-        new PrismBukkitCommand("flagger")
+        BukkitCommandDefinition definition = new PrismBukkitCommand("flagger")
                 .withArguments(
                         new FlagArgument("flags")
                                 .flags(
-                                        Flag.valued(new ColorArgument("color")  , 'c'),
+                                        Flag.valued(new ColorArgument("color"), 'c'),
                                         Flag.presence("enable", 'e')
                                 )
                 )
@@ -187,6 +187,15 @@ public class TestPlugin extends JavaPlugin {
                 .register(platform);
 
         platform.getCommandsRegistry().register(build);
+        Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> {
+            platform.getCommandsRegistry().unregister(build);
+            getLogger().info("Unregistered build command");
+        }, 20 * 5);
+
+        Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> {
+            platform.getCommandsRegistry().register(build);
+            getLogger().info("Registered build command");
+        }, 20 * 10);
     }
 
 }

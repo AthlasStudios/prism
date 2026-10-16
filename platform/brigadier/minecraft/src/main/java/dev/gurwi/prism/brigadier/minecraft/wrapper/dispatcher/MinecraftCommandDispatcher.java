@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDispatcher<MinecraftCommandSource> {
 
@@ -41,6 +42,8 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
     public abstract MinecraftCommandSource toMinecraftSource(SourceStack source);
 
     public abstract void register(@NotNull LiteralCommandNode<MinecraftCommandSource> node, String description, @NotNull List<String> aliases);
+
+    public abstract void unregister(@NotNull LiteralCommandNode<MinecraftCommandSource> node);
 
     public @NotNull LiteralCommandNode<SourceStack> mirror(@NotNull LiteralCommandNode<MinecraftCommandSource> node, @NotNull String label) {
         return (LiteralCommandNode<SourceStack>) mapNode(node, label, Map.of());
@@ -184,10 +187,8 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
     }
 
     protected void report(String where, Throwable throwable) {
-        if (reported.add(where)) {
-            plugin.getLogger().warning("[prism] Brigadier provider: " + where + " failed, continuing without it: " + throwable);
-            throwable.printStackTrace();
-        }
+        if (!reported.add(where)) return;
+        plugin.getLogger().log(Level.WARNING, "[prism] Brigadier provider: " + where + " failed, continuing without it: " + throwable, throwable);
     }
 
 }

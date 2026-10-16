@@ -1,17 +1,12 @@
 package dev.gurwi.prism.brigadier.minecraft.V1_18;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.tree.LiteralCommandNode;
-import dev.gurwi.prism.brigadier.minecraft.wrapper.dispatcher.MinecraftCommandDispatcher;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.dispatcher.ReflectiveCommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
-import org.bukkit.command.Command;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 public class WrappedCommandDispatcher extends ReflectiveCommandDispatcher<CommandSourceStack> {
 
@@ -27,11 +22,6 @@ public class WrappedCommandDispatcher extends ReflectiveCommandDispatcher<Comman
     @Override
     public CommandDispatcher<CommandSourceStack> getVanillaDispatcher() {
         return MinecraftServer.getServer().getCommands().getDispatcher();
-    }
-
-    @Override
-    public Command createBukkitCommand(MinecraftCommandDispatcher<CommandSourceStack> own, LiteralCommandNode<CommandSourceStack> mirrored, String description, List<String> aliases) {
-        return new BrigadierBukkitCommand(own, mirrored, description, aliases);
     }
 
 }

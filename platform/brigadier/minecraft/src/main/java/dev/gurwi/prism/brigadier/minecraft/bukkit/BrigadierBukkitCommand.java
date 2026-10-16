@@ -1,4 +1,4 @@
-package dev.gurwi.prism.brigadier.minecraft.V1_19;
+package dev.gurwi.prism.brigadier.minecraft.bukkit;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
@@ -6,7 +6,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
-import net.minecraft.commands.CommandSourceStack;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -18,19 +17,19 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-final class BrigadierBukkitCommand extends Command {
+public final class BrigadierBukkitCommand<SourceStack> extends Command {
 
     private final CommandDispatcher<MinecraftCommandSource> own;
     private final String root;
 
-    BrigadierBukkitCommand(CommandDispatcher<MinecraftCommandSource> own, @NotNull LiteralCommandNode<CommandSourceStack> node, String description, List<String> aliases) {
+    public BrigadierBukkitCommand(CommandDispatcher<MinecraftCommandSource> own, @NotNull LiteralCommandNode<SourceStack> node, String description, List<String> aliases) {
         super(node.getName(), description == null ? "" : description, "/" + node.getName(), aliases);
         this.own = own;
         this.root = node.getName();
     }
 
     @Override
-    public boolean execute(@NotNull CommandSender sender, @NotNull String label, @NotNull String[] args) {
+    public boolean execute(@NotNull CommandSender sender, @NotNull String label, String @NotNull [] args) {
         try {
             run(own.parse(input(args), source(sender)));
         } catch (CommandSyntaxException exception) {
@@ -41,7 +40,7 @@ final class BrigadierBukkitCommand extends Command {
     }
 
     @Override
-    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) {
+    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, String @NotNull [] args) {
         try {
             return own.getCompletionSuggestions(own.parse(input(args), source(sender)))
                     .get()
@@ -55,7 +54,7 @@ final class BrigadierBukkitCommand extends Command {
     }
 
     @Override
-    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args, Location location) {
+    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, String @NotNull [] args, Location location) {
         return tabComplete(sender, alias, args);
     }
 
