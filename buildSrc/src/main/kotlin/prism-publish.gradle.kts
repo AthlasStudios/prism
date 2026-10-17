@@ -9,7 +9,10 @@ plugins {
 }
 
 val aggregator = path.startsWith(":publish:")
-val prismArtifactId = "prism-" + project.name.removeSuffix("-bundle")
+val prismArtifactId = when (path) {
+    ":platform:brigadier:minecraft" -> "prism-brigadier-minecraft"
+    else -> "prism-" + project.name.removeSuffix("-bundle")
+}
 
 val shade = configurations.create("shade") {
     isCanBeConsumed = false
