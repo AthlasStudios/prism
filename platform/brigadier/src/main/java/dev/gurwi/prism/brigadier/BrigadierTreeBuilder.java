@@ -9,6 +9,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.gurwi.prism.argument.AbstractArgument;
@@ -24,6 +25,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -218,7 +220,6 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
 
     private boolean forcing(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
         return !adapter.forcedValues(argument).isEmpty()
-                && resolveType(argument) == null
                 && !adapter.literal(argument)
                 && !adapter.greedy(argument)
                 && adapter.tokens(argument) == 1;
@@ -429,13 +430,33 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         RequiredArgumentBuilder<S, ?> builder = RequiredArgumentBuilder.argument(slot.name(), slot.type());
         builder.requires(source -> adapter.available(slot.argument(), source));
 
-        SuggestionProvider<S> suggestions = adapter.suggestions(slot.argument(), resolveType(slot.argument()));
+        SuggestionProvider<S> suggestions = suggestionsFor(slot);
 
         if (suggestions != null) {
             builder.suggests(suggestions);
         }
 
         return builder;
+    }
+
+    private @Nullable SuggestionProvider<S> suggestionsFor(@NotNull Slot slot) {
+        ArgumentType<?> resolved = resolveType(slot.argument());
+        SuggestionProvider<S> user = adapter.suggestions(slot.argument(), resolved);
+
+        if (user == null) {
+            return null;
+        }
+
+        if (resolved == null) {
+            return user;
+        }
+
+        return (context, builder) -> {
+            CompletableFuture<Suggestions> nativeSuggestions = resolved.listSuggestions(context, builder.createOffset(builder.getStart()));
+            CompletableFuture<Suggestions> userSuggestions = user.getSuggestions(context, builder.createOffset(builder.getStart()));
+
+            return userSuggestions.thenCombine(nativeSuggestions, (first, second) -> Suggestions.merge(builder.getInput(), List.of(first, second)));
+        };
     }
 
     private void addSlots(@NotNull List<Slot> slots, @NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull String base, boolean terminal, boolean optional) {

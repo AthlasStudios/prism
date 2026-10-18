@@ -3,6 +3,8 @@ package dev.gurwi.prism.test.plugin;
 import dev.gurwi.prism.bukkit.argument.*;
 import dev.gurwi.prism.bukkit.argument.base.EntitySelectorArgument;
 import dev.gurwi.prism.bukkit.argument.parser.ParsedFlags;
+import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestion;
+import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.bukkit.argument.type.Flag;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
@@ -134,6 +136,19 @@ public class TestPlugin extends JavaPlugin {
                                 .executes((sender, args) -> {
                                     Difficulty difficulty = args.get("difficulty");
                                     sender.sendMessage("Selected difficulty " + difficulty.name());
+                                }),
+
+                        new PrismBukkitCommand("idk")
+                                .withArguments(
+                                        new StringArgument("string")
+                                                .replaceSuggestions(
+                                                        BukkitSuggestionsSupplier.sync(
+                                                                ctx -> List.of(BukkitSuggestion.of("test", "test tooltip"))
+                                                        )
+                                                )
+                                )
+                                .executes((sender, args) -> {
+                                    sender.sendMessage("Selected string " + args.get("string"));
                                 })
                 )
                 .executes((sender, args) -> {

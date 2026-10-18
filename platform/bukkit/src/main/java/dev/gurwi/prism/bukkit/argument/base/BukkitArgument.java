@@ -44,6 +44,7 @@ public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> ex
         return withFixedValues(LiteralValues.of(values));
     }
 
+
     public Impl replaceSuggestions(Function<SuggestionContext<CommandSender>, Collection<String>> suggestions) {
         return replaceSuggestions(BukkitSuggestionsSupplier.sync(ctx -> BukkitSuggestion.of(suggestions.apply(ctx))));
     }

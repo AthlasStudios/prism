@@ -145,11 +145,11 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
 
     @Override
     public @Nullable SuggestionProvider<MinecraftCommandSource> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType) {
-        if (nativeType != null) {
+        BukkitArgument<?, ?> bukkitArgument = (BukkitArgument<?, ?>) argument;
+
+        if (bukkitArgument.getSuggestionsSupplier() == null) {
             return null;
         }
-
-        BukkitArgument<?, ?> bukkitArgument = (BukkitArgument<?, ?>) argument;
 
         return (context, suggestionsBuilder) -> {
             CommandSender sender = senderOf(context.getSource());
