@@ -3,11 +3,9 @@ package dev.gurwi.prism.brigadier.minecraft.bukkit;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -15,7 +13,6 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 public final class BrigadierBukkitCommand<SourceStack> extends Command {
 
@@ -37,25 +34,6 @@ public final class BrigadierBukkitCommand<SourceStack> extends Command {
         }
 
         return true;
-    }
-
-    @Override
-    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, String @NotNull [] args) {
-        try {
-            return own.getCompletionSuggestions(own.parse(input(args), source(sender)))
-                    .get()
-                    .getList()
-                    .stream()
-                    .map(Suggestion::getText)
-                    .toList(); // TODO -> WTF
-        } catch (InterruptedException | ExecutionException exception) {
-            return List.of();
-        }
-    }
-
-    @Override
-    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, String @NotNull [] args, Location location) {
-        return tabComplete(sender, alias, args);
     }
 
     private void run(@NotNull ParseResults<MinecraftCommandSource> parsed) throws CommandSyntaxException {

@@ -1,30 +1,38 @@
 package dev.gurwi.prism.bukkit.event;
 
+import dev.gurwi.prism.bukkit.BukkitPlatform;
+import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class AsyncCommandSuggestEvent extends Event {
+public class AsyncCommandSuggestEvent extends Event implements Cancellable {
 
     private static final HandlerList HANDLERS = new HandlerList();
 
-    private final CommandSender player;
+    private final BukkitPlatform<?> platform;
+    private final BukkitCommandDefinition definition;
+    private final CommandSender sender;
     private final String buffer;
+    private final List<String> completions;
 
+    private boolean cancelled = false;
     private CompletableFuture<List<String>> future;
 
-    public AsyncCommandSuggestEvent(CommandSender player, String buffer) {
-        this.player = player;
-        this.buffer = buffer;
-    }
+    public AsyncCommandSuggestEvent(BukkitPlatform<?> platform, BukkitCommandDefinition definition, CommandSender sender, String buffer, List<String> completions) {
+        super(true);
 
-    public boolean isHandled() {
-        return future != null;
+        this.platform = platform;
+        this.definition = definition;
+        this.sender = sender;
+        this.buffer = buffer;
+        this.completions = completions;
     }
 
     public void provideSuggestions(@NotNull CompletableFuture<List<String>> future) {
@@ -35,12 +43,42 @@ public class AsyncCommandSuggestEvent extends Event {
         this.future = CompletableFuture.completedFuture(suggestions);
     }
 
-    public @NotNull CommandSender getPlayer() {
-        return player;
+    public boolean isHandled() {
+        return future != null;
     }
 
-    public @NotNull String getBuffer() {
+    public Optional<CompletableFuture<List<String>>> getFuture() {
+        return Optional.ofNullable(future);
+    }
+
+    public BukkitPlatform<?> getPlatform() {
+        return platform;
+    }
+
+    public BukkitCommandDefinition getDefinition() {
+        return definition;
+    }
+
+    public CommandSender getSender() {
+        return sender;
+    }
+
+    public String getBuffer() {
         return buffer;
+    }
+
+    public List<String> getCompletions() {
+        return completions;
+    }
+
+    @Override
+    public void setCancelled(boolean cancel) {
+        this.cancelled = cancel;
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
     }
 
     @Override
@@ -50,6 +88,10 @@ public class AsyncCommandSuggestEvent extends Event {
 
     public static @NotNull HandlerList getHandlerList() {
         return HANDLERS;
+    }
+
+    public static boolean hasListeners() {
+        return getHandlerList().getRegisteredListeners().length > 0;
     }
 
 }

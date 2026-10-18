@@ -83,6 +83,10 @@ public class LegacyCommandRegistrar implements BukkitCommandRegistrar {
         return Set.copyOf(registeredCommands.keySet());
     }
 
+    public WrappedCommandMap getCommandMap() {
+        return commandMap;
+    }
+
     @Override
     public Type getType() {
         return Type.LEGACY;

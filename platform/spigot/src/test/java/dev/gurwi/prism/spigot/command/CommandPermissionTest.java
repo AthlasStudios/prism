@@ -39,7 +39,7 @@ class CommandPermissionTest extends BukkitTest {
                 .init();
 
         var definition = new PrismBukkitCommand("prism")
-                .withPermissions(BukkitPermission.of("prism.use"))
+                .withPermission(BukkitPermission.of("prism.use"))
                 .executesPlayer((sender, args) -> {})
                 .build();
 
@@ -61,7 +61,7 @@ class CommandPermissionTest extends BukkitTest {
                 .init();
 
         var definition = new PrismBukkitCommand("prism")
-                .withPermissions(BukkitPermission.of("prism.use"))
+                .withPermission(BukkitPermission.of("prism.use"))
                 .executesPlayer((sender, args) -> {})
                 .build();
 
@@ -107,7 +107,7 @@ class CommandPermissionTest extends BukkitTest {
 
         var definition = new PrismBukkitCommand("prism")
                 .withPlayerRequirement(player -> false)
-                .withPermissions(BukkitPermission.of("prism.use"))
+                .withPermission(BukkitPermission.of("prism.use"))
                 .executesPlayer((sender, args) -> {})
                 .build();
 
@@ -132,7 +132,7 @@ class CommandPermissionTest extends BukkitTest {
 
         var definition = new PrismBukkitCommand("prism")
                 .withPlayerRequirement(player -> true)
-                .withPermissions(BukkitPermission.of("prism.use"))
+                .withPermission(BukkitPermission.of("prism.use"))
                 .executesPlayer((sender, args) -> {})
                 .build();
 

@@ -8,6 +8,7 @@ import dev.gurwi.prism.bukkit.argument.parser.ArgumentTokens;
 import dev.gurwi.prism.bukkit.argument.parser.LegacyArgumentsParser;
 import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestion;
 import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
+import dev.gurwi.prism.bukkit.event.AsyncCommandSuggestEvent;
 import dev.gurwi.prism.bukkit.exception.BukkitArgumentsParseException;
 import dev.gurwi.prism.command.AbstractCommandDefinition;
 import dev.gurwi.prism.exception.ArgumentParseException;
@@ -20,10 +21,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import javax.xml.transform.Source;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class BukkitExecutableCommand extends BukkitCommand implements CommandExecutor, TabCompleter, PluginIdentifiableCommand {
+
+    private static final ThreadLocal<List<CompletableFuture<List<String>>>> ASYNC = new ThreadLocal<>();
 
     private final JavaPlugin plugin;
     private final BukkitCommandDefinition definition;
@@ -95,6 +98,33 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         return tabComplete(sender, alias, args);
+    }
+
+    public @NotNull Optional<CompletableFuture<List<String>>> completeAsync(@NotNull CommandSender sender, @NotNull String @NotNull [] args) {
+        if (args.length == 0) return Optional.empty();
+
+        List<CompletableFuture<List<String>>> futures = new ArrayList<>();
+        List<String> immediate;
+
+        ASYNC.set(futures);
+
+        try {
+            immediate = complete(definition, sender, args, 0);
+        } finally {
+            ASYNC.remove();
+        }
+
+        if (futures.isEmpty()) return Optional.empty();
+
+        return Optional.of(CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenApply(ignored -> {
+            Set<String> merged = new LinkedHashSet<>(immediate);
+
+            for (CompletableFuture<List<String>> future : futures) {
+                merged.addAll(future.join());
+            }
+
+            return List.copyOf(merged);
+        }));
     }
 
     @Override
@@ -250,7 +280,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         return List.copyOf(suggestions);
     }
 
-    private @NotNull List<String> completeBranches(@NotNull List<BukkitArgument<?, ?>> candidates, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int from, int last) {
+    private @NotNull @Unmodifiable List<String> completeBranches(@NotNull List<BukkitArgument<?, ?>> candidates, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int from, int last) {
         Set<String> result = new LinkedHashSet<>();
 
         for (BukkitArgument<?, ?> candidate : candidates) {
@@ -303,34 +333,58 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
     }
 
     private @NotNull List<String> suggestFrom(@NotNull BukkitArgument<?, ?> argument, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int from, int last) {
-        List<String> suggestions = suggest(argument, sender, joined(args, from, last));
+        String prefix = from == last ? "" : joined(args, from, last - 1) + " ";
 
-        if (from == last) {
-            return suggestions;
-        }
-
-        String prefix = joined(args, from, last - 1) + " ";
-
-        return suggestions.stream()
-                .filter(suggestion -> suggestion.startsWith(prefix))
-                .map(suggestion -> suggestion.substring(prefix.length()))
-                .toList();
+        return suggest(argument, sender, joined(args, from, last), prefix);
     }
 
     private @NotNull List<String> suggest(@NotNull BukkitArgument<?, ?> argument, @NotNull CommandSender sender, @NotNull String input) {
+        return suggest(argument, sender, input, "");
+    }
+
+    private @NotNull List<String> suggest(@NotNull BukkitArgument<?, ?> argument, @NotNull CommandSender sender, @NotNull String input, @NotNull String prefix) {
         if (!argument.canUse(sender)) {
             return List.of();
         }
 
-        SuggestionContext<CommandSender> context = new SuggestionContext<>(sender, null, input); // TODO -> REMOVE THE NULL CURRENT INPUT ARG
+        SuggestionContext<CommandSender> context = new SuggestionContext<>(sender, null, input);
         BukkitSuggestionsSupplier<?> suggestions = argument.getSuggestionsSupplier();
 
-        if (suggestions instanceof BukkitSuggestionsSupplier.Sync sync) {
-            return sync.getSuggestions(context).stream().map(BukkitSuggestion::getSuggestion).toList();
+        if (suggestions instanceof BukkitSuggestionsSupplier.Async async) {
+            if (!AsyncCommandSuggestEvent.hasListeners()) throw new UnsupportedOperationException("Async suggestions are not supported on bukkit or they were disabled.");
+
+            List<CompletableFuture<List<String>>> collector = ASYNC.get();
+
+            if (collector == null) return List.of();
+
+            String lowered = input.toLowerCase();
+
+            collector.add(async.getSuggestions(context).handle((result, error) -> {
+                if (error != null || result == null) return List.of();
+
+                return strip(result.stream()
+                        .map(BukkitSuggestion::getSuggestion)
+                        .filter(text -> text.toLowerCase().startsWith(lowered))
+                        .toList(), prefix);
+            }));
+
+            return List.of();
         }
 
-        return List.of(); // TODO -> HANDLE ASYNC
-        //return List.copyOf(argument.getSuggestionsSupplier().getSuggestions(context));
+        if (suggestions instanceof BukkitSuggestionsSupplier.Sync sync) {
+            return strip(sync.getSuggestions(context).stream().map(BukkitSuggestion::getSuggestion).toList(), prefix);
+        }
+
+        return List.of();
+    }
+
+    private @NotNull List<String> strip(@NotNull List<String> values, @NotNull String prefix) {
+        if (prefix.isEmpty()) return values;
+
+        return values.stream()
+                .filter(value -> value.startsWith(prefix))
+                .map(value -> value.substring(prefix.length()))
+                .toList();
     }
 
     private @NotNull @Unmodifiable List<String> suggestChildren(@NotNull BukkitCommandDefinition current, @NotNull CommandSender sender, @NotNull String input) {

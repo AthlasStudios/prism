@@ -1,5 +1,6 @@
 package dev.gurwi.prism.test.plugin;
 
+import dev.gurwi.prism.bukkit.BukkitPlatform;
 import dev.gurwi.prism.bukkit.argument.*;
 import dev.gurwi.prism.bukkit.argument.base.EntitySelectorArgument;
 import dev.gurwi.prism.bukkit.argument.parser.ParsedFlags;
@@ -14,32 +15,20 @@ import dev.gurwi.prism.paper.PaperPlatform;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
 public class TestPlugin extends JavaPlugin {
 
     @Override
-    public void onLoad() {
-//        ArgumentMappings.INSTANCE.register(
-//                LocationArgument.class,
-//                ArgumentMapper.<Location, FinePositionResolver, LocationArgument>create(
-//                        argument -> ArgumentTypes.finePosition(),
-//                        (argument, source, resolver) -> {
-//                            var stack = ((WrappedSourceStack) source).getHandle();
-//
-//                            return resolver.resolve(stack).toLocation(stack.getLocation().getWorld());
-//                        }
-//                )
-//        );
-    }
-
-    @Override
     public void onEnable() {
         PaperPlatform platform = PaperPlatform.configure(this)
+                .disableBrigadier()
                 .init();
 
         BukkitCommandDefinition build = new PrismBukkitCommand("testa", "pr")
@@ -209,6 +198,7 @@ public class TestPlugin extends JavaPlugin {
                 .register(platform);
 
         platform.getCommandsRegistry().register(build);
+        register(platform, this);
 //        Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> {
 //            platform.getCommandsRegistry().unregister(build);
 //            getLogger().info("Unregistered build command");
@@ -218,6 +208,45 @@ public class TestPlugin extends JavaPlugin {
 //            platform.getCommandsRegistry().register(build);
 //            getLogger().info("Registered build command");
 //        }, 20 * 10); TODO -> RECHECK I THINK AN ERROR OCCURED
+    }
+
+    public static BukkitCommandDefinition register(BukkitPlatform<?> platform, Plugin plugin) {
+        BukkitSuggestionsSupplier.Async slow = context -> CompletableFuture.supplyAsync(() -> {
+            plugin.getLogger().info("async supplier on " + Thread.currentThread().getName() + " input=" + context.getCurrentRawArg());
+
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+            return List.of(
+                    BukkitSuggestion.of("alpha", "first async value"),
+                    BukkitSuggestion.of("alphabet", "shares a prefix with alpha"),
+                    BukkitSuggestion.of("beta", "second async value"),
+                    BukkitSuggestion.of("gamma", "third async value")
+            );
+        });
+
+        BukkitSuggestionsSupplier.Sync instant = context -> {
+            plugin.getLogger().info("sync supplier on " + Thread.currentThread().getName());
+
+            return List.of(
+                    BukkitSuggestion.of("one", "sync value"),
+                    BukkitSuggestion.of("two", "sync value")
+            );
+        };
+
+        return new PrismBukkitCommand("asynctest")
+                .withArguments(
+                        new StringArgument("slow").replaceSuggestions(slow),
+                        new StringArgument("fast").replaceSuggestions(instant)
+                )
+                .executes((sender, args) -> {
+                    sender.sendMessage("slow: " + args.get("slow"));
+                    sender.sendMessage("fast: " + args.get("fast"));
+                })
+                .register(platform);
     }
 
 }

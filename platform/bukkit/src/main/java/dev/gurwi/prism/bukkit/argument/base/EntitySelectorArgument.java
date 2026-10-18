@@ -1,6 +1,6 @@
 package dev.gurwi.prism.bukkit.argument.base;
 
-import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
+import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestion;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -25,7 +25,7 @@ public abstract class EntitySelectorArgument<Impl extends EntitySelectorArgument
     protected EntitySelectorArgument(@NotNull String name) {
         super(name);
 
-        replaceSuggestions(ctx -> getSuggestions(ctx.getSource(), ctx.getCurrentRawArg()));
+        replaceSuggestions(ctx -> BukkitSuggestion.of(getSuggestions(ctx.getSource(), ctx.getCurrentRawArg())));
     }
 
     private static @NotNull List<String> getSuggestions(@NotNull CommandSender sender, @NotNull String input) {

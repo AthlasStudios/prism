@@ -11,14 +11,16 @@ public class PaperPlatformConfiguration {
 
     private final boolean disableBrigadier;
     private final boolean disableLegacyRegistrar;
+    private final boolean disableAsyncSuggestions;
     private final boolean registerPermissions;
     private final LegacyCommandExecutionErrorHandler legacyCommandErrorHandle;
 
     @Contract(pure = true)
     private PaperPlatformConfiguration(@NotNull Builder builder) {
         this.disableBrigadier = builder.disableBrigadier;
-        this.registerPermissions = builder.registerPermissions;
         this.disableLegacyRegistrar = builder.disableLegacyRegistrar;
+        this.disableAsyncSuggestions = builder.disableAsyncSuggestions;
+        this.registerPermissions = builder.registerPermissions;
         this.legacyCommandErrorHandle = builder.legacyCommandErrorHandle;
     }
 
@@ -28,6 +30,10 @@ public class PaperPlatformConfiguration {
 
     public boolean isLegacyRegistrarDisabled() {
         return disableLegacyRegistrar;
+    }
+
+    public boolean isAsyncSuggestionsDisabled() {
+        return disableAsyncSuggestions;
     }
 
     public boolean isPermissionRegistrationEnabled() {
@@ -44,8 +50,9 @@ public class PaperPlatformConfiguration {
         private final JavaPlugin plugin;
 
         private boolean disableBrigadier = false;
-        private boolean registerPermissions = true;
         private boolean disableLegacyRegistrar = false;
+        private boolean disableAsyncSuggestions = false;
+        private boolean registerPermissions = true;
         private LegacyCommandExecutionErrorHandler legacyCommandErrorHandle = null;
 
         public Builder(JavaPlugin plugin) {
@@ -59,6 +66,11 @@ public class PaperPlatformConfiguration {
 
         public Builder disableLegacyRegistrar() {
             this.disableLegacyRegistrar = true;
+            return this;
+        }
+
+        public Builder disableAsyncSuggestions() {
+            this.disableAsyncSuggestions = true;
             return this;
         }
 

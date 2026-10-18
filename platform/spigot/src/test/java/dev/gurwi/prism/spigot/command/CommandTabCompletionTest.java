@@ -28,7 +28,7 @@ class CommandTabCompletionTest extends BukkitTest {
                                 "Prism command",
                                 "pr"
                         )
-                                .withPermissions(CommandPermission.OP)
+                                .withPermission(CommandPermission.OP)
                                 .executesPlayer((sender, args) -> {})
                                 .build()
                 );
@@ -49,7 +49,7 @@ class CommandTabCompletionTest extends BukkitTest {
                 .getCommandsRegistry()
                 .register(
                         new PrismBukkitCommand("prism")
-                                .withPermissions(CommandPermission.OP)
+                                .withPermission(CommandPermission.OP)
                                 .executesPlayer((sender, args) -> {})
                                 .build()
                 );
@@ -111,7 +111,7 @@ class CommandTabCompletionTest extends BukkitTest {
                 .getCommandsRegistry()
                 .register(
                         new PrismBukkitCommand("prism")
-                                .withPermissions(
+                                .withPermission(
                                         BukkitPermission.of("prism.use")
                                 )
                                 .executesPlayer((sender, args) -> {})
@@ -135,7 +135,7 @@ class CommandTabCompletionTest extends BukkitTest {
                 .getCommandsRegistry()
                 .register(
                         new PrismBukkitCommand("prism")
-                                .withPermissions(
+                                .withPermission(
                                         BukkitPermission.of("prism.use")
                                 )
                                 .executesPlayer((sender, args) -> {})
@@ -162,7 +162,7 @@ class CommandTabCompletionTest extends BukkitTest {
                 .register(
                         new PrismBukkitCommand("prism")
                                 .withPlayerRequirement(playerMock -> false)
-                                .withPermissions(
+                                .withPermission(
                                         BukkitPermission.of("prism.use")
                                 )
                                 .executesPlayer((sender, args) -> {})

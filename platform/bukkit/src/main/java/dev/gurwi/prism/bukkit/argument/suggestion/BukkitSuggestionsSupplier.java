@@ -46,20 +46,10 @@ public interface BukkitSuggestionsSupplier<Result> extends SuggestionsSupplier<C
     @FunctionalInterface
     interface Sync extends BukkitSuggestionsSupplier<Collection<BukkitSuggestion>> {
 
-        @Override
-        default boolean isAsync() {
-            return false;
-        }
-
     }
 
     @FunctionalInterface
     interface Async extends BukkitSuggestionsSupplier<CompletableFuture<Collection<BukkitSuggestion>>> {
-
-        @Override
-        default boolean isAsync() {
-            return true;
-        }
 
     }
 

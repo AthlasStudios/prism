@@ -13,12 +13,14 @@ public class PaperPlatform implements BukkitPlatform<PaperCommandsRegistry> {
     private final PaperPlatformConfiguration configuration;
     private final PaperCommandsRegistry commandsRegistry;
 
-    protected PaperPlatform(@NotNull JavaPlugin plugin, PaperPlatformConfiguration configuration) {
+    protected PaperPlatform(@NotNull JavaPlugin plugin, @NotNull PaperPlatformConfiguration configuration) {
         this.plugin = plugin;
         this.configuration = configuration;
         this.commandsRegistry = new PaperCommandsRegistry(this);
 
-        plugin.getServer().getPluginManager().registerEvents(new AsyncTabCompleter(), plugin); // TODO -> MAKE IT CHECK IF ITS AVAILABLE
+        if (!configuration.isAsyncSuggestionsDisabled()) {
+            plugin.getServer().getPluginManager().registerEvents(new AsyncTabCompleter(this), plugin);
+        }
     }
 
     @Contract(value = "_ -> new", pure = true)

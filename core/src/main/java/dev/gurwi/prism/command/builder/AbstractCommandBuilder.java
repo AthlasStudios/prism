@@ -60,7 +60,7 @@ public abstract class AbstractCommandBuilder<
     }
 
 
-    public Impl withPermissions(Permission... permissions) {
+    public Impl withPermission(Permission... permissions) {
         this.permissions.addAll(Arrays.asList(permissions));
         return self();
     }

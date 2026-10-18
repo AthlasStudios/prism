@@ -26,33 +26,39 @@ public abstract class BukkitCommandBuilder<Impl extends BukkitCommandBuilder<Imp
         super(name, aliases);
     }
 
-    public Impl withPermissions(String... permissions) {
-        withPermissions(BukkitPermission.of(permissions));
+    public Impl withPermission(String... permissions) {
+        withPermission(BukkitPermission.of(permissions));
         return self();
     }
 
+    @Override
     public <Sender extends CommandSender> Impl withRequirement(Class<Sender> type, UsageRequirement<Sender> requirement) {
         return withRequirement(sender ->
                 !type.isInstance(sender) || requirement.test(type.cast(sender))
         );
     }
 
+    @Override
     public Impl withPlayerRequirement(UsageRequirement<Player> requirement) {
         return withRequirement(Player.class, requirement);
     }
 
+    @Override
     public Impl withConsoleRequirement(UsageRequirement<ConsoleCommandSender> requirement) {
         return withRequirement(ConsoleCommandSender.class, requirement);
     }
 
+    @Override
     public Impl withRemoteConsoleRequirement(UsageRequirement<RemoteConsoleCommandSender> requirement) {
         return withRequirement(RemoteConsoleCommandSender.class, requirement);
     }
 
+    @Override
     public Impl withProxyRequirement(UsageRequirement<ProxiedCommandSender> requirement) {
         return withRequirement(ProxiedCommandSender.class, requirement);
     }
 
+    @Override
     public Impl withBlockRequirement(UsageRequirement<BlockCommandSender> requirement) {
         return withRequirement(BlockCommandSender.class, requirement);
     }

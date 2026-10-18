@@ -1,8 +1,6 @@
 package dev.gurwi.prism.bukkit.argument.base;
 
 import dev.gurwi.prism.argument.AbstractTreeArgument;
-import dev.gurwi.prism.argument.suggestion.SuggestionContext;
-import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestion;
 import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.command.executor.BukkitCommandExecutor;
@@ -19,7 +17,6 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 
 public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> extends AbstractTreeArgument<Impl, T, BukkitCommandDefinition, CommandSender, BukkitCommandExecutor<? extends CommandSender>, BukkitArgument<?, ?>, BukkitPermission, BukkitSuggestionsSupplier<?>> implements BukkitExecutorContainerBuilder<Impl>, BukkitRequirementContainerBuilder<Impl> {
 
@@ -42,11 +39,6 @@ public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> ex
 
     public Impl withFixedValues(Collection<String> values) {
         return withFixedValues(LiteralValues.of(values));
-    }
-
-
-    public Impl replaceSuggestions(Function<SuggestionContext<CommandSender>, Collection<String>> suggestions) {
-        return replaceSuggestions(BukkitSuggestionsSupplier.sync(ctx -> BukkitSuggestion.of(suggestions.apply(ctx))));
     }
 
     public Impl replaceSuggestions(Collection<String> suggestions) {
