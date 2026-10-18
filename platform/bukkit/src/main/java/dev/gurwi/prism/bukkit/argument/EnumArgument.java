@@ -1,5 +1,6 @@
 package dev.gurwi.prism.bukkit.argument;
 
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -15,14 +16,12 @@ public class EnumArgument<E extends Enum<E>> extends BukkitArgument<EnumArgument
         super(name);
 
         this.enumClass = enumClass;
+        List<String> values = Arrays.stream(enumClass.getEnumConstants())
+                .map(value -> value.name().toLowerCase())
+                .toList();
 
-        replaceSuggestions(
-                Arrays.stream(enumClass.getEnumConstants())
-                        .map(value -> value.name().toLowerCase())
-                        .toList()
-        );
-
-        forceSuggestions(true);
+        replaceSuggestions(values);
+        withFixedValues(values);
     }
 
     @Override

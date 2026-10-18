@@ -1,5 +1,7 @@
 package dev.gurwi.prism.bukkit.argument;
 
+import dev.gurwi.prism.bukkit.argument.base.PositionArgument;
+
 public class LocationArgument extends PositionArgument<LocationArgument> {
 
     public LocationArgument(String name, boolean centerIntegers) {

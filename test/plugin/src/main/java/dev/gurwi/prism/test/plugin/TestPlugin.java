@@ -1,6 +1,7 @@
 package dev.gurwi.prism.test.plugin;
 
 import dev.gurwi.prism.bukkit.argument.*;
+import dev.gurwi.prism.bukkit.argument.base.EntitySelectorArgument;
 import dev.gurwi.prism.bukkit.argument.parser.ParsedFlags;
 import dev.gurwi.prism.bukkit.argument.type.Flag;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
@@ -126,8 +127,14 @@ public class TestPlugin extends JavaPlugin {
                                 .executes((sender, args) -> {
                                     Particle particle = args.get("particle");
                                     sender.sendMessage("Selected particle " + particle);
-                                })
+                                }),
 
+                        new PrismBukkitCommand("difficulty")
+                                .withArguments(new DifficultyArgument("difficulty"))
+                                .executes((sender, args) -> {
+                                    Difficulty difficulty = args.get("difficulty");
+                                    sender.sendMessage("Selected difficulty " + difficulty.name());
+                                })
                 )
                 .executes((sender, args) -> {
                     ChatColor color = args.get("color");
@@ -187,15 +194,15 @@ public class TestPlugin extends JavaPlugin {
                 .register(platform);
 
         platform.getCommandsRegistry().register(build);
-        Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> {
-            platform.getCommandsRegistry().unregister(build);
-            getLogger().info("Unregistered build command");
-        }, 20 * 5);
-
-        Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> {
-            platform.getCommandsRegistry().register(build);
-            getLogger().info("Registered build command");
-        }, 20 * 10);
+//        Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> {
+//            platform.getCommandsRegistry().unregister(build);
+//            getLogger().info("Unregistered build command");
+//        }, 20 * 5);
+//
+//        Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> {
+//            platform.getCommandsRegistry().register(build);
+//            getLogger().info("Registered build command");
+//        }, 20 * 10); TODO -> RECHECK I THINK AN ERROR OCCURED
     }
 
 }

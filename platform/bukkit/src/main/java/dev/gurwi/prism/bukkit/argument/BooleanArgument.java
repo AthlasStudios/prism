@@ -1,5 +1,6 @@
 package dev.gurwi.prism.bukkit.argument;
 
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -10,7 +11,7 @@ public class BooleanArgument extends BukkitArgument<BooleanArgument, Boolean> {
         super(name);
 
         replaceSuggestions("true", "false");
-        forceSuggestions(true);
+        withFixedValues("true", "false");
     }
 
     @Override

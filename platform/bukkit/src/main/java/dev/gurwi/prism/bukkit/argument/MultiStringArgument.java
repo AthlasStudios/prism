@@ -1,5 +1,6 @@
 package dev.gurwi.prism.bukkit.argument;
 
+import dev.gurwi.prism.bukkit.argument.base.MultiTokenArgument;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;

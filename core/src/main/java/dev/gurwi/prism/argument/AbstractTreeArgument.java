@@ -1,5 +1,6 @@
 package dev.gurwi.prism.argument;
 
+import dev.gurwi.prism.argument.suggestion.SuggestionsSupplier;
 import dev.gurwi.prism.command.AbstractCommandDefinition;
 import dev.gurwi.prism.command.CommandExecutor;
 import dev.gurwi.prism.command.builder.ExecutorContainerBuilder;
@@ -18,7 +19,7 @@ public abstract class AbstractTreeArgument<
         Executor extends CommandExecutor<? extends Source, Definition>,
         Argument extends AbstractArgument<?, ?, ? extends Source, ?>,
         Permission extends PermissionNode<?, Source>,
-        Suggestions extends SuggestionsSupplier
+        Suggestions extends SuggestionsSupplier<Source, ?>
 > extends AbstractArgument<Impl, T, Source, Suggestions> implements TreeBuilder<Impl, AbstractTreeArgument<?, ?, Definition, Source, Executor, Argument, Permission, Suggestions>>, ExecutorContainerBuilder<Impl, Executor> {
 
     protected final Map<Class<? extends Executor>, Executor> executors = new HashMap<>();

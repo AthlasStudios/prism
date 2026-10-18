@@ -1,26 +1,26 @@
 package dev.gurwi.prism.bukkit.argument;
 
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class DisplaySlotArgument extends BukkitArgument<DisplaySlotArgument, DisplaySlot> {
 
     public DisplaySlotArgument(String name) {
         super(name);
 
-        replaceSuggestions(
-                BukkitSuggestionsSupplier.of(
-                        Arrays.stream(DisplaySlot.values())
-                                .map(slot -> slot.name().toLowerCase())
-                                .toList()
-                )
-        );
+        List<String> values = Arrays.stream(DisplaySlot.values())
+                .map(slot -> slot.name().toLowerCase())
+                .toList();
 
-        forceSuggestions(true);
+        replaceSuggestions(values);
+        withFixedValues(values);
     }
 
     @Override

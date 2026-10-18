@@ -40,10 +40,6 @@ public interface BrigadierAdapter<Source, Definition extends AbstractCommandDefi
         return null;
     }
 
-    default boolean forced(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
-        return false;
-    }
-
     default @NotNull List<String> forcedValues(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
         return List.of();
     }

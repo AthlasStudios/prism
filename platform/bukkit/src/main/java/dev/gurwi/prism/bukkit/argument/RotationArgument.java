@@ -1,5 +1,6 @@
 package dev.gurwi.prism.bukkit.argument;
 
+import dev.gurwi.prism.bukkit.argument.base.MultiTokenArgument;
 import dev.gurwi.prism.bukkit.argument.parser.RelativeValues;
 import dev.gurwi.prism.bukkit.argument.type.Rotation;
 import dev.gurwi.prism.exception.ArgumentParseException;

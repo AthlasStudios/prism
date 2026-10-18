@@ -1,24 +1,25 @@
 package dev.gurwi.prism.bukkit.argument;
 
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.WeatherType;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class WeatherArgument extends BukkitArgument<WeatherArgument, WeatherType> {
 
     public WeatherArgument(String name) {
         super(name);
 
-        replaceSuggestions(
-                Arrays.stream(WeatherType.values())
-                        .map(weatherType -> weatherType.name().toLowerCase())
-                        .toList()
-        );
+        List<String> values = Arrays.stream(WeatherType.values())
+                .map(weatherType -> weatherType.name().toLowerCase())
+                .toList();
 
-        forceSuggestions(true);
+        replaceSuggestions(values);
+        withFixedValues(values);
     }
 
     @Override

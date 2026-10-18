@@ -1,6 +1,6 @@
-package dev.gurwi.prism.bukkit;
+package dev.gurwi.prism.bukkit.argument;
 
-import dev.gurwi.prism.bukkit.argument.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import dev.gurwi.prism.bukkit.argument.parser.RelativeValues;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.command.CommandSender;

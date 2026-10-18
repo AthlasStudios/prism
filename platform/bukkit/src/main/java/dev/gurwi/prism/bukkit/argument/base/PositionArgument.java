@@ -1,4 +1,4 @@
-package dev.gurwi.prism.bukkit.argument;
+package dev.gurwi.prism.bukkit.argument.base;
 
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.Bukkit;
@@ -36,7 +36,7 @@ public abstract class PositionArgument<Impl extends PositionArgument<Impl>> exte
         this.centerIntegers = centerIntegers;
         this.components = column ? 2 : 3;
 
-        replaceSuggestions(this::suggest);
+        replaceSuggestions(ctx -> suggest(ctx.getSource(), ctx.getCurrentRawArg()));
     }
 
     @Override

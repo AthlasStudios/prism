@@ -1,6 +1,6 @@
 package dev.gurwi.prism.bukkit.command;
 
-import dev.gurwi.prism.bukkit.argument.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import dev.gurwi.prism.bukkit.command.error.LegacyCommandExecutionErrorHandler;
 import dev.gurwi.prism.bukkit.command.executor.*;
 import dev.gurwi.prism.bukkit.permission.BukkitPermission;

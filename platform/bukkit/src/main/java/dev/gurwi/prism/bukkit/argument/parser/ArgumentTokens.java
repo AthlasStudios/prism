@@ -1,8 +1,8 @@
 package dev.gurwi.prism.bukkit.argument.parser;
 
-import dev.gurwi.prism.bukkit.argument.BukkitArgument;
-import dev.gurwi.prism.bukkit.argument.GreedyArgument;
-import dev.gurwi.prism.bukkit.argument.MultiTokenArgument;
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.base.GreedyArgument;
+import dev.gurwi.prism.bukkit.argument.base.MultiTokenArgument;
 import org.jetbrains.annotations.NotNull;
 
 public final class ArgumentTokens {

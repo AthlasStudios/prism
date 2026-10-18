@@ -1,26 +1,26 @@
 package dev.gurwi.prism.bukkit.argument;
 
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.GameMode;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class GameModeArgument extends BukkitArgument<GameModeArgument, GameMode> {
 
     public GameModeArgument(String name) {
         super(name);
 
-        replaceSuggestions(
-                BukkitSuggestionsSupplier.of(
-                        Arrays.stream(GameMode.values())
-                                .map(gameMode -> gameMode.name().toLowerCase())
-                                .toList()
-                )
-        );
+        List<String> values = Arrays.stream(GameMode.values())
+                .map(gameMode -> gameMode.name().toLowerCase())
+                .toList();
 
-        forceSuggestions(true);
+        replaceSuggestions(values);
+        withFixedValues(values);
     }
 
     @Override

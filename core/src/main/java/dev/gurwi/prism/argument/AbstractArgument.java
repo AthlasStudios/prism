@@ -1,17 +1,17 @@
 package dev.gurwi.prism.argument;
 
+import dev.gurwi.prism.argument.suggestion.SuggestionsSupplier;
 import dev.gurwi.prism.command.builder.RequirementContainerBuilder;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import dev.gurwi.prism.requirement.UsageRequirement;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unchecked")
-public abstract class AbstractArgument<Impl extends AbstractArgument<Impl, T, Source, Suggestions>, T, Source, Suggestions extends SuggestionsSupplier> implements RequirementContainerBuilder<Impl, UsageRequirement<Source>> {
+public abstract class AbstractArgument<Impl extends AbstractArgument<Impl, T, Source, Suggestions>, T, Source, Suggestions extends SuggestionsSupplier<Source, ?>> implements RequirementContainerBuilder<Impl, UsageRequirement<Source>> {
 
     private final String name;
 
     protected boolean listed = true;
-    protected boolean forceSuggestions = false;
     private Suggestions suggestionsSupplier;
     private UsageRequirement<Source> requirement = UsageRequirement.none();
 
@@ -30,11 +30,6 @@ public abstract class AbstractArgument<Impl extends AbstractArgument<Impl, T, So
         return self();
     }
 
-    public Impl forceSuggestions(boolean forceSuggestions) {
-        this.forceSuggestions = forceSuggestions;
-        return self();
-    }
-
     @Override
     public Impl withRequirement(@NotNull UsageRequirement<Source> requirement) {
         this.requirement = this.requirement.and(requirement);
@@ -47,10 +42,6 @@ public abstract class AbstractArgument<Impl extends AbstractArgument<Impl, T, So
 
     public boolean isListed() {
         return listed;
-    }
-
-    public boolean isForceSuggestions() {
-        return forceSuggestions;
     }
 
     public Suggestions getSuggestionsSupplier() {

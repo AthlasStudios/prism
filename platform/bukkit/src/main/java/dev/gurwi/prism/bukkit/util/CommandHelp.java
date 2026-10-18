@@ -3,7 +3,7 @@ package dev.gurwi.prism.bukkit.util;
 import dev.gurwi.prism.argument.AbstractArgument;
 import dev.gurwi.prism.argument.AbstractTreeArgument;
 import dev.gurwi.prism.argument.CommandArguments;
-import dev.gurwi.prism.bukkit.argument.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import dev.gurwi.prism.bukkit.argument.LiteralArgument;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.command.executor.BukkitCommandExecutor;

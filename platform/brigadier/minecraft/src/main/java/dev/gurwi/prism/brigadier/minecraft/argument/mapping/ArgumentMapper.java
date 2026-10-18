@@ -3,7 +3,7 @@ package dev.gurwi.prism.brigadier.minecraft.argument.mapping;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
-import dev.gurwi.prism.bukkit.argument.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;

@@ -96,10 +96,6 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
 
         List<String> values = adapter.forcedValues(argument);
 
-        if (values.isEmpty()) {
-            throw new IllegalStateException("Argument '" + argument.getName() + "' of '" + definition.getName() + "' forces suggestions but provides none");
-        }
-
         List<CommandNode<S>> nodes = new ArrayList<>(values.size());
 
         for (String value : values) {
@@ -221,7 +217,7 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
     }
 
     private boolean forcing(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
-        return adapter.forced(argument)
+        return !adapter.forcedValues(argument).isEmpty()
                 && resolveType(argument) == null
                 && !adapter.literal(argument)
                 && !adapter.greedy(argument)
@@ -255,10 +251,6 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         for (AbstractArgument<?, ?, ?, ?> sibling : ordered) {
             if (forcing(sibling)) {
                 List<String> values = adapter.forcedValues(sibling);
-
-                if (values.isEmpty()) {
-                    throw new IllegalStateException("Argument '" + sibling.getName() + "' of '" + definition.getName() + "' forces suggestions but provides none");
-                }
 
                 for (String value : values) {
                     nodes.add(buildForcedBranch(definition, sibling, value, ancestors, forced));
@@ -395,9 +387,7 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
             throw new IllegalStateException("Greedy argument '" + argument.getName() + "' of '" + definition.getName() + "' cannot have children");
         }
 
-        List<CommandNode<S>> children = new ArrayList<>();
-
-        children.addAll(buildBranches(definition, childArguments, path, forced));
+        List<CommandNode<S>> children = new ArrayList<>(buildBranches(definition, childArguments, path, forced));
 
         requireUnique(argument.getName(), children);
 

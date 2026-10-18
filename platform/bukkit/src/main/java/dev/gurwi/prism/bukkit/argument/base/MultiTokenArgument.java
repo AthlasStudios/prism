@@ -1,4 +1,4 @@
-package dev.gurwi.prism.bukkit.argument;
+package dev.gurwi.prism.bukkit.argument.base;
 
 public abstract class MultiTokenArgument<Impl extends MultiTokenArgument<Impl, T>, T> extends BukkitArgument<Impl, T> {
 

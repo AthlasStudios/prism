@@ -10,8 +10,10 @@ import dev.gurwi.prism.brigadier.minecraft.exception.UnsupportedArgumentTypeExce
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.position.WrappedColumnBlockPosition;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.position.WrappedColumnFinePosition;
-import dev.gurwi.prism.bukkit.AngleArgument;
+import dev.gurwi.prism.bukkit.argument.AngleArgument;
 import dev.gurwi.prism.bukkit.argument.*;
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.base.EntitySelectorArgument;
 import dev.gurwi.prism.bukkit.argument.type.Rotation;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
@@ -58,17 +60,17 @@ public class ArgumentMappings {
                 (argument, source, resolver) -> resolver.resolve(source).get(0)
         ));
 
-        register(EntitySelectorArgument.OneEntity.class, ArgumentMapper.constant(
+        register(dev.gurwi.prism.bukkit.argument.base.EntitySelectorArgument.OneEntity.class, ArgumentMapper.constant(
                 MinecraftArgumentType.entity(),
                 (argument, source, resolver) -> resolver.resolve(source).get(0)
         ));
 
-        register(EntitySelectorArgument.ManyEntities.class, ArgumentMapper.constant(
+        register(dev.gurwi.prism.bukkit.argument.base.EntitySelectorArgument.ManyEntities.class, ArgumentMapper.constant(
                 MinecraftArgumentType.entities(),
                 (argument, source, resolver) -> resolver.resolve(source)
         ));
 
-        register(EntitySelectorArgument.OnePlayer.class, ArgumentMapper.constant(
+        register(dev.gurwi.prism.bukkit.argument.base.EntitySelectorArgument.OnePlayer.class, ArgumentMapper.constant(
                 MinecraftArgumentType.player(),
                 (argument, source, resolver) -> resolver.resolve(source).get(0)
         ));
@@ -143,11 +145,11 @@ public class ArgumentMappings {
         ));
     }
 
-    public <T, BrigadierType, Argument extends BukkitArgument<?, T>> void register(@NotNull Class<Argument> type, @NotNull ArgumentMapper<T, BrigadierType, Argument> mapper) {
+    public <T, BrigadierType, Argument extends dev.gurwi.prism.bukkit.argument.base.BukkitArgument<?, T>> void register(@NotNull Class<Argument> type, @NotNull ArgumentMapper<T, BrigadierType, Argument> mapper) {
         binders.put(type, argument -> bind(mapper, type.cast(argument)));
     }
 
-    public <T> @NotNull Optional<BoundArgumentMapper<T>> find(@NotNull BukkitArgument<?, T> argument) {
+    public <T> @NotNull Optional<BoundArgumentMapper<T>> find(@NotNull dev.gurwi.prism.bukkit.argument.base.BukkitArgument<?, T> argument) {
         try {
             return Optional.ofNullable(resolve(argument));
         } catch (UnsupportedArgumentTypeException exception) {
@@ -156,7 +158,7 @@ public class ArgumentMappings {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> @Nullable BoundArgumentMapper<T> resolve(@NotNull BukkitArgument<?, T> argument) {
+    private <T> @Nullable BoundArgumentMapper<T> resolve(@NotNull dev.gurwi.prism.bukkit.argument.base.BukkitArgument<?, T> argument) {
         if (argument instanceof ArgumentMapper<?, ?, ?> self) {
             return bindSelf(self, argument);
         }
@@ -177,11 +179,11 @@ public class ArgumentMappings {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static <T> @NotNull BoundArgumentMapper<T> bindSelf(ArgumentMapper<?, ?, ?> mapper, BukkitArgument<?, T> argument) {
+    private static <T> @NotNull BoundArgumentMapper<T> bindSelf(ArgumentMapper<?, ?, ?> mapper, dev.gurwi.prism.bukkit.argument.base.BukkitArgument<?, T> argument) {
         return bind((ArgumentMapper) mapper, argument);
     }
 
-    private static <T, BrigadierType, Argument extends BukkitArgument<?, T>> @NotNull BoundArgumentMapper<T> bind(@NotNull ArgumentMapper<T, BrigadierType, Argument> mapper, Argument argument) {
+    private static <T, BrigadierType, Argument extends dev.gurwi.prism.bukkit.argument.base.BukkitArgument<?, T>> @NotNull BoundArgumentMapper<T> bind(@NotNull ArgumentMapper<T, BrigadierType, Argument> mapper, Argument argument) {
         ArgumentType<BrigadierType> type = mapper.toBrigadierType(argument);
 
         return new BoundArgumentMapper<>() {

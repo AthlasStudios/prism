@@ -47,7 +47,7 @@ public final class BrigadierBukkitCommand<SourceStack> extends Command {
                     .getList()
                     .stream()
                     .map(Suggestion::getText)
-                    .toList();
+                    .toList(); // TODO -> WTF
         } catch (InterruptedException | ExecutionException exception) {
             return List.of();
         }

@@ -1,10 +1,13 @@
 package dev.gurwi.prism.bukkit.command;
 
 import dev.gurwi.prism.argument.CommandArguments;
-import dev.gurwi.prism.bukkit.argument.BukkitArgument;
+import dev.gurwi.prism.argument.suggestion.SuggestionContext;
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import dev.gurwi.prism.bukkit.argument.LiteralArgument;
 import dev.gurwi.prism.bukkit.argument.parser.ArgumentTokens;
 import dev.gurwi.prism.bukkit.argument.parser.LegacyArgumentsParser;
+import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestion;
+import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.bukkit.exception.BukkitArgumentsParseException;
 import dev.gurwi.prism.command.AbstractCommandDefinition;
 import dev.gurwi.prism.exception.ArgumentParseException;
@@ -17,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import javax.xml.transform.Source;
 import java.util.*;
 
 public class BukkitExecutableCommand extends BukkitCommand implements CommandExecutor, TabCompleter, PluginIdentifiableCommand {
@@ -317,7 +321,16 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         if (!argument.canUse(sender)) {
             return List.of();
         }
-        return List.copyOf(argument.getSuggestionsSupplier().getSuggestions(sender, input));
+
+        SuggestionContext<CommandSender> context = new SuggestionContext<>(sender, null, input); // TODO -> REMOVE THE NULL CURRENT INPUT ARG
+        BukkitSuggestionsSupplier<?> suggestions = argument.getSuggestionsSupplier();
+
+        if (suggestions instanceof BukkitSuggestionsSupplier.Sync sync) {
+            return sync.getSuggestions(context).stream().map(BukkitSuggestion::getSuggestion).toList();
+        }
+
+        return List.of(); // TODO -> HANDLE ASYNC
+        //return List.copyOf(argument.getSuggestionsSupplier().getSuggestions(context));
     }
 
     private @NotNull @Unmodifiable List<String> suggestChildren(@NotNull BukkitCommandDefinition current, @NotNull CommandSender sender, @NotNull String input) {

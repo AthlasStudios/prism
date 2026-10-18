@@ -1,11 +1,13 @@
 package dev.gurwi.prism.bukkit.argument;
 
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 public class PotionEffectTypeArgument extends BukkitArgument<PotionEffectTypeArgument, PotionEffectType> {
@@ -13,15 +15,13 @@ public class PotionEffectTypeArgument extends BukkitArgument<PotionEffectTypeArg
     public PotionEffectTypeArgument(String name) {
         super(name);
 
-        replaceSuggestions(
-                Arrays.stream(PotionEffectType.values())
-                        .filter(Objects::nonNull)
-                        .map(type -> type.getName().toLowerCase())
-                        .toList()
+        List<String> values = Arrays.stream(PotionEffectType.values())
+                .filter(Objects::nonNull)
+                .map(type -> type.getName().toLowerCase())
+                .toList();
 
-        );
-
-        forceSuggestions(true);
+        replaceSuggestions(values);
+        withFixedValues(values);
     }
 
     @Override

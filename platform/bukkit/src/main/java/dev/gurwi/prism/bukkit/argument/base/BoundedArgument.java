@@ -1,4 +1,4 @@
-package dev.gurwi.prism.bukkit.argument;
+package dev.gurwi.prism.bukkit.argument.base;
 
 public abstract class BoundedArgument<Impl extends BoundedArgument<Impl, T>, T> extends BukkitArgument<Impl, T> {
 

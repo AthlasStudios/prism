@@ -1,5 +1,6 @@
 package dev.gurwi.prism.bukkit.argument;
 
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.Bukkit;
 import org.bukkit.block.data.BlockData;

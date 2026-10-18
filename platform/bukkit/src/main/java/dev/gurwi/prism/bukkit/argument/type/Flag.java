@@ -1,6 +1,6 @@
 package dev.gurwi.prism.bukkit.argument.type;
 
-import dev.gurwi.prism.bukkit.argument.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

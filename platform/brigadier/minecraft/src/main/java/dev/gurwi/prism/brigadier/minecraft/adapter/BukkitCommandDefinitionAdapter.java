@@ -7,21 +7,25 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import dev.gurwi.prism.argument.AbstractArgument;
 import dev.gurwi.prism.argument.CommandArguments;
+import dev.gurwi.prism.argument.suggestion.SuggestionContext;
 import dev.gurwi.prism.brigadier.BrigadierAdapter;
 import dev.gurwi.prism.brigadier.BrigadierCompatibleArgument;
 import dev.gurwi.prism.brigadier.BrigadierTreeBuilder;
 import dev.gurwi.prism.brigadier.minecraft.argument.mapping.ArgumentMappings;
 import dev.gurwi.prism.brigadier.minecraft.argument.mapping.BoundArgumentMapper;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
-import dev.gurwi.prism.bukkit.argument.BukkitArgument;
-import dev.gurwi.prism.bukkit.argument.GreedyArgument;
+import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.base.GreedyArgument;
 import dev.gurwi.prism.bukkit.argument.LiteralArgument;
+import dev.gurwi.prism.bukkit.argument.base.LiteralValues;
 import dev.gurwi.prism.bukkit.argument.parser.ArgumentTokens;
+import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestion;
+import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.exception.ArgumentParseException;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,27 +53,14 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
     }
 
     @Override
-    public boolean forced(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
-        return argument instanceof BukkitArgument<?, ?> bukkitArgument
-                && !(argument instanceof LiteralArgument)
-                && bukkitArgument.isForceSuggestions();
-    }
-
-    @Override
     public @NotNull List<String> forcedValues(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
-        if (!(argument instanceof BukkitArgument<?, ?> bukkitArgument)) {
+        if (!(argument instanceof BukkitArgument<?, ?> bukkitArgument) || argument instanceof LiteralArgument) {
             return List.of();
         }
 
-        Set<String> values = new LinkedHashSet<>();
-
-        for (String suggestion : bukkitArgument.getSuggestionsSupplier().getSuggestions(Bukkit.getConsoleSender(), "")) {
-            if (suggestion != null && !suggestion.isEmpty() && suggestion.indexOf(' ') < 0) {
-                values.add(suggestion);
-            }
-        }
-
-        return List.copyOf(values);
+        return bukkitArgument.getFixedValues()
+                .map(LiteralValues::get)
+                .orElse(List.of());
     }
 
     @Override
@@ -162,16 +153,49 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
 
         return (context, suggestionsBuilder) -> {
             CommandSender sender = senderOf(context.getSource());
-            String remaining = suggestionsBuilder.getRemaining().toLowerCase();
+            String remaining = suggestionsBuilder.getRemaining();
 
-            for (String suggestion : bukkitArgument.getSuggestionsSupplier().getSuggestions(sender, suggestionsBuilder.getRemaining())) {
-                if (suggestion.toLowerCase().startsWith(remaining)) {
-                    suggestionsBuilder.suggest(suggestion);
-                }
+            SuggestionContext<CommandSender> suggestionContext =
+                    new SuggestionContext<>(sender, suggestionsBuilder.getInput(), remaining);
+
+            BukkitSuggestionsSupplier<?> supplier = bukkitArgument.getSuggestionsSupplier();
+
+            if (supplier instanceof BukkitSuggestionsSupplier.Async async) {
+                return async.getSuggestions(suggestionContext).handle((suggestions, error) -> {
+                    if (error == null && suggestions != null) {
+                        applySuggestions(suggestionsBuilder, suggestions, remaining);
+                    }
+
+                    return suggestionsBuilder.build();
+                });
+            }
+
+            if (supplier instanceof BukkitSuggestionsSupplier.Sync sync) {
+                applySuggestions(suggestionsBuilder, sync.getSuggestions(suggestionContext), remaining);
             }
 
             return suggestionsBuilder.buildFuture();
         };
+    }
+
+    private static void applySuggestions(@NotNull SuggestionsBuilder builder, @NotNull Collection<BukkitSuggestion> suggestions, @NotNull String remaining) {
+        String lowered = remaining.toLowerCase(Locale.ROOT);
+
+        for (BukkitSuggestion suggestion : suggestions) {
+            String text = suggestion.getSuggestion();
+
+            if (!text.toLowerCase(Locale.ROOT).startsWith(lowered)) {
+                continue;
+            }
+
+            String tooltip = suggestion.getTooltip();
+
+            if (tooltip != null) {
+                builder.suggest(text, new LiteralMessage(tooltip));
+            } else {
+                builder.suggest(text);
+            }
+        }
     }
 
     public BrigadierTreeBuilder<MinecraftCommandSource, BukkitCommandDefinition> getBuilder() {
