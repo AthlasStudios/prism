@@ -1,8 +1,6 @@
+# 🌟 Prism - THE Command Framework
+
 <div align="center">
-
-# 🌟 Prism
-
-### THE Command Framework
 
 A code-first command framework that lets you build commands directly in Java with a fluent, type-safe API.
 **No annotations required.**
