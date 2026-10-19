@@ -31,6 +31,7 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
 
     public FlagArgument(String name) {
         super(name);
+
         replaceSuggestions(BukkitSuggestionsSupplier.async(this::suggest));
     }
 
@@ -39,7 +40,7 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
             throw new IllegalArgumentException("Duplicate flag: --" + flag.getName());
         }
 
-        Character shortName = flag.getShortName();
+        Character shortName = flag.getShortName().orElse(null);
 
         if (shortName != null && byShort.putIfAbsent(shortName, flag) != null) {
             byLong.remove(flag.getName());
@@ -143,7 +144,7 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
         }
 
         try {
-            list.add(flag.getValue().parse(sender, raw));
+            list.add(flag.getValue().orElseThrow().parse(sender, raw));
         } catch (ArgumentParseException e) {
             throw error("Invalid value '" + raw + "' for '--" + flag.getName() + "': " + e.getMessage());
         }
@@ -244,14 +245,16 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
                 continue;
             }
 
+            String description = flag.getDescription().orElse(null);
+
             if (flag.longLiteral().startsWith(lowered)) {
-                result.add(BukkitSuggestion.of(flag.longLiteral()));
+                result.add(suggestion(flag.longLiteral(), description));
             }
 
-            String shortLiteral = flag.shortLiteral();
+            String shortLiteral = flag.shortLiteral().orElse(null);
 
             if (!partial.isEmpty() && shortLiteral != null && shortLiteral.startsWith(lowered)) {
-                result.add(BukkitSuggestion.of(shortLiteral));
+                result.add(suggestion(shortLiteral, description));
             }
         }
 
@@ -259,7 +262,7 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
     }
 
     private @NotNull CompletableFuture<Collection<BukkitSuggestion>> innerSuggestions(@NotNull SuggestionContext<CommandSender> context, @NotNull Flag<?> flag, String partial) {
-        BukkitArgument<?, ?> inner = flag.getValue();
+        BukkitArgument<?, ?> inner = flag.getValue().orElse(null);
 
         if (inner == null) {
             return CompletableFuture.completedFuture(List.of());
@@ -289,6 +292,14 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
         }
 
         return CompletableFuture.completedFuture(List.of());
+    }
+
+    private static @NotNull BukkitSuggestion suggestion(@NotNull String literal, @Nullable String description) {
+        if (description == null) {
+            return BukkitSuggestion.of(literal);
+        }
+
+        return BukkitSuggestion.of(literal, description);
     }
 
     private static @NotNull List<BukkitSuggestion> matching(@NotNull Collection<BukkitSuggestion> suggestions, @NotNull String lowered) {
