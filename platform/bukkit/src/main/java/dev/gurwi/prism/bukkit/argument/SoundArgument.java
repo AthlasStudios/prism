@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class SoundArgument extends BukkitArgument<SoundArgument, Sound> {
 
@@ -16,7 +17,7 @@ public class SoundArgument extends BukkitArgument<SoundArgument, Sound> {
 
         List<String> values = Arrays.stream(Sound.values())
                 .map(sound -> sound.name().toLowerCase())
-                .toList();
+                .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
         withFixedValues(values);

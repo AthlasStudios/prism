@@ -16,22 +16,22 @@ import dev.gurwi.prism.exception.NoExecutorException;
 import org.bukkit.command.*;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class BukkitExecutableCommand extends BukkitCommand implements CommandExecutor, TabCompleter, PluginIdentifiableCommand {
 
     private static final ThreadLocal<List<CompletableFuture<List<String>>>> ASYNC = new ThreadLocal<>();
 
-    private final JavaPlugin plugin;
+    private final Plugin plugin;
     private final BukkitCommandDefinition definition;
 
-    public BukkitExecutableCommand(JavaPlugin plugin, @NotNull BukkitCommandDefinition definition) {
+    public BukkitExecutableCommand(Plugin plugin, @NotNull BukkitCommandDefinition definition) {
         super(definition.getName());
 
         this.plugin = plugin;
@@ -350,7 +350,9 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         SuggestionContext<CommandSender> context = new SuggestionContext<>(sender, null, input);
         BukkitSuggestionsSupplier<?> suggestions = argument.getSuggestionsSupplier();
 
-        if (suggestions instanceof BukkitSuggestionsSupplier.Async async) {
+        if (suggestions instanceof BukkitSuggestionsSupplier.Async) {
+            BukkitSuggestionsSupplier.Async async = (BukkitSuggestionsSupplier.Async) suggestions;
+
             if (!AsyncCommandSuggestEvent.hasListeners()) throw new UnsupportedOperationException("Async suggestions are not supported on bukkit or they were disabled.");
 
             List<CompletableFuture<List<String>>> collector = ASYNC.get();
@@ -365,14 +367,16 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
                 return strip(result.stream()
                         .map(BukkitSuggestion::getSuggestion)
                         .filter(text -> text.toLowerCase().startsWith(lowered))
-                        .toList(), prefix);
+                        .collect(Collectors.toList()), prefix);
             }));
 
             return List.of();
         }
 
-        if (suggestions instanceof BukkitSuggestionsSupplier.Sync sync) {
-            return strip(sync.getSuggestions(context).stream().map(BukkitSuggestion::getSuggestion).toList(), prefix);
+        if (suggestions instanceof BukkitSuggestionsSupplier.Sync) {
+            BukkitSuggestionsSupplier.Sync sync = (BukkitSuggestionsSupplier.Sync) suggestions;
+
+            return strip(sync.getSuggestions(context).stream().map(BukkitSuggestion::getSuggestion).collect(Collectors.toList()), prefix);
         }
 
         return List.of();
@@ -384,7 +388,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         return values.stream()
                 .filter(value -> value.startsWith(prefix))
                 .map(value -> value.substring(prefix.length()))
-                .toList();
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private @NotNull @Unmodifiable List<String> suggestChildren(@NotNull BukkitCommandDefinition current, @NotNull CommandSender sender, @NotNull String input) {
@@ -395,7 +399,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
                 .filter(child -> child.canExecute(sender))
                 .map(AbstractCommandDefinition::getName)
                 .filter(name -> name.toLowerCase().startsWith(prefix))
-                .toList();
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private static @NotNull List<BukkitArgument<?, ?>> nodes(@NotNull Collection<?> source) {
@@ -408,10 +412,48 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         return result;
     }
 
-    private record Level(@NotNull BukkitCommandDefinition definition, @NotNull String @NotNull [] args, int start) {
+    private static final class Level {
+
+        private final BukkitCommandDefinition definition;
+        private final String[] args;
+        private final int start;
+
+        private Level(@NotNull BukkitCommandDefinition definition, @NotNull String @NotNull [] args, int start) {
+            this.definition = definition;
+            this.args = args;
+            this.start = start;
+        }
+
+        @NotNull BukkitCommandDefinition definition() {
+            return definition;
+        }
+
+        @NotNull String @NotNull [] args() {
+            return args;
+        }
+
+        int start() {
+            return start;
+        }
     }
 
-    private record Located(@NotNull BukkitArgument<?, ?> argument, int start) {
+    private static final class Located {
+
+        private final BukkitArgument<?, ?> argument;
+        private final int start;
+
+        private Located(@NotNull BukkitArgument<?, ?> argument, int start) {
+            this.argument = argument;
+            this.start = start;
+        }
+
+        @NotNull BukkitArgument<?, ?> argument() {
+            return argument;
+        }
+
+        int start() {
+            return start;
+        }
     }
 
 }

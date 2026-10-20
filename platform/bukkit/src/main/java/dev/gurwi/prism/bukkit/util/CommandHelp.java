@@ -162,7 +162,23 @@ public class CommandHelp {
         return !branches.isEmpty() || definition.getChildren().stream().anyMatch(child -> reachable(child, sender));
     }
 
-    private record Entry(@NotNull String command, @Nullable String description) {
+    private static final class Entry {
+
+        private final String command;
+        private final String description;
+
+        private Entry(@NotNull String command, @Nullable String description) {
+            this.command = command;
+            this.description = description;
+        }
+
+        @NotNull String command() {
+            return command;
+        }
+
+        @Nullable String description() {
+            return description;
+        }
     }
 
     private static void send(@NotNull CommandSender sender, @NotNull Entry entry, @NotNull ChatColor primaryColor, @NotNull ChatColor secondaryColor) {

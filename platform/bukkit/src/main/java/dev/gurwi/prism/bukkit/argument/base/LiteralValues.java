@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public interface LiteralValues extends Supplier<List<String>> {
 
@@ -33,7 +34,8 @@ public interface LiteralValues extends Supplier<List<String>> {
 
         return of(Arrays.stream(type.getEnumConstants())
                 .map(constant -> constant.name().toLowerCase(Locale.ROOT))
-                .toList());
+                .collect(Collectors.toUnmodifiableList())
+        );
     }
 
     private static @NotNull @Unmodifiable List<String> snapshot(Collection<String> input) {

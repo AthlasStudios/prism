@@ -14,17 +14,24 @@ public class ConsoleCommandExecutionErrorHandler implements LegacyCommandExecuti
             @NotNull CommandSender sender,
             @NotNull BukkitArgumentsParseException exception
     ) {
-        sender.sendMessage(
-                ChatColor.RED +
-                        switch (exception.getType()) {
-                            case INVALID_ARGUMENT ->
-                                    formatInvalidArgument(sender, command, exception);
-                            case MISSING_ARGUMENT ->
-                                    formatMissingArgument(sender, command, exception);
-                            case UNKNOWN_ARGUMENT ->
-                                    formatUnknownArgument(exception);
-                        }
-        );
+        sender.sendMessage(ChatColor.RED + format(sender, command, exception));
+    }
+
+    private @NotNull String format(
+            @NotNull CommandSender sender,
+            @NotNull BukkitCommandDefinition command,
+            @NotNull BukkitArgumentsParseException exception
+    ) {
+        switch (exception.getType()) {
+            case INVALID_ARGUMENT:
+                return formatInvalidArgument(sender, command, exception);
+            case MISSING_ARGUMENT:
+                return formatMissingArgument(sender, command, exception);
+            case UNKNOWN_ARGUMENT:
+                return formatUnknownArgument(exception);
+            default:
+                throw new IllegalStateException("Unexpected type: " + exception.getType());
+        }
     }
 
     private @NotNull String formatInvalidArgument(
@@ -93,4 +100,5 @@ public class ConsoleCommandExecutionErrorHandler implements LegacyCommandExecuti
                 + " ".repeat(start)
                 + "^".repeat(Math.max(1, end - start));
     }
+
 }

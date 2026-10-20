@@ -5,9 +5,21 @@ plugins {
 
 dependencies {
     api(project(":platform:bukkit"))
-    implementation(project(":platform:brigadier:minecraft:brigadier-paper"))
+    runtimeOnly(project(":platform:brigadier:minecraft:brigadier-paper"))
 
     compileOnly("com.destroystokyo.paper:paper-api:1.13.2-R0.1-SNAPSHOT")
+}
+
+java {
+    toolchain.languageVersion.set(
+        JavaLanguageVersion.of(11)
+    )
+}
+
+configurations.runtimeClasspath {
+    attributes {
+        attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 16)
+    }
 }
 
 tasks {

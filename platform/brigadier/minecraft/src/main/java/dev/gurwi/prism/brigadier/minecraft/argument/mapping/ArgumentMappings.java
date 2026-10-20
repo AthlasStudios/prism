@@ -132,7 +132,7 @@ public class ArgumentMappings {
                 argument -> MinecraftArgumentType.columnFinePosition(argument.isCenterIntegers()),
                 (argument, source, resolver) -> {
                     WrappedColumnFinePosition position = resolver.resolve(source);
-                    return new Location(source.getLocation().getWorld(), position.getX(), 0, position.getZ());
+                    return new Location(source.getLocation().getWorld(), position.x(), 0, position.z());
                 }
         ));
 
@@ -140,7 +140,7 @@ public class ArgumentMappings {
                 MinecraftArgumentType.columnBlockPosition(),
                 (argument, source, resolver) -> {
                     WrappedColumnBlockPosition position = resolver.resolve(source);
-                    return new Location(source.getLocation().getWorld(), position.getBlockX(), 0, position.getBlockZ());
+                    return new Location(source.getLocation().getWorld(), position.blockX(), 0, position.blockZ());
                 }
         ));
     }

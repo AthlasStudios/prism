@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class EntitySelectorArgument<Impl extends EntitySelectorArgument<Impl, T>, T> extends BukkitArgument<Impl, T> {
 
@@ -49,7 +50,7 @@ public abstract class EntitySelectorArgument<Impl extends EntitySelectorArgument
     private static @NotNull List<String> getInitialSuggestions() {
         List<String> suggestions = new ArrayList<>(SELECTORS);
 
-        suggestions.addAll(Bukkit.getOnlinePlayers().stream().map(Player::getName).toList());
+        suggestions.addAll(Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList()));
 
         return suggestions;
     }
@@ -115,23 +116,41 @@ public abstract class EntitySelectorArgument<Impl extends EntitySelectorArgument
     }
 
     private static @NotNull List<String> getParameterValues(@NotNull String prefix, @NotNull String parameter, @NotNull String input) {
-        return switch (parameter) {
-            case "gamemode=" -> getGameModeSuggestions(prefix, input);
-            case "sort=" -> filter(prefix, input, SORTS);
-            case "type=" -> getEntityTypeSuggestions(prefix, input);
-            case "name=" -> getPlayerSuggestions(prefix, input);
-            case "team=" -> getTeamSuggestions(prefix, input);
-            case "tag=" -> getTagSuggestions(prefix, input);
-            default -> List.of();
-        };
+        switch (parameter) {
+            case "gamemode=":
+                return getGameModeSuggestions(prefix, input);
+            case "sort=":
+                return filter(prefix, input, SORTS);
+            case "type=":
+                return getEntityTypeSuggestions(prefix, input);
+            case "name=":
+                return getPlayerSuggestions(prefix, input);
+            case "team=":
+                return getTeamSuggestions(prefix, input);
+            case "tag=":
+                return getTagSuggestions(prefix, input);
+            default:
+                return List.of();
+        }
     }
 
     private static @NotNull List<String> getGameModeSuggestions(@NotNull String prefix, @NotNull String input) {
-        return Arrays.stream(GameMode.values()).map(mode -> mode.name().toLowerCase(Locale.ROOT)).filter(mode -> startsWith(mode, input)).map(prefix::concat).toList();
+        return Arrays.stream(GameMode.values())
+                .map(mode -> mode.name().toLowerCase(Locale.ROOT))
+                .filter(mode -> startsWith(mode, input))
+                .map(prefix::concat)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private static @NotNull List<String> getEntityTypeSuggestions(@NotNull String prefix, @NotNull String input) {
-        return Arrays.stream(EntityType.values()).filter(EntityType::isSpawnable).map(EntityType::getName).filter(Objects::nonNull).map(Object::toString).filter(type -> startsWith(type, input)).map(prefix::concat).toList();
+        return Arrays.stream(EntityType.values())
+                .filter(EntityType::isSpawnable)
+                .map(EntityType::getName)
+                .filter(Objects::nonNull)
+                .map(Object::toString)
+                .filter(type -> startsWith(type, input))
+                .map(prefix::concat)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private static @NotNull List<String> getTeamSuggestions(@NotNull String prefix, @NotNull String input) {
@@ -139,19 +158,36 @@ public abstract class EntitySelectorArgument<Impl extends EntitySelectorArgument
             return List.of();
         }
 
-        return Bukkit.getScoreboardManager().getMainScoreboard().getTeams().stream().map(Team::getName).filter(team -> startsWith(team, input)).map(prefix::concat).toList();
+        return Bukkit.getScoreboardManager().getMainScoreboard().getTeams().stream()
+                .map(Team::getName)
+                .filter(team -> startsWith(team, input))
+                .map(prefix::concat)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private static @NotNull @Unmodifiable List<String> getTagSuggestions(@NotNull String prefix, @NotNull String input) {
-        return Bukkit.getWorlds().stream().flatMap(world -> world.getEntities().stream()).flatMap(entity -> entity.getScoreboardTags().stream()).distinct().filter(tag -> startsWith(tag, input)).map(prefix::concat).toList();
+        return Bukkit.getWorlds().stream()
+                .flatMap(world -> world.getEntities().stream())
+                .flatMap(entity -> entity.getScoreboardTags().stream())
+                .distinct()
+                .filter(tag -> startsWith(tag, input))
+                .map(prefix::concat)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private static @NotNull @Unmodifiable List<String> getPlayerSuggestions(@NotNull String prefix, @NotNull String input) {
-        return Bukkit.getOnlinePlayers().stream().map(Player::getName).filter(name -> startsWith(name, input)).map(prefix::concat).toList();
+        return Bukkit.getOnlinePlayers().stream()
+                .map(Player::getName)
+                .filter(name -> startsWith(name, input))
+                .map(prefix::concat)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private static @NotNull @Unmodifiable List<String> filter(@NotNull String prefix, @NotNull String input, @NotNull Collection<String> values) {
-        return values.stream().filter(value -> startsWith(value, input)).map(prefix::concat).toList();
+        return values.stream()
+                .filter(value -> startsWith(value, input))
+                .map(prefix::concat)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private static boolean startsWith(@NotNull String value, @NotNull String input) {
@@ -192,11 +228,11 @@ public abstract class EntitySelectorArgument<Impl extends EntitySelectorArgument
         public @NotNull Player parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
             Entity entity = parseEntity(this, sender, value);
 
-            if (!(entity instanceof Player player)) {
+            if (!(entity instanceof Player)) {
                 throw new ArgumentParseException(this, value, "Expected a player");
             }
 
-            return player;
+            return (Player) entity;
         }
     }
 
@@ -213,11 +249,11 @@ public abstract class EntitySelectorArgument<Impl extends EntitySelectorArgument
             List<Player> players = new ArrayList<>(entities.size());
 
             for (Entity entity : entities) {
-                if (!(entity instanceof Player player)) {
+                if (!(entity instanceof Player)) {
                     throw new ArgumentParseException(this, value, "Expected only players");
                 }
 
-                players.add(player);
+                players.add((Player) entity);
             }
 
             return players;

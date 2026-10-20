@@ -13,15 +13,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
@@ -283,12 +275,12 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
 
         BukkitSuggestionsSupplier<?> supplier = inner.getSuggestionsSupplier();
 
-        if (supplier instanceof BukkitSuggestionsSupplier.Async async) {
-            return async.getSuggestions(innerContext).thenApply(suggestions -> matching(suggestions, lowered));
+        if (supplier instanceof BukkitSuggestionsSupplier.Async) {
+            return ((BukkitSuggestionsSupplier.Async) supplier).getSuggestions(innerContext).thenApply(suggestions -> matching(suggestions, lowered));
         }
 
-        if (supplier instanceof BukkitSuggestionsSupplier.Sync sync) {
-            return CompletableFuture.completedFuture(matching(sync.getSuggestions(innerContext), lowered));
+        if (supplier instanceof BukkitSuggestionsSupplier.Sync) {
+            return CompletableFuture.completedFuture(matching(((BukkitSuggestionsSupplier.Sync) supplier).getSuggestions(innerContext), lowered));
         }
 
         return CompletableFuture.completedFuture(List.of());
@@ -318,7 +310,7 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
         List<BukkitSuggestion> result = new ArrayList<>(suggestions.size());
 
         for (BukkitSuggestion suggestion : suggestions) {
-            result.add(BukkitSuggestion.of(prefix + suggestion.getSuggestion(), suggestion.getTooltip()));
+            result.add(BukkitSuggestion.of(prefix + suggestion.getSuggestion(), suggestion.getTooltip().orElse(null)));
         }
 
         return result;
@@ -403,7 +395,52 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
         return new FlagSyntaxException(message);
     }
 
-    private record Tokenized(List<String> tokens, boolean trailingSpace, int lastTokenStart) {
+    private static final class Tokenized {
+        private final List<String> tokens;
+        private final boolean trailingSpace;
+        private final int lastTokenStart;
+
+        private Tokenized(List<String> tokens, boolean trailingSpace, int lastTokenStart) {
+            this.tokens = tokens;
+            this.trailingSpace = trailingSpace;
+            this.lastTokenStart = lastTokenStart;
+        }
+
+        public List<String> tokens() {
+            return tokens;
+        }
+
+        public boolean trailingSpace() {
+            return trailingSpace;
+        }
+
+        public int lastTokenStart() {
+            return lastTokenStart;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (Tokenized) obj;
+            return Objects.equals(this.tokens, that.tokens) &&
+                    this.trailingSpace == that.trailingSpace &&
+                    this.lastTokenStart == that.lastTokenStart;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(tokens, trailingSpace, lastTokenStart);
+        }
+
+        @Override
+        public String toString() {
+            return "Tokenized[" +
+                    "tokens=" + tokens + ", " +
+                    "trailingSpace=" + trailingSpace + ", " +
+                    "lastTokenStart=" + lastTokenStart + ']';
+        }
+
     }
 
 }

@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class EntityTypeArgument extends BukkitArgument<EntityTypeArgument, EntityType> {
 
@@ -16,7 +17,7 @@ public class EntityTypeArgument extends BukkitArgument<EntityTypeArgument, Entit
 
         List<String> values = Arrays.stream(EntityType.values())
                 .map(entityType -> entityType.name().toLowerCase())
-                .toList();
+                .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
         withFixedValues(values);

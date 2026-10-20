@@ -9,7 +9,7 @@ A code-first command framework that lets you build commands directly in Java wit
 
 [![Maven Central](https://img.shields.io/maven-central/v/dev.gurwi/prism-paper?style=for-the-badge&logo=apachemaven&logoColor=white&label=Maven%20Central&color=00E5FF)](https://central.sonatype.com/namespace/dev.gurwi)
 [![Build](https://img.shields.io/github/actions/workflow/status/AthlasStudios/prism/test.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=Tests)](https://github.com/AthlasStudios/prism/actions/workflows/test.yml)
-[![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://adoptium.net)
+[![Java](https://img.shields.io/badge/Java-11%2B-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://adoptium.net)
 [![License](https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](https://opensource.org/license/mit)
 
 [![Stars](https://img.shields.io/github/stars/AthlasStudios/prism?style=flat-square&logo=github&label=Stars)](https://github.com/AthlasStudios/prism/stargazers)
@@ -106,10 +106,10 @@ Prism compiles against the Spigot 1.13.2 API, and the Brigadier layer has per-ve
 
 Group ID: `dev.gurwi`
 
-| Server software | Artifact ID |
-| --- | --- |
-| Paper | `prism-paper` |
-| Spigot | `prism-spigot` |
+| Server software | Artifact ID    |
+|-----------------|----------------|
+| Paper           | `prism-paper`  |
+| Spigot          | `prism-spigot` |
 
 Each artifact is a self-contained bundle that already includes the core, Bukkit layer and the matching Brigadier adapters, so you only add one dependency.
 
@@ -121,7 +121,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.gurwi:prism-paper:1.0.0-beta.2")
+    implementation("dev.gurwi:prism-paper:1.0.0-beta.4")
 }
 ```
 
@@ -133,7 +133,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'dev.gurwi:prism-paper:1.0.0-beta.2'
+    implementation 'dev.gurwi:prism-paper:1.0.0-beta.4'
 }
 ```
 
@@ -143,7 +143,7 @@ dependencies {
 <dependency>
     <groupId>dev.gurwi</groupId>
     <artifactId>prism-paper</artifactId>
-    <version>1.0.0-beta.2</version>
+    <version>1.0.0-beta.4</version>
 </dependency>
 ```
 

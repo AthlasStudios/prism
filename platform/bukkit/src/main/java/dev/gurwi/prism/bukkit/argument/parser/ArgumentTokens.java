@@ -11,7 +11,7 @@ public final class ArgumentTokens {
     }
 
     public static int consumption(@NotNull BukkitArgument<?, ?> argument) {
-        return argument instanceof MultiTokenArgument<?, ?> multi ? multi.getConsumption() : 1;
+        return argument instanceof MultiTokenArgument<?, ?> ? ((MultiTokenArgument<?, ?>) argument).getConsumption() : 1;
     }
 
     public static int advance(@NotNull BukkitArgument<?, ?> argument, int position, int length) {

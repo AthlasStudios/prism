@@ -14,6 +14,7 @@ import dev.gurwi.prism.argument.suggestion.SuggestionContext;
 import dev.gurwi.prism.brigadier.BrigadierAdapter;
 import dev.gurwi.prism.brigadier.BrigadierCompatibleArgument;
 import dev.gurwi.prism.brigadier.BrigadierTreeBuilder;
+import dev.gurwi.prism.brigadier.NodeSpec;
 import dev.gurwi.prism.brigadier.minecraft.argument.mapping.ArgumentMappings;
 import dev.gurwi.prism.brigadier.minecraft.argument.mapping.BoundArgumentMapper;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
@@ -46,6 +47,7 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
     @Override
     public boolean available(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull MinecraftCommandSource source) {
         if (argument instanceof BukkitArgument<?, ?> bukkitArgument) {
+
             return bukkitArgument.getRequirement().test(senderOf(source));
         }
 
@@ -90,11 +92,11 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
 
     @Override
     public int tokens(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
-        if (!(argument instanceof BukkitArgument<?, ?> bukkitArgument)) {
+        if (!(argument instanceof BukkitArgument<?, ?>)) {
             return 0;
         }
 
-        return ArgumentTokens.consumption(bukkitArgument);
+        return ArgumentTokens.consumption((BukkitArgument<?, ?>) argument);
     }
 
     @Override
@@ -161,6 +163,7 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
             BukkitSuggestionsSupplier<?> supplier = bukkitArgument.getSuggestionsSupplier();
 
             if (supplier instanceof BukkitSuggestionsSupplier.Async async) {
+
                 return async.getSuggestions(suggestionContext).handle((suggestions, error) -> {
                     if (error == null && suggestions != null) {
                         applySuggestions(suggestionsBuilder, suggestions, remaining);
@@ -188,13 +191,10 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
                 continue;
             }
 
-            String tooltip = suggestion.getTooltip();
-
-            if (tooltip != null) {
-                builder.suggest(text, new LiteralMessage(tooltip));
-            } else {
-                builder.suggest(text);
-            }
+            suggestion.getTooltip().ifPresentOrElse(
+                    tooltip -> builder.suggest(text, new LiteralMessage(tooltip)),
+                    () -> builder.suggest(text)
+            );
         }
     }
 
@@ -252,31 +252,31 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
     }
 
     private @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parseLevel(@NotNull BukkitCommandDefinition level, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender, CommandArguments<BukkitCommandDefinition, CommandSender> parent, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {
-        Map<AbstractArgument<?, ?, ?, ?>, List<BrigadierTreeBuilder.Slot>> grouped = new LinkedHashMap<>();
+        Map<AbstractArgument<?, ?, ?, ?>, List<NodeSpec>> grouped = new LinkedHashMap<>();
 
-        for (BrigadierTreeBuilder.Slot slot : builder.slots(level)) {
-            grouped.computeIfAbsent(slot.argument(), key -> new ArrayList<>()).add(slot);
+        for (NodeSpec spec : builder.specs(level)) {
+            grouped.computeIfAbsent(spec.argument(), key -> new ArrayList<>()).add(spec);
         }
 
         Map<String, Object> required = new HashMap<>();
         Map<String, Object> optional = new HashMap<>();
 
-        for (Map.Entry<AbstractArgument<?, ?, ?, ?>, List<BrigadierTreeBuilder.Slot>> entry : grouped.entrySet()) {
+        for (Map.Entry<AbstractArgument<?, ?, ?, ?>, List<NodeSpec>> entry : grouped.entrySet()) {
             BukkitArgument<?, ?> argument = (BukkitArgument<?, ?>) entry.getKey();
-            List<BrigadierTreeBuilder.Slot> slots = entry.getValue();
+            List<NodeSpec> specs = entry.getValue();
 
-            if (slots.get(0).literal() || !argument.isListed()) {
+            if (specs.get(0).literal() || !argument.isListed()) {
                 continue;
             }
 
-            boolean isOptional = slots.get(0).optional();
+            boolean isOptional = specs.get(0).optional();
             String fixed = forced.get(argument);
 
-            if (fixed == null && isOptional && !present(context, slots.get(0).name())) {
+            if (fixed == null && isOptional && !present(context, specs.get(0).name())) {
                 continue;
             }
 
-            Object value = fixed != null ? parseFixed(argument, sender, fixed) : read(argument, slots, context, source, sender);
+            Object value = fixed != null ? parseFixed(argument, sender, fixed) : read(argument, specs, context, source, sender);
 
             if (isOptional) {
                 optional.put(argument.getName(), value);
@@ -300,9 +300,9 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
                 continue;
             }
 
-            List<BrigadierTreeBuilder.Slot> slots = builder.treeSlots(level, path.subList(0, index + 1));
+            List<NodeSpec> specs = builder.treeSpecs(level, path.subList(0, index + 1));
 
-            required.put(argument.getName(), read(argument, slots, context, source, sender));
+            required.put(argument.getName(), read(argument, specs, context, source, sender));
         }
 
         return new CommandArguments<>(level, required, optional, parent);
@@ -317,8 +317,8 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
     }
 
     @SuppressWarnings("unchecked")
-    private <T> @NotNull T read(@NotNull BukkitArgument<?, T> argument, @NotNull List<BrigadierTreeBuilder.Slot> slots, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender) throws CommandSyntaxException {
-        String name = slots.get(0).name();
+    private <T> @NotNull T read(@NotNull BukkitArgument<?, T> argument, @NotNull List<NodeSpec> specs, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender) throws CommandSyntaxException {
+        String name = specs.get(0).name();
         Optional<BoundArgumentMapper<T>> mapping = ArgumentMappings.INSTANCE.find(argument);
 
         if (mapping.isPresent()) {
@@ -326,17 +326,18 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
         }
 
         if (argument instanceof BrigadierCompatibleArgument<?> compatible) {
+
             return (T) Objects.requireNonNull(compatible.fromBrigadier(context, name));
         }
 
         StringBuilder joined = new StringBuilder();
 
-        for (BrigadierTreeBuilder.Slot slot : slots) {
+        for (NodeSpec spec : specs) {
             if (!joined.isEmpty()) {
                 joined.append(' ');
             }
 
-            joined.append(context.getArgument(slot.name(), String.class));
+            joined.append(context.getArgument(spec.name(), String.class));
         }
 
         try {

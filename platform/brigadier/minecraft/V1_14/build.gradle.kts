@@ -10,14 +10,14 @@ dependencies {
     spigotNms("1.14.4-R0.1-SNAPSHOT")
 }
 
+java {
+    toolchain.languageVersion.set(
+        JavaLanguageVersion.of(16)
+    )
+}
+
 configurations.configureEach {
     if (isCanBeConsumed) {
         attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 8)
     }
-}
-
-java {
-    toolchain.languageVersion.set(
-        JavaLanguageVersion.of(17) // TODO -> FIX AND SWITCH TO 16
-    )
 }

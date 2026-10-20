@@ -6,13 +6,16 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Collection;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public interface BukkitSuggestion {
 
     String getSuggestion();
 
-    default @Nullable String getTooltip() {
-        return null;
+    default Optional<String> getTooltip() {
+        return Optional.empty();
     }
 
     @Contract("_ -> new")
@@ -26,12 +29,47 @@ public interface BukkitSuggestion {
     }
 
     static @NotNull @Unmodifiable Collection<BukkitSuggestion> of(@NotNull Collection<String> suggestions) {
-        return suggestions.stream().map(BukkitSuggestion::of).toList();
+        return suggestions.stream().map(BukkitSuggestion::of).collect(Collectors.toUnmodifiableList());
     }
 
-    record Simple(String suggestion, @Nullable String tooltip) implements BukkitSuggestion {
-        @Override public String getSuggestion() { return suggestion; }
-        @Override public @Nullable String getTooltip() { return tooltip; }
+    final class Simple implements BukkitSuggestion {
+
+        private final String suggestion;
+        private final @Nullable String tooltip;
+
+        public Simple(String suggestion, @Nullable String tooltip) {
+            this.suggestion = suggestion;
+            this.tooltip = tooltip;
+        }
+
+        @Override
+        public String getSuggestion() {
+            return suggestion;
+        }
+
+        @Contract(pure = true)
+        @Override
+        public @NotNull Optional<String> getTooltip() {
+            return Optional.ofNullable(tooltip);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Simple)) return false;
+            Simple other = (Simple) o;
+            return Objects.equals(suggestion, other.suggestion) && Objects.equals(tooltip, other.tooltip);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(suggestion, tooltip);
+        }
+
+        @Override
+        public String toString() {
+            return "Simple[suggestion=" + suggestion + ", tooltip=" + tooltip + "]";
+        }
     }
 
 }

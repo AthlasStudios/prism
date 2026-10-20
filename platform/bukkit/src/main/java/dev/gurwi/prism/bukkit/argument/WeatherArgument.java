@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class WeatherArgument extends BukkitArgument<WeatherArgument, WeatherType> {
 
@@ -16,7 +17,7 @@ public class WeatherArgument extends BukkitArgument<WeatherArgument, WeatherType
 
         List<String> values = Arrays.stream(WeatherType.values())
                 .map(weatherType -> weatherType.name().toLowerCase())
-                .toList();
+                .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
         withFixedValues(values);

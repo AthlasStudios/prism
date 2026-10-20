@@ -1,7 +1,6 @@
 package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
-import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.block.structure.StructureRotation;
 import org.bukkit.command.CommandSender;
@@ -9,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class StructureRotationArgument extends BukkitArgument<StructureRotationArgument, StructureRotation> {
 
@@ -17,7 +17,7 @@ public class StructureRotationArgument extends BukkitArgument<StructureRotationA
 
         List<String> values = Arrays.stream(StructureRotation.values())
                 .map(rotation -> rotation.name().toLowerCase())
-                .toList();
+                .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
         withFixedValues(values);

@@ -114,8 +114,8 @@ public abstract class PositionArgument<Impl extends PositionArgument<Impl>> exte
         List<String> parts = trimmed.isEmpty() ? List.of() : List.of(trimmed.split("\\s+"));
 
         Block targetBlock = null;
-        if (sender instanceof LivingEntity livingEntity) {
-            targetBlock = livingEntity.getTargetBlockExact(5);
+        if (sender instanceof LivingEntity) {
+            targetBlock = ((LivingEntity) sender).getTargetBlockExact(5);
         }
 
         int[] coordinates = null;
@@ -207,12 +207,12 @@ public abstract class PositionArgument<Impl extends PositionArgument<Impl>> exte
     }
 
     private @Nullable Location getSenderLocation(@NotNull CommandSender sender) {
-        if (sender instanceof Entity entity) {
-            return entity.getLocation();
+        if (sender instanceof Entity) {
+            return ((Entity) sender).getLocation();
         }
 
-        if (sender instanceof BlockCommandSender blockSender) {
-            Block senderBlock = blockSender.getBlock();
+        if (sender instanceof BlockCommandSender) {
+            Block senderBlock = ((BlockCommandSender) sender).getBlock();
             return new Location(senderBlock.getWorld(), senderBlock.getX() + 0.5, senderBlock.getY() + 0.5, senderBlock.getZ() + 0.5);
         }
 

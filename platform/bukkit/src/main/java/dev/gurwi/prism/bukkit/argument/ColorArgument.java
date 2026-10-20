@@ -7,6 +7,7 @@ import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ColorArgument extends BukkitArgument<ColorArgument, ChatColor> {
 
@@ -15,7 +16,7 @@ public class ColorArgument extends BukkitArgument<ColorArgument, ChatColor> {
 
         List<String> values = Arrays.stream(ChatColor.values())
                 .map(color -> color.name().toLowerCase())
-                .toList();
+                .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
         withFixedValues(values);

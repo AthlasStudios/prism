@@ -5,8 +5,8 @@ import dev.gurwi.prism.bukkit.command.BukkitExecutableCommand;
 import dev.gurwi.prism.bukkit.wrapper.WrappedCommandMap;
 import dev.gurwi.prism.reflection.ReflectionUtil;
 import org.bukkit.command.Command;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -18,11 +18,11 @@ public class LegacyCommandRegistrar implements BukkitCommandRegistrar {
 
     private final Map<BukkitCommandDefinition, Command> registeredCommands = new HashMap<>();
 
-    private final JavaPlugin plugin;
+    private final Plugin plugin;
     private final WrappedCommandMap commandMap;
     private final Map<String, Map<String, Object>> pluginCommands;
 
-    public LegacyCommandRegistrar(@NotNull JavaPlugin plugin) throws NoSuchFieldException, IllegalAccessException {
+    public LegacyCommandRegistrar(@NotNull Plugin plugin) throws NoSuchFieldException, IllegalAccessException {
         this.plugin = plugin;
         this.commandMap = new WrappedCommandMap(plugin.getServer());
         this.pluginCommands = getPluginCommands();

@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class BiomeArgument extends BukkitArgument<BiomeArgument, Biome> {
 
@@ -16,7 +17,7 @@ public class BiomeArgument extends BukkitArgument<BiomeArgument, Biome> {
 
         List<String> values = Arrays.stream(Biome.values())
                 .map(biome -> biome.name().toLowerCase())
-                .toList();
+                .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
         withFixedValues(values);

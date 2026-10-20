@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public interface BukkitPermission extends PermissionNode<String, CommandSender> {
 
@@ -25,14 +26,42 @@ public interface BukkitPermission extends PermissionNode<String, CommandSender> 
         return new StartsWith(regex);
     }
 
-    record Plain(String permission) implements BukkitPermission {
+    final class Plain implements BukkitPermission {
+
+        private final String permission;
+
+        public Plain(String permission) {
+            this.permission = permission;
+        }
 
         @Override
-            public boolean hasPermission(@NotNull CommandSender sender) {
-                return sender.isOp() || sender.hasPermission(permission);
-            }
-
+        public String permission() {
+            return permission;
         }
+
+        @Override
+        public boolean hasPermission(@NotNull CommandSender sender) {
+            return sender.isOp() || sender.hasPermission(permission);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Plain)) return false;
+            return Objects.equals(permission, ((Plain) o).permission);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(permission);
+        }
+
+        @Override
+        public String toString() {
+            return "Plain[permission=" + permission + "]";
+        }
+
+    }
 
     class StartsWith implements BukkitPermission {
 

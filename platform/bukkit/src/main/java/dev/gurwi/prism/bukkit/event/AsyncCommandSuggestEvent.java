@@ -16,7 +16,7 @@ public class AsyncCommandSuggestEvent extends Event implements Cancellable {
 
     private static final HandlerList HANDLERS = new HandlerList();
 
-    private final BukkitPlatform<?> platform;
+    private final BukkitPlatform<?, ?> platform;
     private final BukkitCommandDefinition definition;
     private final CommandSender sender;
     private final String buffer;
@@ -25,7 +25,7 @@ public class AsyncCommandSuggestEvent extends Event implements Cancellable {
     private boolean cancelled = false;
     private CompletableFuture<List<String>> future;
 
-    public AsyncCommandSuggestEvent(BukkitPlatform<?> platform, BukkitCommandDefinition definition, CommandSender sender, String buffer, List<String> completions) {
+    public AsyncCommandSuggestEvent(BukkitPlatform<?, ?> platform, BukkitCommandDefinition definition, CommandSender sender, String buffer, List<String> completions) {
         super(true);
 
         this.platform = platform;
@@ -51,7 +51,7 @@ public class AsyncCommandSuggestEvent extends Event implements Cancellable {
         return Optional.ofNullable(future);
     }
 
-    public BukkitPlatform<?> getPlatform() {
+    public BukkitPlatform<?, ?> getPlatform() {
         return platform;
     }
 

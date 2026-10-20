@@ -16,6 +16,12 @@ dependencies {
     testFixturesApi("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.0.0")
 }
 
+java {
+    toolchain.languageVersion.set(
+        JavaLanguageVersion.of(11)
+    )
+}
+
 val javaComponent = components["java"] as AdhocComponentWithVariants
 javaComponent.withVariantsFromConfiguration(configurations["testFixturesApiElements"]) { skip() }
 javaComponent.withVariantsFromConfiguration(configurations["testFixturesRuntimeElements"]) { skip() }

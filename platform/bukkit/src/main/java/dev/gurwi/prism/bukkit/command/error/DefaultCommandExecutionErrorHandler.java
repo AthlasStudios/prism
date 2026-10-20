@@ -40,9 +40,17 @@ public class DefaultCommandExecutionErrorHandler implements LegacyCommandExecuti
         sender.sendMessage("");
 
         switch (exception.getType()) {
-            case INVALID_ARGUMENT -> sendError(sender, "Invalid argument", command, exception, false);
-            case MISSING_ARGUMENT -> sendError(sender, "Missing argument", command, exception, true);
-            case UNKNOWN_ARGUMENT -> sendError(sender, "Unknown argument", command, exception, false);
+            case INVALID_ARGUMENT:
+                sendError(sender, "Invalid argument", command, exception, false);
+                break;
+            case MISSING_ARGUMENT:
+                sendError(sender, "Missing argument", command, exception, true);
+                break;
+            case UNKNOWN_ARGUMENT:
+                sendError(sender, "Unknown argument", command, exception, false);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected type: " + exception.getType());
         }
 
         sender.sendMessage("");
@@ -203,22 +211,49 @@ public class DefaultCommandExecutionErrorHandler implements LegacyCommandExecuti
     }
 
     private int charWidth(char c) {
-        return switch (c) {
-            case ' ' -> 4;
-            case 'i', '!', '.', ',', ':', ';', '|', '\'' -> 2;
-            case 'l', '`' -> 3;
-            case 'I', 't', '[', ']' -> 4;
-            case 'f', 'k', '(', ')', '{', '}', '<', '>', '*', '"' -> 5;
-            case '@', '~' -> 7;
-            default -> 6;
-        };
+        switch (c) {
+            case ' ':
+            case 'I':
+            case 't':
+            case '[':
+            case ']':
+                return 4;
+            case 'i':
+            case '!':
+            case '.':
+            case ',':
+            case ':':
+            case ';':
+            case '|':
+            case '\'':
+                return 2;
+            case 'l':
+            case '`':
+                return 3;
+            case 'f':
+            case 'k':
+            case '(':
+            case ')':
+            case '{':
+            case '}':
+            case '<':
+            case '>':
+            case '*':
+            case '"':
+                return 5;
+            case '@':
+            case '~':
+                return 7;
+            default:
+                return 6;
+        }
     }
 
     private int clamp(int value, int min, int max) {
         return Math.max(min, Math.min(value, max));
     }
 
-    private @NotNull BaseComponent line(@NotNull BaseComponent... parts) {
+    private @NotNull BaseComponent line(@NotNull BaseComponent @NotNull ... parts) {
         TextComponent parent = new TextComponent("");
         for (BaseComponent part : parts) {
             parent.addExtra(part);

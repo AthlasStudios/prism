@@ -22,12 +22,12 @@ public class RelativeValues {
     }
 
     public static @NotNull Location origin(@NotNull CommandSender sender) {
-        if (sender instanceof Entity entity) {
-            return entity.getLocation();
+        if (sender instanceof Entity) {
+            return ((Entity) sender).getLocation();
         }
 
-        if (sender instanceof BlockCommandSender block) {
-            return block.getBlock().getLocation();
+        if (sender instanceof BlockCommandSender) {
+            return ((BlockCommandSender) sender).getBlock().getLocation();
         }
 
         return new Location(Bukkit.getWorlds().get(0), 0, 0, 0);

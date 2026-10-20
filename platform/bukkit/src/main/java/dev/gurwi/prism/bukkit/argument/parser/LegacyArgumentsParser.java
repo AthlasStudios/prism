@@ -27,10 +27,72 @@ public final class LegacyArgumentsParser {
     private LegacyArgumentsParser() {
     }
 
-    public record TreeParseResult(@NotNull CommandArguments<BukkitCommandDefinition, CommandSender> arguments, @Nullable BukkitArgument<?, ?> node) {
+    public static final class TreeParseResult {
+
+        private final CommandArguments<BukkitCommandDefinition, CommandSender> arguments;
+        private final BukkitArgument<?, ?> node;
+
+        public TreeParseResult(@NotNull CommandArguments<BukkitCommandDefinition, CommandSender> arguments, @Nullable BukkitArgument<?, ?> node) {
+            this.arguments = arguments;
+            this.node = node;
+        }
+
+        public @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> arguments() {
+            return arguments;
+        }
+
+        public @Nullable BukkitArgument<?, ?> node() {
+            return node;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof TreeParseResult)) return false;
+            TreeParseResult other = (TreeParseResult) o;
+            return Objects.equals(arguments, other.arguments) && Objects.equals(node, other.node);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(arguments, node);
+        }
+
+        @Override
+        public String toString() {
+            return "TreeParseResult[arguments=" + arguments + ", node=" + node + "]";
+        }
     }
 
-    private record Attempt(@Nullable BukkitArgument<?, ?> node, @NotNull Map<String, Object> values, @Nullable Exception failure, int depth) {
+    private static final class Attempt {
+
+        private final BukkitArgument<?, ?> node;
+        private final Map<String, Object> values;
+        private final Exception failure;
+        private final int depth;
+
+        private Attempt(@Nullable BukkitArgument<?, ?> node, @NotNull Map<String, Object> values, @Nullable Exception failure, int depth) {
+            this.node = node;
+            this.values = values;
+            this.failure = failure;
+            this.depth = depth;
+        }
+
+        @Nullable BukkitArgument<?, ?> node() {
+            return node;
+        }
+
+        @NotNull Map<String, Object> values() {
+            return values;
+        }
+
+        @Nullable Exception failure() {
+            return failure;
+        }
+
+        int depth() {
+            return depth;
+        }
 
         @Contract("_, _ -> new")
         static @NotNull Attempt ok(@NotNull BukkitArgument<?, ?> node, @NotNull Map<String, Object> values) {
@@ -266,12 +328,12 @@ public final class LegacyArgumentsParser {
     }
 
     private static @NotNull BukkitArgumentsParseException rethrow(@NotNull Exception failure) {
-        if (failure instanceof BukkitArgumentsParseException parse) {
-            return parse;
+        if (failure instanceof BukkitArgumentsParseException) {
+            return (BukkitArgumentsParseException) failure;
         }
 
-        if (failure instanceof RuntimeException runtime) {
-            throw runtime;
+        if (failure instanceof RuntimeException) {
+            throw (RuntimeException) failure;
         }
 
         throw new IllegalStateException(failure);

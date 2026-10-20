@@ -1,7 +1,6 @@
 package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
-import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.scoreboard.DisplaySlot;
@@ -9,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DisplaySlotArgument extends BukkitArgument<DisplaySlotArgument, DisplaySlot> {
 
@@ -17,7 +17,7 @@ public class DisplaySlotArgument extends BukkitArgument<DisplaySlotArgument, Dis
 
         List<String> values = Arrays.stream(DisplaySlot.values())
                 .map(slot -> slot.name().toLowerCase())
-                .toList();
+                .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
         withFixedValues(values);

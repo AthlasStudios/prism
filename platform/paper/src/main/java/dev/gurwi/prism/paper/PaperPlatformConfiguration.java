@@ -1,96 +1,49 @@
 package dev.gurwi.prism.paper;
 
-import dev.gurwi.prism.bukkit.command.error.LegacyCommandExecutionErrorHandler;
+import dev.gurwi.prism.bukkit.BukkitPlatformConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Optional;
+public class PaperPlatformConfiguration extends BukkitPlatformConfiguration<PaperPlatform> {
 
-public class PaperPlatformConfiguration {
-
-    private final boolean disableBrigadier;
-    private final boolean disableLegacyRegistrar;
     private final boolean disableAsyncSuggestions;
-    private final boolean registerPermissions;
-    private final LegacyCommandExecutionErrorHandler legacyCommandErrorHandle;
 
-    @Contract(pure = true)
     private PaperPlatformConfiguration(@NotNull Builder builder) {
-        this.disableBrigadier = builder.disableBrigadier;
-        this.disableLegacyRegistrar = builder.disableLegacyRegistrar;
+        super(builder);
+
         this.disableAsyncSuggestions = builder.disableAsyncSuggestions;
-        this.registerPermissions = builder.registerPermissions;
-        this.legacyCommandErrorHandle = builder.legacyCommandErrorHandle;
-    }
-
-    public boolean isBrigadierDisabled() {
-        return disableBrigadier;
-    }
-
-    public boolean isLegacyRegistrarDisabled() {
-        return disableLegacyRegistrar;
     }
 
     public boolean isAsyncSuggestionsDisabled() {
         return disableAsyncSuggestions;
     }
 
-    public boolean isPermissionRegistrationEnabled() {
-        return registerPermissions;
-    }
+    public static class Builder extends BukkitPlatformConfiguration.Builder<PaperPlatform, Builder> {
 
-    @Contract(pure = true)
-    public @NotNull Optional<LegacyCommandExecutionErrorHandler> getGlobalLegacyCommandErrorHandler() {
-        return Optional.ofNullable(legacyCommandErrorHandle);
-    }
-
-    public static class Builder {
-
-        private final JavaPlugin plugin;
-
-        private boolean disableBrigadier = false;
-        private boolean disableLegacyRegistrar = false;
         private boolean disableAsyncSuggestions = false;
-        private boolean registerPermissions = true;
-        private LegacyCommandExecutionErrorHandler legacyCommandErrorHandle = null;
 
-        public Builder(JavaPlugin plugin) {
-            this.plugin = plugin;
+        public Builder(@NotNull JavaPlugin plugin) {
+            super(plugin);
         }
 
-        public Builder disableBrigadier() {
-            this.disableBrigadier = true;
-            return this;
-        }
-
-        public Builder disableLegacyRegistrar() {
-            this.disableLegacyRegistrar = true;
-            return this;
-        }
-
-        public Builder disableAsyncSuggestions() {
+        public @NotNull Builder disableAsyncSuggestions() {
             this.disableAsyncSuggestions = true;
             return this;
         }
 
-        public Builder registerPermissions(boolean registerPermissions) {
-            this.registerPermissions = registerPermissions;
+        @Override
+        protected @NotNull Builder self() {
             return this;
         }
 
-        public Builder withGlobalLegacyCommandErrorHandler(LegacyCommandExecutionErrorHandler legacyCommandErrorHandle) {
-            this.legacyCommandErrorHandle = legacyCommandErrorHandle;
-            return this;
-        }
-
-        public PaperPlatform init() {
-            //if (disableLegacyRegistrar && (disableBrigadier || !PrismBrigadier.isCompatible())) throw new IllegalStateException("Cannot disable both legacy registrar and brigadier");
-            return new PaperPlatform(plugin, new PaperPlatformConfiguration(this));
+        @Override
+        public @NotNull PaperPlatform init() {
+            //if (isLegacyRegistrarDisabled() && ...) throw new IllegalStateException("Cannot disable both legacy registrar and brigadier");
+            return new PaperPlatform(getPlugin(), new PaperPlatformConfiguration(this));
         }
 
 //        public PaperPlatform init(BootstrapContext context) {
-//            return new PaperPlatform(plugin, new PaperPlatformConfiguration(this));
+//            return new PaperPlatform(getPlugin(), new PaperPlatformConfiguration(this));
 //        }
 
     }

@@ -26,15 +26,14 @@ public class AxesArgument extends BukkitArgument<AxesArgument, Set<Axis>> {
         }
 
         for (char c : value.toLowerCase().toCharArray()) {
-            Axis axis = switch (c) {
-                case 'x' -> Axis.X;
-                case 'y' -> Axis.Y;
-                case 'z' -> Axis.Z;
-                default -> throw new ArgumentParseException(this, value, "Expected axes got " + value);
-            };
+            try {
+                Axis axis = Axis.valueOf(String.valueOf(c).toUpperCase());
 
-            if (!axes.add(axis)) {
-                throw new ArgumentParseException(this, value, "Duplicate axis in " + value);
+                if (!axes.add(axis)) {
+                    throw new ArgumentParseException(this, value, "Duplicate axis in " + value);
+                }
+            } catch (IllegalArgumentException e) {
+                throw new ArgumentParseException(this, value, "Expected axes got " + value);
             }
         }
 

@@ -18,3 +18,15 @@ dependencies {
         .filter { it.name.matches(Regex("V\\d+(_\\d+)*")) }
         .forEach { runtimeOnly(project(it.path)) }
 }
+
+java {
+    toolchain.languageVersion.set(
+        JavaLanguageVersion.of(16)
+    )
+}
+
+listOf("apiElements", "runtimeElements").forEach { name ->
+    configurations.named(name) {
+        attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 8)
+    }
+}

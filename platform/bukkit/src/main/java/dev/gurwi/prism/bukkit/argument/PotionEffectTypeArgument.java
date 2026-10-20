@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class PotionEffectTypeArgument extends BukkitArgument<PotionEffectTypeArgument, PotionEffectType> {
 
@@ -18,7 +19,7 @@ public class PotionEffectTypeArgument extends BukkitArgument<PotionEffectTypeArg
         List<String> values = Arrays.stream(PotionEffectType.values())
                 .filter(Objects::nonNull)
                 .map(type -> type.getName().toLowerCase())
-                .toList();
+                .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
         withFixedValues(values);

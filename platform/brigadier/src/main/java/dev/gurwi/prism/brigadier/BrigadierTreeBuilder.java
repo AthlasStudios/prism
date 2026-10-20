@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDefinition<Definition, ?, ?, ?, ?>> {
@@ -39,7 +40,9 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
     }
 
     public @NotNull @Unmodifiable List<String> labels(@NotNull Definition definition) {
-        return Stream.concat(Stream.of(definition.getName()), definition.getAliases().stream()).distinct().toList();
+        return Stream.concat(Stream.of(definition.getName()), definition.getAliases().stream())
+                .distinct()
+                .collect(Collectors.toUnmodifiableList());
     }
 
     public @NotNull LiteralCommandNode<S> build(@NotNull Definition definition, @NotNull String label) {
@@ -47,7 +50,7 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
     }
 
     private @NotNull LiteralCommandNode<S> build(@NotNull Definition definition, @NotNull String label, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) {
-        List<Slot> slots = slots(definition);
+        List<NodeSpec> nodeSpecs = specs(definition);
         Supplier<List<CommandNode<S>>> children = memo(() -> children(definition, forced));
 
         LiteralArgumentBuilder<S> literal = LiteralArgumentBuilder.literal(label);
@@ -57,7 +60,7 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
             decorate(literal, definition, children.get(), false, forced);
         }
 
-        for (CommandNode<S> node : buildSlots(definition, slots, 0, forced, children)) {
+        for (CommandNode<S> node : buildSpecs(definition, nodeSpecs, 0, forced, children)) {
             literal.then(node);
         }
 
@@ -80,18 +83,18 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         return children;
     }
 
-    private @NotNull List<CommandNode<S>> buildSlots(@NotNull Definition definition, @NotNull List<Slot> slots, int index, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced, @NotNull Supplier<List<CommandNode<S>>> children) {
-        if (index >= slots.size()) {
+    private @NotNull List<CommandNode<S>> buildSpecs(@NotNull Definition definition, @NotNull List<NodeSpec> nodeSpecs, int index, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced, @NotNull Supplier<List<CommandNode<S>>> children) {
+        if (index >= nodeSpecs.size()) {
             return List.of();
         }
 
-        Slot slot = slots.get(index);
-        AbstractArgument<?, ?, ?, ?> argument = slot.argument();
+        NodeSpec nodeSpec = nodeSpecs.get(index);
+        AbstractArgument<?, ?, ?, ?> argument = nodeSpec.argument();
 
-        if (slot.literal() || !forcing(argument)) {
-            ArgumentBuilder<S, ?> builder = node(slot);
+        if (nodeSpec.literal() || !forcing(argument)) {
+            ArgumentBuilder<S, ?> builder = node(nodeSpec);
 
-            finishSlot(builder, definition, slots, index, forced, children);
+            finishSpec(builder, definition, nodeSpecs, index, forced, children);
 
             return List.of(builder.build());
         }
@@ -106,7 +109,7 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
 
             LiteralArgumentBuilder<S> literal = forcedLiteral(argument, value);
 
-            finishSlot(literal, definition, slots, index, next, memo(() -> children(definition, next)));
+            finishSpec(literal, definition, nodeSpecs, index, next, memo(() -> children(definition, next)));
 
             nodes.add(literal.build());
         }
@@ -114,18 +117,18 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         return nodes;
     }
 
-    private void finishSlot(@NotNull ArgumentBuilder<S, ?> builder, @NotNull Definition definition, @NotNull List<Slot> slots, int index, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced, @NotNull Supplier<List<CommandNode<S>>> children) {
-        Slot slot = slots.get(index);
-        List<CommandNode<S>> tail = buildSlots(definition, slots, index + 1, forced, children);
+    private void finishSpec(@NotNull ArgumentBuilder<S, ?> builder, @NotNull Definition definition, @NotNull List<NodeSpec> nodeSpecs, int index, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced, @NotNull Supplier<List<CommandNode<S>>> children) {
+        NodeSpec nodeSpec = nodeSpecs.get(index);
+        List<CommandNode<S>> tail = buildSpecs(definition, nodeSpecs, index + 1, forced, children);
 
-        if (slot.terminal()) {
+        if (nodeSpec.terminal()) {
             List<CommandNode<S>> attached = children.get();
             List<CommandNode<S>> siblings = new ArrayList<>(attached);
             siblings.addAll(tail);
 
             requireUnique(definition.getName(), siblings);
 
-            decorate(builder, definition, attached, slot.greedy(), forced);
+            decorate(builder, definition, attached, nodeSpec.greedy(), forced);
         }
 
         for (CommandNode<S> node : tail) {
@@ -159,32 +162,32 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
             return override;
         }
 
-        return argument instanceof BrigadierCompatibleArgument<?> compatible ? compatible.brigadierType() : null;
+        return argument instanceof BrigadierCompatibleArgument<?> ? ((BrigadierCompatibleArgument<?>) argument).brigadierType() : null;
     }
 
-    public @NotNull List<Slot> slots(@NotNull Definition definition) {
-        List<Slot> slots = new ArrayList<>();
+    public @NotNull List<NodeSpec> specs(@NotNull Definition definition) {
+        List<NodeSpec> nodeSpecs = new ArrayList<>();
         int requiredSize = definition.getRequiredArguments().size();
         int index = 0;
 
         for (AbstractArgument<?, ?, ?, ?> argument : definition.getRequiredArguments()) {
-            addSlots(slots, argument, nodeName(definition, argument), index == requiredSize - 1, false);
+            addSpecs(nodeSpecs, argument, nodeName(definition, argument), index == requiredSize - 1, false);
             index++;
         }
 
         for (AbstractArgument<?, ?, ?, ?> argument : definition.getOptionalArguments()) {
-            addSlots(slots, argument, nodeName(definition, argument), true, true);
+            addSpecs(nodeSpecs, argument, nodeName(definition, argument), true, true);
         }
 
-        return slots;
+        return nodeSpecs;
     }
 
-    public @NotNull List<Slot> treeSlots(@NotNull Definition definition, @NotNull List<? extends AbstractArgument<?, ?, ?, ?>> path) {
-        List<Slot> slots = new ArrayList<>();
+    public @NotNull List<NodeSpec> treeSpecs(@NotNull Definition definition, @NotNull List<? extends AbstractArgument<?, ?, ?, ?>> path) {
+        List<NodeSpec> nodeSpecs = new ArrayList<>();
 
-        addSlots(slots, path.get(path.size() - 1), treeNodeName(definition, path), true, false);
+        addSpecs(nodeSpecs, path.get(path.size() - 1), treeNodeName(definition, path), true, false);
 
-        return slots;
+        return nodeSpecs;
     }
 
     public @NotNull String nodeName(@NotNull Definition definition, @NotNull AbstractArgument<?, ?, ?, ?> argument) {
@@ -376,15 +379,15 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         List<AbstractArgument<?, ?, ?, ?>> path = new ArrayList<>(ancestors);
         path.add(argument);
 
-        List<Slot> slots = treeSlots(definition, path);
+        List<NodeSpec> nodeSpecs = treeSpecs(definition, path);
 
-        if (slots.isEmpty()) {
+        if (nodeSpecs.isEmpty()) {
             throw new IllegalStateException("Argument '" + argument.getName() + "' of '" + definition.getName() + "' consumes no input");
         }
 
         List<? extends AbstractArgument<?, ?, ?, ?>> childArguments = adapter.children(argument);
 
-        if (slots.get(slots.size() - 1).greedy() && !childArguments.isEmpty()) {
+        if (nodeSpecs.get(nodeSpecs.size() - 1).greedy() && !childArguments.isEmpty()) {
             throw new IllegalStateException("Greedy argument '" + argument.getName() + "' of '" + definition.getName() + "' cannot have children");
         }
 
@@ -395,11 +398,11 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         Command<S> command = adapter.command(definition, List.copyOf(path), forced);
         CommandNode<S> next = null;
 
-        for (int i = slots.size() - 1; i >= 0; i--) {
-            Slot slot = slots.get(i);
-            ArgumentBuilder<S, ?> builder = node(slot);
+        for (int i = nodeSpecs.size() - 1; i >= 0; i--) {
+            NodeSpec nodeSpec = nodeSpecs.get(i);
+            ArgumentBuilder<S, ?> builder = node(nodeSpec);
 
-            if (slot.terminal()) {
+            if (nodeSpec.terminal()) {
                 if (command != null) {
                     builder.executes(command);
                 }
@@ -419,18 +422,18 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         return next;
     }
 
-    private @NotNull ArgumentBuilder<S, ?> node(@NotNull Slot slot) {
-        if (slot.literal()) {
-            LiteralArgumentBuilder<S> literal = LiteralArgumentBuilder.literal(slot.name());
-            literal.requires(source -> adapter.available(slot.argument(), source));
+    private @NotNull ArgumentBuilder<S, ?> node(@NotNull NodeSpec nodeSpec) {
+        if (nodeSpec.literal()) {
+            LiteralArgumentBuilder<S> literal = LiteralArgumentBuilder.literal(nodeSpec.name());
+            literal.requires(source -> adapter.available(nodeSpec.argument(), source));
 
             return literal;
         }
 
-        RequiredArgumentBuilder<S, ?> builder = RequiredArgumentBuilder.argument(slot.name(), slot.type());
-        builder.requires(source -> adapter.available(slot.argument(), source));
+        RequiredArgumentBuilder<S, ?> builder = RequiredArgumentBuilder.argument(nodeSpec.name(), nodeSpec.type());
+        builder.requires(source -> adapter.available(nodeSpec.argument(), source));
 
-        SuggestionProvider<S> suggestions = suggestionsFor(slot);
+        SuggestionProvider<S> suggestions = suggestionsFor(nodeSpec);
 
         if (suggestions != null) {
             builder.suggests(suggestions);
@@ -439,9 +442,9 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         return builder;
     }
 
-    private @Nullable SuggestionProvider<S> suggestionsFor(@NotNull Slot slot) {
-        ArgumentType<?> resolved = resolveType(slot.argument());
-        SuggestionProvider<S> user = adapter.suggestions(slot.argument(), resolved);
+    private @Nullable SuggestionProvider<S> suggestionsFor(@NotNull NodeSpec nodeSpec) {
+        ArgumentType<?> resolved = resolveType(nodeSpec.argument());
+        SuggestionProvider<S> user = adapter.suggestions(nodeSpec.argument(), resolved);
 
         if (user == null) {
             return null;
@@ -459,9 +462,9 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         };
     }
 
-    private void addSlots(@NotNull List<Slot> slots, @NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull String base, boolean terminal, boolean optional) {
+    private void addSpecs(@NotNull List<NodeSpec> nodeSpecs, @NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull String base, boolean terminal, boolean optional) {
         if (adapter.literal(argument)) {
-            slots.add(new Slot(argument, base, StringArgumentType.word(), terminal, false, optional, 0, 1, true));
+            nodeSpecs.add(new NodeSpec(argument, base, StringArgumentType.word(), terminal, false, optional, 0, 1, true));
             return;
         }
 
@@ -469,12 +472,12 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         ArgumentType<?> resolved = resolveType(argument);
 
         if (resolved != null) {
-            slots.add(new Slot(argument, base, resolved, terminal, greedy, optional, 0, 1, false));
+            nodeSpecs.add(new NodeSpec(argument, base, resolved, terminal, greedy, optional, 0, 1, false));
             return;
         }
 
         if (greedy) {
-            slots.add(new Slot(argument, base, StringArgumentType.greedyString(), terminal, true, optional, 0, 1, false));
+            nodeSpecs.add(new NodeSpec(argument, base, StringArgumentType.greedyString(), terminal, true, optional, 0, 1, false));
             return;
         }
 
@@ -482,7 +485,7 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
 
         for (int part = 0; part < tokens; part++) {
             String name = part == 0 ? base : base + ":" + part;
-            slots.add(new Slot(argument, name, StringArgumentType.word(), terminal && part == tokens - 1, false, optional, part, tokens, false));
+            nodeSpecs.add(new NodeSpec(argument, name, StringArgumentType.word(), terminal && part == tokens - 1, false, optional, part, tokens, false));
         }
     }
 
@@ -543,9 +546,6 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
 
     private boolean counts(@NotNull AbstractArgument<?, ?, ?, ?> candidate, @NotNull String name) {
         return !adapter.literal(candidate) && candidate.getName().equals(name);
-    }
-
-    public record Slot(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull String name, @NotNull ArgumentType<?> type, boolean terminal, boolean greedy, boolean optional, int part, int parts, boolean literal) {
     }
 
 }

@@ -8,6 +8,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.stream.Collectors;
+
 public class OfflinePlayerArgument extends BukkitArgument<OfflinePlayerArgument, OfflinePlayer> {
 
     public OfflinePlayerArgument(String name) {
@@ -16,7 +18,7 @@ public class OfflinePlayerArgument extends BukkitArgument<OfflinePlayerArgument,
         replaceSuggestions(Bukkit.getOnlinePlayers()
                 .stream()
                 .map(Player::getName)
-                .toList()
+                .collect(Collectors.toUnmodifiableList())
         );
     }
 

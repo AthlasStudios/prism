@@ -28,7 +28,6 @@ public class TestPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         PaperPlatform platform = PaperPlatform.configure(this)
-                .disableBrigadier()
                 .init();
 
         BukkitCommandDefinition build = new PrismBukkitCommand("testa", "pr")
@@ -210,7 +209,7 @@ public class TestPlugin extends JavaPlugin {
 //        }, 20 * 10); TODO -> RECHECK I THINK AN ERROR OCCURED
     }
 
-    public static BukkitCommandDefinition register(BukkitPlatform<?> platform, Plugin plugin) {
+    public static BukkitCommandDefinition register(BukkitPlatform<?, ?> platform, Plugin plugin) {
         BukkitSuggestionsSupplier.Async slow = context -> CompletableFuture.supplyAsync(() -> {
             plugin.getLogger().info("async supplier on " + Thread.currentThread().getName() + " input=" + context.getCurrentRawArg());
 

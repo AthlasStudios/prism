@@ -7,6 +7,8 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.stream.Collectors;
+
 public class WorldArgument extends BukkitArgument<WorldArgument, World> {
 
     public WorldArgument(String name) {
@@ -15,7 +17,7 @@ public class WorldArgument extends BukkitArgument<WorldArgument, World> {
         replaceSuggestions(Bukkit.getWorlds()
                 .stream()
                 .map(World::getName)
-                .toList()
+                .collect(Collectors.toUnmodifiableList())
         );
     }
 

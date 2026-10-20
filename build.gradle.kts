@@ -4,7 +4,7 @@ plugins {
     kotlin("jvm")
 }
 
-val targetJavaVersion = 17
+val targetJavaVersion = 11
 val testJavaVersion = 21
 
 rootProject.extra["targetJavaVersion"] = targetJavaVersion

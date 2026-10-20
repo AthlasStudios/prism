@@ -33,11 +33,11 @@ public class AsyncSuggestionsHandler implements Listener {
 
         Command command = legacyRegistrar.getCommandMap().getCommand(parts[0].toLowerCase(Locale.ROOT));
 
-        if (!(command instanceof BukkitExecutableCommand executable)) return;
+        if (!(command instanceof BukkitExecutableCommand)) return;
 
         String[] args = Arrays.copyOfRange(parts, 1, parts.length);
 
-        executable.completeAsync(event.getSender(), args).ifPresent(event::provideSuggestions);
+        ((BukkitExecutableCommand) command).completeAsync(event.getSender(), args).ifPresent(event::provideSuggestions);
     }
 
 }

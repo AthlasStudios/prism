@@ -5,14 +5,26 @@ plugins {
 
 dependencies {
     api(project(":platform:bukkit"))
-    implementation(project(":platform:brigadier:minecraft"))
     implementation(project(":reflection"))
+    "runtimeOnly"(project(":platform:brigadier:minecraft"))
 
     compileOnly("org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT") {
         exclude(group = "net.md-5", module = "bungeecord-chat")
     }
 
     testImplementation(testFixtures(project(":platform:bukkit")))
+}
+
+java {
+    toolchain.languageVersion.set(
+        JavaLanguageVersion.of(11)
+    )
+}
+
+configurations.runtimeClasspath {
+    attributes {
+        attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 16)
+    }
 }
 
 tasks {

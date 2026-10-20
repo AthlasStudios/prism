@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ParticleArgument extends BukkitArgument<ParticleArgument, Particle> {
 
@@ -16,7 +17,7 @@ public class ParticleArgument extends BukkitArgument<ParticleArgument, Particle>
 
         List<String> values = Arrays.stream(Particle.values())
                 .map(material -> material.name().toLowerCase())
-                .toList();
+                .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
         withFixedValues(values);
