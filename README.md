@@ -102,7 +102,7 @@ Prism compiles against the Spigot 1.13.2 API, and the Brigadier layer has per-ve
 
 ## Installation
 
-> Prism is currently in **beta** (`1.0.0-beta.2`). APIs may still change between beta releases.
+> Prism is currently in **beta** (`1.0.0-beta.4`). APIs may still change between beta releases.
 
 Group ID: `dev.gurwi`
 
@@ -502,7 +502,7 @@ Add the core module (it is published on its own):
 
 ```kotlin
 dependencies {
-    api("dev.gurwi:prism-core:1.0.0-beta.2")
+    api("dev.gurwi:prism-core:1.0.0-beta.4")
 }
 ```
 
