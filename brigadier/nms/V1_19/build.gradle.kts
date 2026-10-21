@@ -10,12 +10,6 @@ dependencies {
     spigotNms("1.19.4-R0.1-SNAPSHOT", NMSMapping.MOJANG)
 }
 
-configurations.configureEach {
-    if (isCanBeConsumed) {
-        attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 8)
-    }
-}
-
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }

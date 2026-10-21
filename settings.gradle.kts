@@ -1,13 +1,8 @@
 pluginManagement {
-
     repositories {
         gradlePluginPortal()
 
         maven("https://repo.papermc.io/repository/maven-public/")
-    }
-
-    plugins {
-        kotlin("jvm") version "2.4.21"
     }
 
     includeBuild("build-logic/spigot-nms")
@@ -42,4 +37,10 @@ include(":brigadier:nms:V26")
 
 include(":examples:paper-plugin")
 
-include("bundles:paper-bundle", "bundles:spigot-bundle")
+include(
+    ":plugin:bukkit-plugin",
+    ":plugin:bukkit-plugin:plugin",
+    ":plugin:bukkit-plugin:api"
+)
+
+include(":bundles:paper-bundle", ":bundles:spigot-bundle")

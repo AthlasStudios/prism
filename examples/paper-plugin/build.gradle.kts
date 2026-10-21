@@ -5,11 +5,6 @@ plugins {
     id("xyz.jpenilla.resource-factory-bukkit-convention") version "1.3.1"
 }
 
-repositories {
-    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
-    maven("https://oss.sonatype.org/content/repositories/snapshots/")
-}
-
 dependencies {
     implementation(project(":platform:paper"))
     implementation(project(":brigadier:brigadier-minecraft"))

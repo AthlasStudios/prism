@@ -9,14 +9,6 @@ dependencies {
     spigotNms("26.3-R0.1-SNAPSHOT")
 }
 
-configurations.configureEach {
-    if (isCanBeConsumed) {
-        attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 8)
-    }
-}
-
 java {
-    toolchain.languageVersion.set(
-        JavaLanguageVersion.of(25)
-    )
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }

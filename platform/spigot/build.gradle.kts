@@ -15,12 +15,6 @@ dependencies {
     testImplementation(testFixtures(project(":platform:bukkit")))
 }
 
-java {
-    toolchain.languageVersion.set(
-        JavaLanguageVersion.of(11)
-    )
-}
-
 configurations.runtimeClasspath {
     attributes {
         attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 16)

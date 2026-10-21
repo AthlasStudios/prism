@@ -11,13 +11,5 @@ dependencies {
 }
 
 java {
-    toolchain.languageVersion.set(
-        JavaLanguageVersion.of(16)
-    )
-}
-
-configurations.configureEach {
-    if (isCanBeConsumed) {
-        attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 8)
-    }
+    toolchain.languageVersion.set(JavaLanguageVersion.of(16))
 }

@@ -8,15 +8,12 @@ plugins {
     id("com.vanniktech.maven.publish.base")
 }
 
-val aggregator = path.startsWith(":publish:")
-val prismArtifactId = when (path) {
-    ":platform:brigadier:minecraft" -> "prism-brigadier-minecraft"
-    else -> "prism-" + project.name.removeSuffix("-bundle")
-}
+val prismArtifactId = "prism-" + project.name.removeSuffix("-bundle")
 
 val shade = configurations.create("shade") {
     isCanBeConsumed = false
     isCanBeResolved = true
+
     attributes {
         attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
         attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
@@ -52,7 +49,7 @@ extensions.configure<MavenPublishBaseExtension> {
     coordinates(project.group.toString(), prismArtifactId, project.version.toString())
     configure(
         JavaLibrary(
-            javadocJar = if (aggregator) JavadocJar.Empty() else JavadocJar.Javadoc(),
+            javadocJar = JavadocJar.Javadoc(),
             sourcesJar = true
         )
     )

@@ -14,7 +14,7 @@ dependencies {
         exclude(group = "net.md-5", module = "bungeecord-chat")
     }
 
-    subprojects
+    rootProject.subprojects
         .filter { it.name.matches(Regex("V\\d+(_\\d+)*")) }
         .forEach { runtimeOnly(project(it.path)) }
 }

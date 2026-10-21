@@ -9,11 +9,6 @@ dependencies.extensions.add("spigotNms", nms)
 
 val specialSource = configurations.create("specialSource")
 
-repositories {
-    mavenCentral()
-    maven("https://repo.codemc.io/repository/nms/")
-}
-
 fun mojangOnly(coordinates: (String) -> String): Provider<String> =
     nms.mappings.flatMap { mappings ->
         if (mappings == NMSMapping.MOJANG) {
@@ -41,10 +36,6 @@ configurations.configureEach {
     if (isCanBeConsumed) {
         attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 8)
     }
-}
-
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 val remapperClasspath = specialSource.filter { it.name.contains("SpecialSource") }

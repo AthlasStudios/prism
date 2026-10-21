@@ -1,7 +1,6 @@
 plugins {
     id("java-library")
     id("com.gradleup.shadow") version "9.4.1" apply false
-    kotlin("jvm")
 }
 
 val targetJavaVersion = 11
@@ -24,7 +23,6 @@ allprojects {
 
     repositories {
         mavenCentral()
-        mavenLocal()
 
         maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
         maven("https://oss.sonatype.org/content/repositories/snapshots/")
@@ -102,11 +100,4 @@ subprojects {
             }
         }
     }
-}
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    testImplementation(kotlin("test"))
 }

@@ -2,8 +2,8 @@ plugins {
     id("prism-publish")
 }
 
-val versionModules = project(":brigadier:brigadier-minecraft").subprojects
-    .filter { it.name != "brigadier-paper" }
+val versionModules = rootProject.subprojects
+    .filter { it.name.matches(Regex("V\\d+(_\\d+)*")) }
 
 dependencies {
     "shade"(project(":platform:spigot"))
