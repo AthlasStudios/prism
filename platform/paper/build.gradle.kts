@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
     api(project(":platform:bukkit"))
-    runtimeOnly(project(":platform:brigadier:minecraft:brigadier-paper"))
+    runtimeOnly(project(":brigadier:brigadier-paper"))
 
     compileOnly("com.destroystokyo.paper:paper-api:1.13.2-R0.1-SNAPSHOT")
 }

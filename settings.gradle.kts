@@ -10,7 +10,7 @@ pluginManagement {
         kotlin("jvm") version "2.4.21"
     }
 
-    includeBuild("gradle-plugin/spigot-nms")
+    includeBuild("build-logic/spigot-nms")
 }
 
 plugins {
@@ -21,26 +21,25 @@ rootProject.name = "prism"
 
 include(":core")
 include(":reflection")
-include(":test:plugin")
 include(":platform:bukkit")
 include(":platform:spigot")
 include(":platform:paper")
-include(":platform:brigadier")
 include(":platform:jda")
 
-include(":platform:brigadier:minecraft")
-include(":platform:brigadier:minecraft:V1_13")
-include(":platform:brigadier:minecraft:V1_14")
-include(":platform:brigadier:minecraft:V1_15")
-include(":platform:brigadier:minecraft:V1_16")
-include(":platform:brigadier:minecraft:V1_17")
-include(":platform:brigadier:minecraft:V1_18")
-include(":platform:brigadier:minecraft:V1_19")
-include(":platform:brigadier:minecraft:V1_20")
-include(":platform:brigadier:minecraft:V1_21")
-include(":platform:brigadier:minecraft:V26")
-include(":platform:brigadier:minecraft:brigadier-paper")
+include(":brigadier:brigadier-api")
+include(":brigadier:brigadier-minecraft")
+include(":brigadier:brigadier-paper")
+include(":brigadier:nms:V1_13")
+include(":brigadier:nms:V1_14")
+include(":brigadier:nms:V1_15")
+include(":brigadier:nms:V1_16")
+include(":brigadier:nms:V1_17")
+include(":brigadier:nms:V1_18")
+include(":brigadier:nms:V1_19")
+include(":brigadier:nms:V1_20")
+include(":brigadier:nms:V1_21")
+include(":brigadier:nms:V26")
 
-include("publish:paper", "publish:spigot")
-project(":publish:paper").name = "paper-bundle"
-project(":publish:spigot").name = "spigot-bundle"
+include(":examples:paper-plugin")
+
+include("bundles:paper-bundle", "bundles:spigot-bundle")

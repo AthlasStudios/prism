@@ -768,7 +768,7 @@ Tests use [JUnit](https://junit.org/) with [MockBukkit](https://github.com/MockB
 
 ## Trying it out on a server
 
-The `test/plugin` module is a sample plugin that exercises most of the API (subcommands, argument trees, flags, async and sync suggestions, and many built-in argument types). Start a local Paper server with it installed:
+The `examples` module is a sample plugin that exercises most of the API (subcommands, argument trees, flags, async and sync suggestions, and many built-in argument types). Start a local Paper server with it installed:
 
 ```bash
 ./gradlew :test:plugin:runServer
@@ -780,7 +780,7 @@ To produce the plugin jar instead:
 ./gradlew :test:plugin:shadowJar
 ```
 
-Its source, [`TestPlugin.java`](test/plugin/src/main/java/dev/gurwi/prism/test/plugin/TestPlugin.java), doubles as a handy set of usage examples.
+Its source, [`TestPlugin.java`](examples/paper-plugin/src/main/java/dev/gurwi/prism/test/plugin/TestPlugin.java), doubles as a handy set of usage examples.
 
 ## Contributing
 
