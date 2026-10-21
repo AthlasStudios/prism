@@ -10,7 +10,7 @@ A code-first command framework that lets you build commands directly in Java wit
 [![Maven Central](https://img.shields.io/maven-central/v/dev.gurwi/prism-paper?style=for-the-badge&logo=apachemaven&logoColor=white&label=Maven%20Central&color=00E5FF)](https://central.sonatype.com/namespace/dev.gurwi)
 [![Build](https://img.shields.io/github/actions/workflow/status/AthlasStudios/prism/test.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=Tests)](https://github.com/AthlasStudios/prism/actions/workflows/test.yml)
 [![Java](https://img.shields.io/badge/Java-11%2B-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://adoptium.net)
-[![License](https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](https://opensource.org/license/mit)
+[![License](https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](https://github.com/AthlasStudios/prism/blob/main/LICENSE)
 
 [![Stars](https://img.shields.io/github/stars/AthlasStudios/prism?style=flat-square&logo=github&label=Stars)](https://github.com/AthlasStudios/prism/stargazers)
 [![Issues](https://img.shields.io/github/issues/AthlasStudios/prism?style=flat-square&logo=github&label=Issues)](https://github.com/AthlasStudios/prism/issues)
