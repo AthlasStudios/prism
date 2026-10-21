@@ -22,7 +22,7 @@ public class LiteralArgument extends BukkitArgument<LiteralArgument, Void> {
 
     @Override
     public LiteralArgument setListed(boolean listed) {
-        throw new IllegalArgumentException("Literal arguments cannot be listed");
+        throw new IllegalArgumentException("Literal arguments cannot be listed!");
     }
 
 }

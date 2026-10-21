@@ -17,13 +17,13 @@ public interface BukkitSuggestionsSupplier<Result> extends SuggestionsSupplier<C
     }
 
     @Contract(pure = true)
-    static @NotNull Sync sync(Collection<BukkitSuggestion> suggestions) {
+    static @NotNull Sync sync(Collection<CommandSuggestion> suggestions) {
         return ctx -> suggestions;
     }
 
     @Contract(pure = true)
     static @NotNull Sync strings(Collection<String> suggestions) {
-        return ctx -> BukkitSuggestion.of(suggestions);
+        return ctx -> CommandSuggestion.of(suggestions);
     }
 
     @Contract(pure = true)
@@ -31,12 +31,12 @@ public interface BukkitSuggestionsSupplier<Result> extends SuggestionsSupplier<C
         return suggestions;
     }
 
-    static @NotNull Async async(CompletableFuture<Collection<BukkitSuggestion>> suggestionsFuture) {
+    static @NotNull Async async(CompletableFuture<Collection<CommandSuggestion>> suggestionsFuture) {
         return ctx -> suggestionsFuture;
     }
 
     static @NotNull Async stringsAsync(CompletableFuture<Collection<String>> suggestionsFuture) {
-        return ctx -> suggestionsFuture.thenApply(BukkitSuggestion::of);
+        return ctx -> suggestionsFuture.thenApply(CommandSuggestion::of);
     }
 
     static @NotNull BukkitSuggestionsSupplier<?> empty() {
@@ -44,12 +44,12 @@ public interface BukkitSuggestionsSupplier<Result> extends SuggestionsSupplier<C
     }
 
     @FunctionalInterface
-    interface Sync extends BukkitSuggestionsSupplier<Collection<BukkitSuggestion>> {
+    interface Sync extends BukkitSuggestionsSupplier<Collection<CommandSuggestion>> {
 
     }
 
     @FunctionalInterface
-    interface Async extends BukkitSuggestionsSupplier<CompletableFuture<Collection<BukkitSuggestion>>> {
+    interface Async extends BukkitSuggestionsSupplier<CompletableFuture<Collection<CommandSuggestion>>> {
 
     }
 

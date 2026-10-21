@@ -19,6 +19,7 @@ include(":reflection")
 include(":platform:bukkit")
 include(":platform:spigot")
 include(":platform:paper")
+include(":platform:velocity")
 include(":platform:jda")
 
 include(":brigadier:brigadier-api")

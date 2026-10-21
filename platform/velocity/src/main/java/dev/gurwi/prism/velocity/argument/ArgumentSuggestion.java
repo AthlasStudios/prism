@@ -1,4 +1,4 @@
-package dev.gurwi.prism.bukkit.argument.suggestion;
+package dev.gurwi.prism.velocity.argument;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -8,9 +8,8 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-public interface BukkitSuggestion {
+public interface ArgumentSuggestion {
 
     String getSuggestion();
 
@@ -19,20 +18,20 @@ public interface BukkitSuggestion {
     }
 
     @Contract("_ -> new")
-    static @NotNull BukkitSuggestion of(String suggestion) {
+    static @NotNull ArgumentSuggestion of(String suggestion) {
         return new Simple(suggestion, null);
     }
 
     @Contract("_, _ -> new")
-    static @NotNull BukkitSuggestion of(String suggestion, @Nullable String tooltip) {
+    static @NotNull ArgumentSuggestion of(String suggestion, @Nullable String tooltip) {
         return new Simple(suggestion, tooltip);
     }
 
-    static @NotNull @Unmodifiable Collection<BukkitSuggestion> of(@NotNull Collection<String> suggestions) {
-        return suggestions.stream().map(BukkitSuggestion::of).collect(Collectors.toUnmodifiableList());
+    static @NotNull @Unmodifiable Collection<ArgumentSuggestion> of(@NotNull Collection<String> suggestions) {
+        return suggestions.stream().map(ArgumentSuggestion::of).toList();
     }
 
-    final class Simple implements BukkitSuggestion {
+    final class Simple implements ArgumentSuggestion {
 
         private final String suggestion;
         private final @Nullable String tooltip;
@@ -56,8 +55,7 @@ public interface BukkitSuggestion {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof Simple)) return false;
-            Simple other = (Simple) o;
+            if (!(o instanceof Simple other)) return false;
             return Objects.equals(suggestion, other.suggestion) && Objects.equals(tooltip, other.tooltip);
         }
 
@@ -70,6 +68,7 @@ public interface BukkitSuggestion {
         public String toString() {
             return "Simple[suggestion=" + suggestion + ", tooltip=" + tooltip + "]";
         }
+
     }
 
 }

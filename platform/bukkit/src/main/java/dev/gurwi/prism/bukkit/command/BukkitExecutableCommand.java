@@ -6,7 +6,7 @@ import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import dev.gurwi.prism.bukkit.argument.LiteralArgument;
 import dev.gurwi.prism.bukkit.argument.parser.ArgumentTokens;
 import dev.gurwi.prism.bukkit.argument.parser.LegacyArgumentsParser;
-import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestion;
+import dev.gurwi.prism.bukkit.argument.suggestion.CommandSuggestion;
 import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.bukkit.event.AsyncCommandSuggestEvent;
 import dev.gurwi.prism.bukkit.exception.BukkitArgumentsParseException;
@@ -365,7 +365,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
                 if (error != null || result == null) return List.of();
 
                 return strip(result.stream()
-                        .map(BukkitSuggestion::getSuggestion)
+                        .map(CommandSuggestion::getSuggestion)
                         .filter(text -> text.toLowerCase().startsWith(lowered))
                         .collect(Collectors.toList()), prefix);
             }));
@@ -376,7 +376,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         if (suggestions instanceof BukkitSuggestionsSupplier.Sync) {
             BukkitSuggestionsSupplier.Sync sync = (BukkitSuggestionsSupplier.Sync) suggestions;
 
-            return strip(sync.getSuggestions(context).stream().map(BukkitSuggestion::getSuggestion).collect(Collectors.toList()), prefix);
+            return strip(sync.getSuggestions(context).stream().map(CommandSuggestion::getSuggestion).collect(Collectors.toList()), prefix);
         }
 
         return List.of();
