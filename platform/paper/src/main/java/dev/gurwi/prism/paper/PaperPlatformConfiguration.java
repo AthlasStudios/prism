@@ -1,7 +1,7 @@
 package dev.gurwi.prism.paper;
 
 import dev.gurwi.prism.bukkit.BukkitPlatformConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 public class PaperPlatformConfiguration extends BukkitPlatformConfiguration<PaperPlatform> {
@@ -22,7 +22,7 @@ public class PaperPlatformConfiguration extends BukkitPlatformConfiguration<Pape
 
         private boolean disableAsyncSuggestions = false;
 
-        public Builder(@NotNull JavaPlugin plugin) {
+        public Builder(@NotNull Plugin plugin) {
             super(plugin);
         }
 

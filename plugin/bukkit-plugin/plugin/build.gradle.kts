@@ -1,6 +1,6 @@
 plugins {
     id("com.gradleup.shadow")
-    id("xyz.jpenilla.run-paper")
+//    id("xyz.jpenilla.run-paper")
     id("com.modrinth.minotaur")
 
     id("xyz.jpenilla.resource-factory-bukkit-convention")
@@ -17,14 +17,17 @@ data class PluginData(
 
 val pluginData = PluginData(
     mainClass = "club.athlas.athlasdevtemplate.AthlasDevTemplate",
-    apiVersion = "1.21",
+    apiVersion = "1.12",
     description = "Athlas Development Plugin Template",
     authors = listOf("Athlas Development Team"),
-    foliaSupported = false
+    foliaSupported = true
 )
 
 dependencies {
     implementation(project(":plugin:bukkit-plugin:api"))
+    implementation(project(":platform:paper"))
+
+    implementation("dev.gurwi:confetti:0.1.9")
 }
 
 tasks {
@@ -36,21 +39,24 @@ tasks {
         archiveFileName = "${rootProject.name}-${rootProject.version}.jar"
 
         // relocations
+
+        relocate("dev.gurwi.prism", "club.athlas.prism.libs.command")
+        relocate("dev.gurwi.confetti", "club.athlas.prism.libs.config")
     }
 
-    runServer {
-        minecraftVersion("1.21.5")
-    }
-
-    @Suppress("UnstableApiUsage")
-    withType(xyz.jpenilla.runtask.task.AbstractRun::class) {
-        javaLauncher = rootProject.javaToolchains.launcherFor {
-            vendor = JvmVendorSpec.JETBRAINS
-            languageVersion = JavaLanguageVersion.of(21)
-        }
-
-        jvmArgs("-XX:+AllowEnhancedClassRedefinition")
-    }
+//    runServer {
+//        minecraftVersion("1.21.5")
+//    }
+//
+//    @Suppress("UnstableApiUsage")
+//    withType(xyz.jpenilla.runtask.task.AbstractRun::class) {
+//        javaLauncher = rootProject.javaToolchains.launcherFor {
+//            vendor = JvmVendorSpec.JETBRAINS
+//            languageVersion = JavaLanguageVersion.of(21)
+//        }
+//
+//        jvmArgs("-XX:+AllowEnhancedClassRedefinition")
+//    }
 }
 
 bukkitPluginYaml {

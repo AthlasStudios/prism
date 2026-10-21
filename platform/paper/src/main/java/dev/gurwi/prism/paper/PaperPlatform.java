@@ -4,7 +4,6 @@ import dev.gurwi.prism.Prism;
 import dev.gurwi.prism.bukkit.BukkitPlatform;
 import dev.gurwi.prism.paper.listener.AsyncTabCompleter;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,7 +24,7 @@ public class PaperPlatform implements BukkitPlatform<PaperCommandsRegistry, Pape
     }
 
     @Contract(value = "_ -> new", pure = true)
-    public static @NotNull PaperPlatformConfiguration.Builder configure(JavaPlugin plugin) {
+    public static @NotNull PaperPlatformConfiguration.Builder configure(@NotNull Plugin plugin) {
         return new PaperPlatformConfiguration.Builder(plugin);
     }
 

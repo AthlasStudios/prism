@@ -18,7 +18,7 @@ public class PaperCommandsRegistry implements BukkitCommandsRegistry<PaperPlatfo
 
     public PaperCommandsRegistry(@NotNull PaperPlatform platform) {
         this.platform = platform;
-        this.registrar = getRegistrar();
+        this.registrar = initRegistrar();
 
         platform.getPlugin().getLogger().info(
                 "[prism] Command registration initialized using " + registrar.getType().name() + "."
@@ -47,7 +47,7 @@ public class PaperCommandsRegistry implements BukkitCommandsRegistry<PaperPlatfo
     }
 
     @Contract(" -> new")
-    private @NotNull BukkitCommandRegistrar getRegistrar() {
+    private @NotNull BukkitCommandRegistrar initRegistrar() {
         BukkitCommandRegistrar registrar = createRegistrar(platform);
 
         if (registrar instanceof LegacyCommandRegistrar) {

@@ -1,0 +1,7 @@
+# prism platform initializer configuration
+
+disableInfoCommand: false
+disableBrigadierRegistrar: false
+disableLegacyRegistrar: false
+disableAsyncSuggestions: false
+registerPermissions: false

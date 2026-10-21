@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-
+    compileOnlyApi(project(":platform:bukkit"))
 }
 
 tasks {
