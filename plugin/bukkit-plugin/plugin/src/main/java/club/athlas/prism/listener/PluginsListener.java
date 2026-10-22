@@ -21,13 +21,16 @@ public class PluginsListener implements Listener {
     public void onPluginEnable(@NotNull PluginEnableEvent event) {
         Plugin target = event.getPlugin();
 
-        if (target instanceof PrismCommandProvider) {
-            plugin.getProvidersManager().register(target, (PrismCommandProvider) target);
+        if (!(target instanceof PrismCommandProvider)) return;
 
-            if (!plugin.getDescription().getDepend().contains(plugin.getName())) {
-                plugin.getLogger().warning("Plugin " + target.getName() + " should depend on prism to work correctly.");
-            }
+        boolean depends = target.getDescription().getDepend().contains(plugin.getName())
+                || target.getDescription().getSoftDepend().contains(plugin.getName());
+
+        if (!depends) {
+            plugin.getLogger().warning("Plugin " + target.getName() + " should depend on prism to work correctly.");
         }
+
+        plugin.registerProvider(target, (PrismCommandProvider) target, null);
     }
 
     @EventHandler

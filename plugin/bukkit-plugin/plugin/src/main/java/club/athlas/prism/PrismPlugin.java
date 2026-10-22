@@ -5,19 +5,17 @@ import club.athlas.prism.api.PrismCommandProvider;
 import club.athlas.prism.api.PrismPluginAPI;
 import club.athlas.prism.command.PrismInfoCommand;
 import club.athlas.prism.config.PrismConfiguration;
+import club.athlas.prism.listener.PluginsListener;
 import club.athlas.prism.manager.BasePluginRegistriesManager;
 import club.athlas.prism.manager.ProvidersManager;
 import dev.gurwi.confetti.Confetti;
 import dev.gurwi.prism.bukkit.BukkitCommandsRegistry;
 import dev.gurwi.prism.bukkit.BukkitPlatform;
-import dev.gurwi.prism.bukkit.command.PrismBukkitCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Collection;
 
 public class PrismPlugin extends JavaPlugin implements PrismPluginAPI {
 
@@ -40,27 +38,21 @@ public class PrismPlugin extends JavaPlugin implements PrismPluginAPI {
 
         if (!PrismConfiguration.disableInfoCommand) new PrismInfoCommand().register(platform);
 
-        getProvidersManager().getProviders().forEach(provider -> provider.getCommands()
-                .forEach(command -> provider.getRegistry().register(command.build()))
-        );
+        getServer().getPluginManager().registerEvents(new PluginsListener(this), this);
     }
 
     @Override
     public void registerProvider(Plugin plugin, PrismCommandProvider provider, @Nullable BukkitCommandsRegistry<?> registry) {
-        providersManager.register(plugin, new PrismCommandProvider() {
+        BukkitCommandsRegistry<?> target = registry;
 
-            @Override
-            public Collection<? extends PrismBukkitCommand> getCommands() {
-                return provider.getCommands();
-            }
+        if (target == null) target = provider.getRegistry();
+        if (target == null) target = registriesManager.getRegistry(plugin).orElseGet(() -> registriesManager.createRegistry(plugin));
 
-            @Override
-            public BukkitCommandsRegistry<?> getRegistry() {
-                if (registry == null) return getDefaultRegistry();
-                return registry;
-            }
+        providersManager.register(plugin, provider);
 
-        });
+        BukkitCommandsRegistry<?> destination = target;
+
+        provider.getCommands().forEach(command -> destination.register(command.build()));
     }
 
     @Override

@@ -10,6 +10,7 @@ import dev.gurwi.prism.paper.PaperPlatformConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -36,10 +37,13 @@ public class BasePluginRegistriesManager implements PluginRegistriesManager {
 
     @Override
     public void unloadRegistry(@NotNull Plugin plugin) {
-        plugin.getLogger().info("Unloading registry for " + plugin.getName());
-
         BukkitCommandsRegistry<?> removedRegistry = registries.remove(plugin);
-        removedRegistry.getRegisteredCommands().forEach(removedRegistry::unregister);
+
+        if (removedRegistry == null) return;
+
+        this.plugin.getLogger().info("Unloading registry for " + plugin.getName());
+
+        new ArrayList<>(removedRegistry.getRegisteredCommands()).forEach(removedRegistry::unregister);
     }
 
     @Override
