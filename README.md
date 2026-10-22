@@ -31,6 +31,10 @@ A code-first command framework that lets you build commands directly in Java wit
 - [Features](#features)
 - [Supported platforms](#supported-platforms)
 - [Installation](#installation)
+- [Standalone plugin](#standalone-plugin)
+  - [Install the plugin](#install-the-plugin)
+  - [Use it from your plugin](#use-it-from-your-plugin)
+  - [Plugin configuration](#plugin-configuration)
 - [Quick start](#quick-start)
 - [Guide](#guide)
   - [Arguments](#arguments)
@@ -94,6 +98,7 @@ new PrismBukkitCommand("heal")
 - 📖 **Built-in help generator** that renders clickable usage for a command tree
 - ♻️ **Runtime registration and unregistration** of commands
 - 🧩 **Shaded bundles** so you ship a single dependency
+- 🔌 **Standalone plugin** if you would rather not shade Prism into your jar
 
 ## Supported platforms
 
@@ -159,6 +164,93 @@ dependencies {
 Swap `prism-paper` for `prism-spigot` if you target Spigot. The individual modules (`prism-core`, `prism-bukkit`, `prism-brigadier` and `prism-brigadier-minecraft`) are published too, but most projects should use a bundle.
 
 Prism is a library, not a standalone plugin, so **shade it into your own plugin jar** (for example with the [Shadow](https://github.com/GradleUp/shadow) plugin) and relocate it to avoid conflicts with other plugins that bundle Prism.
+
+Don't want to shade? Install Prism as a standalone plugin instead, see [Standalone plugin](#standalone-plugin).
+
+## Standalone plugin
+
+Instead of shading Prism into every plugin, you can install it once on the server as a plugin named `prism`. Your plugins then depend on it, use one shared copy of the library and get their commands registered through the Prism API. This is the Bukkit plugin in `plugin/bukkit-plugin`, built on the Paper platform.
+
+### Install the plugin
+
+1. Drop `prism-<version>.jar` into the server's `plugins` folder.
+2. Start the server once. The plugin creates `plugins/prism/config.yml`.
+3. Add Prism as a dependency of every plugin that uses it.
+
+The plugin also adds a `/prism` command that shows basic info and links to this repository. It can be turned off in the config.
+
+### Use it from your plugin
+
+Declare the dependency in your `plugin.yml`, so Prism always loads first:
+
+```yaml
+name: MyPlugin
+main: com.example.myplugin.MyPlugin
+version: 1.0.0
+depend: [prism]
+```
+
+Compile against Prism without shading it. The API classes come from the `api` module, which builds to `prism-<version>-API.jar`, and the command classes come from the matching Prism module:
+
+```kotlin
+dependencies {
+    compileOnly("dev.gurwi:prism-paper:1.0.0-beta.4")
+    compileOnly(files("libs/prism-1.0.0-beta.4-API.jar"))
+}
+```
+
+Everything is `compileOnly`: at runtime the classes come from the installed Prism plugin, so there is nothing to shade or relocate.
+
+Get the API through `PrismPluginAPI.getAPI()`. It returns `null` when Prism is not installed or has not registered its service yet.
+
+```java
+public class MyPlugin extends JavaPlugin {
+
+    @Override
+    public void onEnable() {
+        PrismPluginAPI api = PrismPluginAPI.getAPI();
+
+        if (api == null) {
+            getLogger().severe("Prism is not installed");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
+        BukkitCommandsRegistry<?> registry = api.createRegistry(this);
+
+        registry.register(
+                new PrismBukkitCommand("hello")
+                        .executes((sender, args) -> sender.sendMessage("Hello!"))
+                        .build()
+        );
+    }
+}
+```
+
+Commands are built with the same `PrismBukkitCommand` API as in the [Guide](#guide). Instead of `.register(platform)` you pass the built definition to a registry.
+
+| Method                                    | Description                                                              |
+|-------------------------------------------|--------------------------------------------------------------------------|
+| `PrismPluginAPI.getAPI()`                 | The API instance, or `null` if Prism is missing.                         |
+| `createRegistry(plugin)`                  | Creates a registry for your plugin, configured from Prism's `config.yml`. |
+| `getDefaultRegistry()`                    | The registry of Prism's own platform, shared by all plugins.             |
+| `getRegistriesManager()`                  | `createRegistry`, `getRegistry(plugin)` and `unloadRegistry(plugin)`.    |
+
+Prefer `createRegistry(this)` so your commands are tracked per plugin.
+
+### Plugin configuration
+
+`plugins/prism/config.yml` controls how Prism creates its platform and the registries it hands out:
+
+| Option                      | Default | Description                                                  |
+|-----------------------------|---------|--------------------------------------------------------------|
+| `disableInfoCommand`        | `false` | Don't register the `/prism` info command.                    |
+| `disableBrigadierRegistrar` | `false` | Skip Brigadier and register through the legacy system only.  |
+| `disableLegacyRegistrar`    | `false` | Disable the legacy registrar.                                |
+| `disableAsyncSuggestions`   | `false` | Don't register the async tab-completion listener.            |
+| `registerPermissions`       | `false` | Register command permissions with the server.                |
+
+These map to the options in [Platform configuration](#platform-configuration) and apply to every plugin using the standalone Prism.
 
 ## Quick start
 
@@ -870,6 +962,8 @@ prism
 ├── gradle-plugin/
 │   └── spigot-nms/        Gradle plugin for Spigot NMS reobfuscation
 ├── buildSrc/              Shared publishing conventions
+├── plugin/
+│   └── bukkit-plugin/     Standalone Prism plugin (`api/` for dependents, `plugin/` for the jar)
 ├── examples/
 │   ├── paper-plugin/      Paper example plugin
 │   └── velocity-plugin/   Velocity example plugin
