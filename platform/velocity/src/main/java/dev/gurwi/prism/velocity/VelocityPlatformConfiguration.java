@@ -12,10 +12,12 @@ public class VelocityPlatformConfiguration {
 
     public static class Builder {
 
-        private final Plugin plugin;
+        private final Object plugin;
         private final ProxyServer server;
 
-        public Builder(Plugin plugin, ProxyServer server) {
+        public Builder(@NotNull Object plugin, ProxyServer server) {
+            if (!plugin.getClass().isAnnotationPresent(Plugin.class)) throw new IllegalArgumentException("Plugin must be annotated with @Plugin");
+
             this.plugin = plugin;
             this.server = server;
         }

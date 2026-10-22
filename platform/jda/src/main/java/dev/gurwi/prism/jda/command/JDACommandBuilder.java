@@ -6,6 +6,7 @@ import dev.gurwi.prism.jda.argument.JDAArgument;
 import dev.gurwi.prism.jda.executor.JDACommandExecutor;
 import dev.gurwi.prism.jda.permission.CommandPermission;
 import net.dv8tion.jda.api.entities.User;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public class JDACommandBuilder extends AbstractCommandBuilder<JDACommandBuilder,
     }
 
     @Override
-    public JDACommandDefinition build(@Nullable JDACommandDefinition parent) {
+    public @NotNull JDACommandDefinition build(@Nullable JDACommandDefinition parent) {
         return new JDACommandDefinition(
                 parent,
                 name,

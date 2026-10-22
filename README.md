@@ -780,7 +780,7 @@ To produce the plugin jar instead:
 ./gradlew :test:plugin:shadowJar
 ```
 
-Its source, [`TestPlugin.java`](examples/paper-plugin/src/main/java/dev/gurwi/prism/test/plugin/TestPlugin.java), doubles as a handy set of usage examples.
+Its source, [`TestPlugin.java`](examples/paper-plugin/src/main/java/dev/gurwi/prism/example/velocity/plugin/TestPlugin.java), doubles as a handy set of usage examples.
 
 ## Contributing
 

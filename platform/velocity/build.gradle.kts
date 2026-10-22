@@ -1,6 +1,6 @@
 plugins {
     id("java")
-//    id("prism-publish") // NOT YET
+    id("prism-publish")
 }
 
 dependencies {

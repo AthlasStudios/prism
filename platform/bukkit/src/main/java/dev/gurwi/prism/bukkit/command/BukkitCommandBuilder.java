@@ -7,9 +7,8 @@ import dev.gurwi.prism.bukkit.permission.BukkitPermission;
 import dev.gurwi.prism.bukkit.requirement.BukkitRequirementContainerBuilder;
 import dev.gurwi.prism.command.builder.AbstractTreeCommandBuilder;
 import dev.gurwi.prism.command.builder.CommandChildrenFactory;
-import dev.gurwi.prism.requirement.UsageRequirement;
 import org.bukkit.command.*;
-import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -31,45 +30,13 @@ public abstract class BukkitCommandBuilder<Impl extends BukkitCommandBuilder<Imp
         return self();
     }
 
-    @Override
-    public <Sender extends CommandSender> Impl withRequirement(Class<Sender> type, UsageRequirement<Sender> requirement) {
-        return withRequirement(sender ->
-                !type.isInstance(sender) || requirement.test(type.cast(sender))
-        );
-    }
-
-    @Override
-    public Impl withPlayerRequirement(UsageRequirement<Player> requirement) {
-        return withRequirement(Player.class, requirement);
-    }
-
-    @Override
-    public Impl withConsoleRequirement(UsageRequirement<ConsoleCommandSender> requirement) {
-        return withRequirement(ConsoleCommandSender.class, requirement);
-    }
-
-    @Override
-    public Impl withRemoteConsoleRequirement(UsageRequirement<RemoteConsoleCommandSender> requirement) {
-        return withRequirement(RemoteConsoleCommandSender.class, requirement);
-    }
-
-    @Override
-    public Impl withProxyRequirement(UsageRequirement<ProxiedCommandSender> requirement) {
-        return withRequirement(ProxiedCommandSender.class, requirement);
-    }
-
-    @Override
-    public Impl withBlockRequirement(UsageRequirement<BlockCommandSender> requirement) {
-        return withRequirement(BlockCommandSender.class, requirement);
-    }
-
     public Impl replaceErrorHandler(LegacyCommandExecutionErrorHandler handler) {
         this.legacyCommandErrorHandler = handler;
         return self();
     }
 
     @Override
-    public BukkitCommandDefinition build(@Nullable BukkitCommandDefinition parent) {
+    public @NotNull BukkitCommandDefinition build(@Nullable BukkitCommandDefinition parent) {
         return new BukkitCommandDefinition(
                 parent,
                 name,

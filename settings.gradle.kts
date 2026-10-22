@@ -36,7 +36,10 @@ include(":brigadier:nms:V1_20")
 include(":brigadier:nms:V1_21")
 include(":brigadier:nms:V26")
 
-include(":examples:paper-plugin")
+include(
+    ":examples:paper-plugin",
+    ":examples:velocity-plugin",
+)
 
 include(
     ":plugin:bukkit-plugin",

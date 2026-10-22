@@ -1,4 +1,4 @@
-package dev.gurwi.prism.test.plugin;
+package dev.gurwi.prism.example.paper.plugin;
 
 import dev.gurwi.prism.bukkit.BukkitPlatform;
 import dev.gurwi.prism.bukkit.argument.*;
@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
-public class TestPlugin extends JavaPlugin {
+public class PaperExample extends JavaPlugin {
 
     @Override
     public void onEnable() {

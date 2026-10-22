@@ -107,9 +107,9 @@ public abstract class AbstractCommandBuilder<
         return (Impl) this;
     }
 
-    public abstract Definition build(@Nullable Definition parent);
+    public abstract @NotNull Definition build(@Nullable Definition parent);
 
-    public Definition build() {
+    public @NotNull Definition build() {
         return build(null);
     }
 

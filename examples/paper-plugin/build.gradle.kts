@@ -39,7 +39,7 @@ tasks.withType(xyz.jpenilla.runtask.task.AbstractRun::class) {
 }
 
 bukkitPluginYaml {
-    main.set("dev.gurwi.prism.test.plugin.TestPlugin")
+    main.set("dev.gurwi.prism.example.paper.plugin.PaperExample")
     apiVersion.set("1.13")
 
     name.set(rootProject.name)
