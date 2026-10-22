@@ -4,7 +4,7 @@ import dev.gurwi.prism.argument.suggestion.SuggestionContext;
 import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import dev.gurwi.prism.bukkit.argument.base.GreedyArgument;
 import dev.gurwi.prism.bukkit.argument.parser.ParsedFlags;
-import dev.gurwi.prism.bukkit.argument.suggestion.CommandSuggestion;
+import dev.gurwi.prism.bukkit.argument.suggestion.ArgumentSuggestion;
 import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.bukkit.argument.type.Flag;
 import dev.gurwi.prism.exception.ArgumentParseException;
@@ -142,7 +142,7 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
         }
     }
 
-    public @NotNull CompletableFuture<Collection<CommandSuggestion>> suggest(@NotNull SuggestionContext<CommandSender> context) {
+    public @NotNull CompletableFuture<Collection<ArgumentSuggestion>> suggest(@NotNull SuggestionContext<CommandSender> context) {
         String input = context.getCurrentRawArg();
         Tokenized tokenized = tokenize(input);
         String prefix = input.substring(0, tokenized.lastTokenStart);
@@ -150,7 +150,7 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
         return suggestRelative(context, tokenized).thenApply(relative -> prefix.isEmpty() ? relative : withPrefix(relative, prefix));
     }
 
-    private @NotNull CompletableFuture<Collection<CommandSuggestion>> suggestRelative(@NotNull SuggestionContext<CommandSender> context, @NotNull Tokenized tokenized) {
+    private @NotNull CompletableFuture<Collection<ArgumentSuggestion>> suggestRelative(@NotNull SuggestionContext<CommandSender> context, @NotNull Tokenized tokenized) {
         List<String> tokens = new ArrayList<>(tokenized.tokens);
         String partial = "";
 
@@ -228,9 +228,9 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
         return CompletableFuture.completedFuture(List.of());
     }
 
-    private @NotNull List<CommandSuggestion> flagSuggestions(Set<String> used, @NotNull String partial) {
+    private @NotNull List<ArgumentSuggestion> flagSuggestions(Set<String> used, @NotNull String partial) {
         String lowered = partial.toLowerCase(Locale.ROOT);
-        List<CommandSuggestion> result = new ArrayList<>();
+        List<ArgumentSuggestion> result = new ArrayList<>();
 
         for (Flag<?> flag : byLong.values()) {
             if (used.contains(flag.getName()) && !flag.isRepeatable()) {
@@ -253,7 +253,7 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
         return result;
     }
 
-    private @NotNull CompletableFuture<Collection<CommandSuggestion>> innerSuggestions(@NotNull SuggestionContext<CommandSender> context, @NotNull Flag<?> flag, String partial) {
+    private @NotNull CompletableFuture<Collection<ArgumentSuggestion>> innerSuggestions(@NotNull SuggestionContext<CommandSender> context, @NotNull Flag<?> flag, String partial) {
         BukkitArgument<?, ?> inner = flag.getValue().orElse(null);
 
         if (inner == null) {
@@ -264,10 +264,10 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
         String lowered = partial.toLowerCase(Locale.ROOT);
 
         if (inner.getFixedValues().isPresent()) {
-            List<CommandSuggestion> fixed = new ArrayList<>();
+            List<ArgumentSuggestion> fixed = new ArrayList<>();
 
             for (String value : inner.getFixedValues().get().get()) {
-                fixed.add(CommandSuggestion.of(value));
+                fixed.add(ArgumentSuggestion.of(value));
             }
 
             return CompletableFuture.completedFuture(matching(fixed, lowered));
@@ -286,18 +286,18 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
         return CompletableFuture.completedFuture(List.of());
     }
 
-    private static @NotNull CommandSuggestion suggestion(@NotNull String literal, @Nullable String description) {
+    private static @NotNull ArgumentSuggestion suggestion(@NotNull String literal, @Nullable String description) {
         if (description == null) {
-            return CommandSuggestion.of(literal);
+            return ArgumentSuggestion.of(literal);
         }
 
-        return CommandSuggestion.of(literal, description);
+        return ArgumentSuggestion.of(literal, description);
     }
 
-    private static @NotNull List<CommandSuggestion> matching(@NotNull Collection<CommandSuggestion> suggestions, @NotNull String lowered) {
-        List<CommandSuggestion> result = new ArrayList<>();
+    private static @NotNull List<ArgumentSuggestion> matching(@NotNull Collection<ArgumentSuggestion> suggestions, @NotNull String lowered) {
+        List<ArgumentSuggestion> result = new ArrayList<>();
 
-        for (CommandSuggestion suggestion : suggestions) {
+        for (ArgumentSuggestion suggestion : suggestions) {
             if (suggestion.getSuggestion().toLowerCase(Locale.ROOT).startsWith(lowered)) {
                 result.add(suggestion);
             }
@@ -306,11 +306,11 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
         return result;
     }
 
-    private static @NotNull List<CommandSuggestion> withPrefix(@NotNull Collection<CommandSuggestion> suggestions, @NotNull String prefix) {
-        List<CommandSuggestion> result = new ArrayList<>(suggestions.size());
+    private static @NotNull List<ArgumentSuggestion> withPrefix(@NotNull Collection<ArgumentSuggestion> suggestions, @NotNull String prefix) {
+        List<ArgumentSuggestion> result = new ArrayList<>(suggestions.size());
 
-        for (CommandSuggestion suggestion : suggestions) {
-            result.add(CommandSuggestion.of(prefix + suggestion.getSuggestion(), suggestion.getTooltip().orElse(null)));
+        for (ArgumentSuggestion suggestion : suggestions) {
+            result.add(ArgumentSuggestion.of(prefix + suggestion.getSuggestion(), suggestion.getTooltip().orElse(null)));
         }
 
         return result;

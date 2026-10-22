@@ -2,7 +2,7 @@ package dev.gurwi.prism.velocity.command;
 
 import com.velocitypowered.api.command.CommandSource;
 import dev.gurwi.prism.command.builder.AbstractTreeCommandBuilder;
-import dev.gurwi.prism.velocity.argument.VelocityArgument;
+import dev.gurwi.prism.velocity.argument.base.VelocityArgument;
 import dev.gurwi.prism.velocity.executor.VelocityCommandExecutor;
 import dev.gurwi.prism.velocity.executor.VelocityExecutorContainerBuilder;
 import dev.gurwi.prism.velocity.permission.VelocityPermission;

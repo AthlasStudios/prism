@@ -1,5 +1,6 @@
 package dev.gurwi.prism.velocity.argument;
 
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,7 +14,7 @@ public interface ArgumentSuggestion {
 
     String getSuggestion();
 
-    default Optional<String> getTooltip() {
+    default Optional<Component> getTooltip() {
         return Optional.empty();
     }
 
@@ -23,7 +24,7 @@ public interface ArgumentSuggestion {
     }
 
     @Contract("_, _ -> new")
-    static @NotNull ArgumentSuggestion of(String suggestion, @Nullable String tooltip) {
+    static @NotNull ArgumentSuggestion of(String suggestion, @Nullable Component tooltip) {
         return new Simple(suggestion, tooltip);
     }
 
@@ -34,9 +35,9 @@ public interface ArgumentSuggestion {
     final class Simple implements ArgumentSuggestion {
 
         private final String suggestion;
-        private final @Nullable String tooltip;
+        private final @Nullable Component tooltip;
 
-        public Simple(String suggestion, @Nullable String tooltip) {
+        public Simple(String suggestion, @Nullable Component tooltip) {
             this.suggestion = suggestion;
             this.tooltip = tooltip;
         }
@@ -48,7 +49,7 @@ public interface ArgumentSuggestion {
 
         @Contract(pure = true)
         @Override
-        public @NotNull Optional<String> getTooltip() {
+        public @NotNull Optional<Component> getTooltip() {
             return Optional.ofNullable(tooltip);
         }
 

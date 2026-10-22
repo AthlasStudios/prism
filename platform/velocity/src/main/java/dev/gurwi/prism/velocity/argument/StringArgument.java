@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.command.CommandSource;
 import dev.gurwi.prism.exception.ArgumentParseException;
+import dev.gurwi.prism.velocity.argument.base.VelocityArgument;
 import org.jetbrains.annotations.NotNull;
 
 public class StringArgument extends VelocityArgument<StringArgument, String> {
@@ -19,7 +20,7 @@ public class StringArgument extends VelocityArgument<StringArgument, String> {
 
     @Override
     public ArgumentType<String> getArgumentType() {
-        return StringArgumentType.string();
+        return StringArgumentType.word();
     }
 
 }

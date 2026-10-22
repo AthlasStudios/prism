@@ -4,7 +4,7 @@ import dev.gurwi.prism.bukkit.BukkitPlatform;
 import dev.gurwi.prism.bukkit.argument.*;
 import dev.gurwi.prism.bukkit.argument.base.EntitySelectorArgument;
 import dev.gurwi.prism.bukkit.argument.parser.ParsedFlags;
-import dev.gurwi.prism.bukkit.argument.suggestion.CommandSuggestion;
+import dev.gurwi.prism.bukkit.argument.suggestion.ArgumentSuggestion;
 import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.bukkit.argument.type.Flag;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
@@ -131,7 +131,7 @@ public class TestPlugin extends JavaPlugin {
                                         new StringArgument("string")
                                                 .replaceSuggestions(
                                                         BukkitSuggestionsSupplier.sync(
-                                                                ctx -> List.of(CommandSuggestion.of("test", "test tooltip"))
+                                                                ctx -> List.of(ArgumentSuggestion.of("test", "test tooltip"))
                                                         )
                                                 )
                                 )
@@ -220,10 +220,10 @@ public class TestPlugin extends JavaPlugin {
             }
 
             return List.of(
-                    CommandSuggestion.of("alpha", "first async value"),
-                    CommandSuggestion.of("alphabet", "shares a prefix with alpha"),
-                    CommandSuggestion.of("beta", "second async value"),
-                    CommandSuggestion.of("gamma", "third async value")
+                    ArgumentSuggestion.of("alpha", "first async value"),
+                    ArgumentSuggestion.of("alphabet", "shares a prefix with alpha"),
+                    ArgumentSuggestion.of("beta", "second async value"),
+                    ArgumentSuggestion.of("gamma", "third async value")
             );
         });
 
@@ -231,8 +231,8 @@ public class TestPlugin extends JavaPlugin {
             plugin.getLogger().info("sync supplier on " + Thread.currentThread().getName());
 
             return List.of(
-                    CommandSuggestion.of("one", "sync value"),
-                    CommandSuggestion.of("two", "sync value")
+                    ArgumentSuggestion.of("one", "sync value"),
+                    ArgumentSuggestion.of("two", "sync value")
             );
         };
 

@@ -10,6 +10,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import dev.gurwi.prism.argument.AbstractArgument;
 import dev.gurwi.prism.argument.CommandArguments;
 import dev.gurwi.prism.argument.suggestion.SuggestionContext;
@@ -18,7 +19,8 @@ import dev.gurwi.prism.brigadier.BrigadierAdapter;
 import dev.gurwi.prism.brigadier.BrigadierTreeBuilder;
 import dev.gurwi.prism.brigadier.NodeSpec;
 import dev.gurwi.prism.velocity.argument.LiteralArgument;
-import dev.gurwi.prism.velocity.argument.VelocityArgument;
+import dev.gurwi.prism.velocity.argument.base.LiteralValues;
+import dev.gurwi.prism.velocity.argument.base.VelocityArgument;
 import dev.gurwi.prism.velocity.argument.ArgumentSuggestion;
 import dev.gurwi.prism.velocity.command.VelocityCommandDefinition;
 import org.jetbrains.annotations.NotNull;
@@ -137,6 +139,17 @@ public class VelocityCommandDefinitionAdapter implements BrigadierAdapter<Comman
     }
 
     @Override
+    public @NotNull List<String> forcedValues(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
+        if (!(argument instanceof VelocityArgument<?, ?> velocityArgument) || argument instanceof LiteralArgument) {
+            return List.of();
+        }
+
+        return velocityArgument.getFixedValues()
+                .map(LiteralValues::get)
+                .orElse(List.of());
+    }
+
+    @Override
     public @Nullable SuggestionProvider<CommandSource> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType) {
         if (!(argument instanceof VelocityArgument<?, ?> velocityArgument) || argument instanceof LiteralArgument) {
             return null;
@@ -162,7 +175,7 @@ public class VelocityCommandDefinitionAdapter implements BrigadierAdapter<Comman
                                 if (!text.toLowerCase(Locale.ROOT).startsWith(lowered)) continue;
 
                                 suggestion.getTooltip().ifPresentOrElse(
-                                        tooltip -> suggestionsBuilder.suggest(text, new LiteralMessage(tooltip)),
+                                        tooltip -> suggestionsBuilder.suggest(text, VelocityBrigadierMessage.tooltip(tooltip)),
                                         () -> suggestionsBuilder.suggest(text)
                                 );
                                 added = true;

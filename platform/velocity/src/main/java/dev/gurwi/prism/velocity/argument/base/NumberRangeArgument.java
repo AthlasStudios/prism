@@ -1,14 +1,15 @@
-package dev.gurwi.prism.bukkit.argument;
+package dev.gurwi.prism.velocity.argument.base;
 
-import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
-import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
+import com.mojang.brigadier.arguments.ArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.velocitypowered.api.command.CommandSource;
 import dev.gurwi.prism.exception.ArgumentParseException;
-import org.bukkit.command.CommandSender;
+import dev.gurwi.prism.velocity.argument.type.RangedNumber;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 
-public class NumberRangeArgument<T extends Number & Comparable<T>> extends BukkitArgument<NumberRangeArgument<T>, RangedNumber<T>> {
+public abstract class NumberRangeArgument<T extends Number & Comparable<T>> extends VelocityArgument<NumberRangeArgument<T>, RangedNumber<T>> {
 
     private final Function<String, T> parser;
 
@@ -18,7 +19,7 @@ public class NumberRangeArgument<T extends Number & Comparable<T>> extends Bukki
     }
 
     @Override
-    public RangedNumber<T> parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
+    public RangedNumber<T> parse(@NotNull CommandSource source, @NotNull String value) throws ArgumentParseException {
         String[] parts = value.split("\\.\\.", -1);
 
         if (parts.length > 2) {
@@ -47,6 +48,11 @@ public class NumberRangeArgument<T extends Number & Comparable<T>> extends Bukki
                     e.getMessage()
             );
         }
+    }
+
+    @Override
+    public ArgumentType<?> getArgumentType() {
+        return StringArgumentType.word();
     }
 
 }

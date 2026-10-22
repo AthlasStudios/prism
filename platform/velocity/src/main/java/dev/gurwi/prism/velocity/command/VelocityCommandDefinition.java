@@ -5,7 +5,7 @@ import dev.gurwi.prism.argument.AbstractTreeArgument;
 import dev.gurwi.prism.command.AbstractTreeCommandDefinition;
 import dev.gurwi.prism.command.builder.CommandChildrenFactory;
 import dev.gurwi.prism.requirement.UsageRequirement;
-import dev.gurwi.prism.velocity.argument.VelocityArgument;
+import dev.gurwi.prism.velocity.argument.base.VelocityArgument;
 import dev.gurwi.prism.velocity.executor.VelocityCommandExecutor;
 import dev.gurwi.prism.velocity.permission.VelocityPermission;
 import org.jetbrains.annotations.NotNull;

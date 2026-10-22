@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public interface CommandSuggestion {
+public interface ArgumentSuggestion {
 
     String getSuggestion();
 
@@ -19,20 +19,20 @@ public interface CommandSuggestion {
     }
 
     @Contract("_ -> new")
-    static @NotNull CommandSuggestion of(String suggestion) {
+    static @NotNull ArgumentSuggestion of(String suggestion) {
         return new Simple(suggestion, null);
     }
 
     @Contract("_, _ -> new")
-    static @NotNull CommandSuggestion of(String suggestion, @Nullable String tooltip) {
+    static @NotNull ArgumentSuggestion of(String suggestion, @Nullable String tooltip) {
         return new Simple(suggestion, tooltip);
     }
 
-    static @NotNull @Unmodifiable Collection<CommandSuggestion> of(@NotNull Collection<String> suggestions) {
-        return suggestions.stream().map(CommandSuggestion::of).collect(Collectors.toUnmodifiableList());
+    static @NotNull @Unmodifiable Collection<ArgumentSuggestion> of(@NotNull Collection<String> suggestions) {
+        return suggestions.stream().map(ArgumentSuggestion::of).collect(Collectors.toUnmodifiableList());
     }
 
-    final class Simple implements CommandSuggestion {
+    final class Simple implements ArgumentSuggestion {
 
         private final String suggestion;
         private final @Nullable String tooltip;

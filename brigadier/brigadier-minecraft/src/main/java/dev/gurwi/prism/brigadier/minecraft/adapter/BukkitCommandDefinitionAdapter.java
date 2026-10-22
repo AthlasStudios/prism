@@ -23,7 +23,7 @@ import dev.gurwi.prism.bukkit.argument.base.GreedyArgument;
 import dev.gurwi.prism.bukkit.argument.LiteralArgument;
 import dev.gurwi.prism.bukkit.argument.base.LiteralValues;
 import dev.gurwi.prism.bukkit.argument.parser.ArgumentTokens;
-import dev.gurwi.prism.bukkit.argument.suggestion.CommandSuggestion;
+import dev.gurwi.prism.bukkit.argument.suggestion.ArgumentSuggestion;
 import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.exception.ArgumentParseException;
@@ -181,10 +181,10 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
         };
     }
 
-    private static void applySuggestions(@NotNull SuggestionsBuilder builder, @NotNull Collection<CommandSuggestion> suggestions, @NotNull String remaining) {
+    private static void applySuggestions(@NotNull SuggestionsBuilder builder, @NotNull Collection<ArgumentSuggestion> suggestions, @NotNull String remaining) {
         String lowered = remaining.toLowerCase(Locale.ROOT);
 
-        for (CommandSuggestion suggestion : suggestions) {
+        for (ArgumentSuggestion suggestion : suggestions) {
             String text = suggestion.getSuggestion();
 
             if (!text.toLowerCase(Locale.ROOT).startsWith(lowered)) {
