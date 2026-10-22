@@ -34,6 +34,7 @@ A code-first command framework that lets you build commands directly in Java wit
 - [Standalone plugin](#standalone-plugin)
   - [Install the plugin](#install-the-plugin)
   - [Use it from your plugin](#use-it-from-your-plugin)
+  - [Command providers](#command-providers)
   - [Plugin configuration](#plugin-configuration)
 - [Quick start](#quick-start)
 - [Guide](#guide)
@@ -201,6 +202,8 @@ dependencies {
 
 Everything is `compileOnly`: at runtime the classes come from the installed Prism plugin, so there is nothing to shade or relocate.
 
+There are two ways to register commands: let Prism pick them up from a [command provider](#command-providers), or use the API and a registry yourself. The registry route comes first.
+
 Get the API through `PrismPluginAPI.getAPI()`. It returns `null` when Prism is not installed or has not registered its service yet.
 
 ```java
@@ -234,9 +237,52 @@ Commands are built with the same `PrismBukkitCommand` API as in the [Guide](#gui
 | `PrismPluginAPI.getAPI()`                 | The API instance, or `null` if Prism is missing.                         |
 | `createRegistry(plugin)`                  | Creates a registry for your plugin, configured from Prism's `config.yml`. |
 | `getDefaultRegistry()`                    | The registry of Prism's own platform, shared by all plugins.             |
+| `registerProvider(plugin, provider, registry)` | Registers a [command provider](#command-providers). `registry` may be `null`. |
 | `getRegistriesManager()`                  | `createRegistry`, `getRegistry(plugin)` and `unloadRegistry(plugin)`.    |
 
 Prefer `createRegistry(this)` so your commands are tracked per plugin.
+
+### Command providers
+
+If you only want commands registered, implement `PrismCommandProvider` on your main class and return them from `getCommands()`. Prism detects the provider when your plugin enables, builds every command and registers it. There is no registry code in your plugin.
+
+```java
+public class MyPlugin extends JavaPlugin implements PrismCommandProvider {
+
+    @Override
+    public Collection<? extends PrismBukkitCommand> getCommands() {
+        return List.of(
+                new PrismBukkitCommand("hello")
+                        .executes((sender, args) -> sender.sendMessage("Hello!")),
+
+                new PrismBukkitCommand("ping")
+                        .executes((sender, args) -> sender.sendMessage("Pong!"))
+        );
+    }
+}
+```
+
+Return the builders, not built definitions: Prism calls `build()` itself.
+
+By default each plugin gets its own registry, created from Prism's `config.yml`, and its commands are unregistered when the plugin disables. To choose the registry yourself, override `getRegistry()`:
+
+```java
+@Override
+public BukkitCommandsRegistry<?> getRegistry() {
+    return PrismPluginAPI.getAPI().getDefaultRegistry();
+}
+```
+
+A provider does not have to be your main class. Register any provider by hand with `registerProvider`:
+
+```java
+PrismPluginAPI.getAPI().registerProvider(this, () -> List.of(
+        new PrismBukkitCommand("hello")
+                .executes((sender, args) -> sender.sendMessage("Hello!"))
+), null);
+```
+
+Passing `null` as the registry uses the provider's `getRegistry()`, then falls back to a per-plugin registry. Your plugin must still declare `depend: [prism]`; Prism logs a warning for providers that don't.
 
 ### Plugin configuration
 
