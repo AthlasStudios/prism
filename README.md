@@ -17,6 +17,7 @@ A code-first command framework that lets you build commands directly in Java wit
 [![Last commit](https://img.shields.io/github/last-commit/AthlasStudios/prism?style=flat-square&logo=git&logoColor=white&label=Last%20commit)](https://github.com/AthlasStudios/prism/commits/main)
 ![Paper](https://img.shields.io/badge/Paper-supported-1C6BA0?style=flat-square)
 ![Spigot](https://img.shields.io/badge/Spigot-supported-ED8106?style=flat-square)
+![Velocity](https://img.shields.io/badge/Velocity-experimental-00AEEF?style=flat-square)
 
 [Documentation](https://docs.gurwi.dev/prism) · [Issues](https://github.com/AthlasStudios/prism/issues)
 
@@ -42,6 +43,10 @@ A code-first command framework that lets you build commands directly in Java wit
   - [Flags](#flags)
   - [Built-in help](#built-in-help)
   - [Registering and unregistering](#registering-and-unregistering)
+- [Velocity](#velocity)
+  - [Setup](#setup)
+  - [Permissions](#permissions)
+  - [Differences from Bukkit](#differences-from-bukkit)
 - [Platform configuration](#platform-configuration)
 - [Built-in argument types](#built-in-argument-types)
 - [Implementing your own platform](#implementing-your-own-platform)
@@ -60,7 +65,7 @@ Most command frameworks lean on annotations and reflection: you describe a comma
 - **Compile-time safety.** Arguments, executors and requirements are real typed objects, not strings buried in annotations.
 - **Composability.** Commands are values. Build them in loops, share argument definitions, and assemble trees programmatically.
 - **Discoverability.** Your IDE's autocomplete is the documentation. Everything hangs off one builder.
-- **One API, many platforms.** The core is platform-agnostic; Spigot, Paper (with native Brigadier support) and others plug in on top.
+- **One API, many platforms.** The core is platform-agnostic; Spigot, Paper (with native Brigadier support), Velocity and others plug in on top.
 
 ```java
 new PrismBukkitCommand("heal")
@@ -85,6 +90,7 @@ new PrismBukkitCommand("heal")
 - 🔐 **Permissions and usage requirements** at the command and argument level
 - 🧭 **Per-sender-type executors** for players, console, remote console, command blocks and proxied senders
 - ⚡ **Native Brigadier integration** (client-side validation, colored syntax, native suggestions) with an automatic **legacy fallback**
+- 🛰️ **Velocity support** built on the same Brigadier tree builder
 - 📖 **Built-in help generator** that renders clickable usage for a command tree
 - ♻️ **Runtime registration and unregistration** of commands
 - 🧩 **Shaded bundles** so you ship a single dependency
@@ -96,9 +102,12 @@ new PrismBukkitCommand("heal")
 | Spigot (and forks)                | `prism-spigot`                         | Supported         |
 | Paper (and forks)                 | `prism-paper`                          | Supported         |
 | Brigadier (Minecraft 1.13 → 26.x) | bundled in the Spigot and Paper builds | Supported         |
+| Velocity                          | `platform/velocity`                    | 🧪 Experimental   |
 | JDA (Discord)                     | `platform/jda`                         | 🚧 In development |
 
 Prism compiles against the Spigot 1.13.2 API, and the Brigadier layer has per-version adapters for Minecraft **1.13 through 1.21 and 26.x**. If Brigadier can't be initialized on your server version, Prism logs a warning and falls back to legacy registration, so commands keep working.
+
+The Velocity module targets **Java 25** and the Velocity 4.x API. Velocity has no legacy fallback: commands are always registered through Brigadier.
 
 ## Installation
 
@@ -185,6 +194,8 @@ public class MyPlugin extends JavaPlugin {
 }
 ```
 
+**Velocity** is set up differently, see [Velocity](#velocity).
+
 ### 2. Build and register a command
 
 ```java
@@ -203,6 +214,8 @@ new PrismBukkitCommand("teleport", "tp")
 That's it. The first argument is the command name; any further strings are aliases. Tab completion, argument parsing and error messages come for free.
 
 ## Guide
+
+The guide uses the Bukkit API (`PrismBukkitCommand`). The builder methods (`withArguments`, `withOptionalArguments`, `withSubCommands`, `then`, `withPermission`, `withRequirement`, `register`) are inherited from the platform-agnostic core and work the same on every platform. Only the executors, senders, arguments and permission helpers differ.
 
 ### Arguments
 
@@ -317,6 +330,8 @@ new PrismBukkitCommand("prism", "pri")
 
 Branches can be nested further by calling `.then(...)` on an argument. Argument names must be unique among siblings, and Prism throws an `IllegalArgumentException` if you reuse one or try to add an argument beneath itself.
 
+Arguments that are not listed (`setListed(false)`, as `LiteralArgument` is) are matched but never stored in `CommandArguments`.
+
 ### Executors and senders
 
 Pick the executor that matches who may run the command. Prism only invokes the executor that fits the sender, so you don't need `instanceof` checks.
@@ -341,9 +356,11 @@ new PrismBukkitCommand("whoami")
 
 Use `clearExecutors()` to remove all executors from a builder.
 
+A sender that has no matching executor gets "This command cannot be run by this sender" on Brigadier platforms, and the command is hidden from its suggestions.
+
 ### Permissions and requirements
 
-**Permissions** are checked against the sender (operators always pass):
+**Permissions** are checked against the sender (operators always pass on Bukkit platforms):
 
 ```java
 new PrismBukkitCommand("admin")
@@ -351,7 +368,7 @@ new PrismBukkitCommand("admin")
         // ...
 ```
 
-For wildcard-style checks, `BukkitPermission.startsWith("myplugin.")` matches any effective permission with that prefix.
+For wildcard-style checks, `BukkitPermission.startsWith("myplugin.")` matches any effective permission with that prefix. Velocity has no equivalent, see [Velocity permissions](#permissions).
 
 **Requirements** are arbitrary predicates on the sender. Sender-specific shortcuts are available:
 
@@ -379,8 +396,8 @@ new IntegerArgument("number", 0, 10).replaceSuggestions("5", "10");
 ```java
 new StringArgument("kit").replaceSuggestions(
         BukkitSuggestionsSupplier.sync(ctx -> List.of(
-                BukkitSuggestion.of("starter", "The default starter kit"),
-                BukkitSuggestion.of("vip", "Perks for VIP players")
+                ArgumentSuggestion.of("starter", "The default starter kit"),
+                ArgumentSuggestion.of("vip", "Perks for VIP players")
         ))
 );
 ```
@@ -390,12 +407,14 @@ new StringArgument("kit").replaceSuggestions(
 ```java
 new StringArgument("player").replaceSuggestions(
         BukkitSuggestionsSupplier.async(ctx -> CompletableFuture.supplyAsync(() ->
-                List.of(BukkitSuggestion.of("alpha", "first async value"))
+                List.of(ArgumentSuggestion.of("alpha", "first async value"))
         ))
 );
 ```
 
 The `SuggestionContext` passed in gives you access to the current raw input (`ctx.getCurrentRawArg()`) so you can filter results. Helpers `BukkitSuggestionsSupplier.strings(...)` and `stringsAsync(...)` cover the plain-string cases.
+
+On Brigadier platforms Prism also filters suggestions by the text already typed (case-insensitive prefix match), so suppliers can return their full list.
 
 > On Paper, async suggestions are handled through a dedicated listener. You can turn this off with `disableAsyncSuggestions()` (see [Platform configuration](#platform-configuration)).
 
@@ -454,9 +473,77 @@ platform.getCommandsRegistry().unregister(built);
 
 `getRegisteredCommands()` returns an unmodifiable view of everything registered on the platform.
 
+## Velocity
+
+The Velocity platform (`platform/velocity`) reuses the core builder and the Brigadier tree builder, so commands, subcommands, argument trees, optional arguments and suggestions work as described in the guide. The command class is `VelocityCommand`, and the sender is Velocity's `CommandSource`.
+
+### Setup
+
+Create the platform in your plugin constructor and register commands from your `ProxyInitializeEvent` handler or later.
+
+```java
+@Plugin(id = "my-plugin")
+public class MyPlugin {
+
+    private final ProxyServer server;
+    private final VelocityPlatform platform;
+
+    @Inject
+    public MyPlugin(ProxyServer server) {
+        this.server = server;
+        this.platform = VelocityPlatform.configure(this, server).init();
+    }
+
+    @Subscribe
+    public void onProxyInit(ProxyInitializeEvent event) {
+        new VelocityCommand("hello")
+                .executes((source, args) -> {
+                    source.sendPlainMessage("Hello World!");
+                })
+                .register(platform);
+    }
+}
+```
+
+- `VelocityPlatform.configure(plugin, server)` takes your plugin instance as a plain `Object`. Velocity has no plugin handle: `@Plugin` is an annotation, and the instance of your main class is the plugin.
+- Prism does not register any Velocity event listener. `register(...)` talks to Velocity's `CommandManager` immediately, so calling it before `ProxyInitializeEvent` is your responsibility to avoid.
+- Velocity injects the SLF4J `Logger`, not `java.util.logging.Logger`.
+
+### Permissions
+
+Velocity has no operator system, so there is no `OP` permission. Permissions go through `CommandSource#hasPermission`, and `ConsoleCommandSource` always passes.
+
+```java
+VelocityPermission.of("myplugin.admin");
+VelocityPermission.of("myplugin.admin", "myplugin.staff");
+```
+
+Without a permission plugin such as LuckPerms, Velocity's default provider returns `true` for every `hasPermission` call, so any player passes any permission check. Don't rely on permissions for anything sensitive unless a permission plugin is installed.
+
+Velocity cannot enumerate the permissions a source holds, so a prefix check works against a known set of nodes instead of the sender's effective permissions:
+
+```java
+VelocityPermission.startsWith("myplugin.admin.", knownPermissions);
+```
+
+`knownPermissions` is the collection of nodes your commands declare. Only nodes in that collection are tested, and each one is checked with `hasPermission`. Use the LuckPerms API directly if you need to match arbitrary nodes at runtime.
+
+### Differences from Bukkit
+
+| Topic                   | Bukkit platforms              | Velocity                              |
+|-------------------------|-------------------------------|---------------------------------------|
+| Command class           | `PrismBukkitCommand`          | `VelocityCommand`                     |
+| Sender                  | `CommandSender`               | `CommandSource`                       |
+| Plugin handle           | `JavaPlugin`                  | `Object` (your plugin instance)       |
+| Registration timing     | `onEnable`                    | `ProxyInitializeEvent` or later       |
+| Operators               | Always pass permission checks | No operator concept                   |
+| `startsWith` permission | Matches effective permissions | Matches a supplied set of known nodes |
+| Brigadier fallback      | Legacy registrar              | None, Brigadier only                  |
+| Suggestion tooltips     | `LiteralMessage`              | `VelocityBrigadierMessage`            |
+
 ## Platform configuration
 
-Both `PaperPlatform.configure(plugin)` and `SpigotPlatform.configure(plugin)` return a builder. Finish with `.init()`.
+Both `PaperPlatform.configure(plugin)` and `SpigotPlatform.configure(plugin)` return a builder. Finish with `.init()`. `VelocityPlatform.configure(plugin, server)` works the same way.
 
 | Option                                         | Platform      | Description                                                                      |
 |------------------------------------------------|---------------|----------------------------------------------------------------------------------|
@@ -490,13 +577,15 @@ All of these live in `dev.gurwi.prism.bukkit.argument`.
 | **Text and color**            | `ColorArgument`, `HexColorArgument`, `MessageArgument`, `TimeArgument`                                                                                                                                                                                       |
 | **Structure**                 | `LiteralArgument`, `FlagArgument`                                                                                                                                                                                                                            |
 
-Need something custom? Extend `BukkitArgument` (or one of the `base` argument classes) and implement `parse(...)`, and optionally provide default suggestions.
+Velocity arguments live in `dev.gurwi.prism.velocity.argument` and extend `VelocityArgument`. Each one wraps a Brigadier `ArgumentType`.
+
+Need something custom? Extend `BukkitArgument` (or `VelocityArgument` on Velocity, or one of the `base` argument classes) and implement `parse(...)`, and optionally provide default suggestions.
 
 > Greedy arguments must be the last argument of a command and cannot have children.
 
 ## Implementing your own platform
 
-`core` knows nothing about Minecraft, Discord or any other host. A platform is a thin layer that supplies six things on top of it, and everything else (the fluent builder, argument trees, subcommands, requirements, `CommandArguments`) comes for free. The `platform/bukkit` module is the full-featured reference, and `platform/jda` is a minimal skeleton that follows the same layout.
+`core` knows nothing about Minecraft, Discord or any other host. A platform is a thin layer that supplies six things on top of it, and everything else (the fluent builder, argument trees, subcommands, requirements, `CommandArguments`) comes for free. The `platform/bukkit` module is the full-featured reference, `platform/velocity` is a compact Brigadier-only reference, and `platform/jda` is a minimal skeleton that follows the same layout.
 
 Add the core module (it is published on its own):
 
@@ -575,6 +664,8 @@ public class AcmeIntegerArgument extends AcmeArgument<AcmeIntegerArgument, Integ
 
 If you want `then(...)` argument trees on your platform, extend `AbstractTreeArgument` instead and `AbstractTreeCommandBuilder` / `AbstractTreeCommandDefinition` in the next steps (this is what the Bukkit module does).
 
+Arguments also expose `canUse(source)`, which a platform must honour, and `isListed()`, which decides whether a parsed value is stored in `CommandArguments`.
+
 ### 4. Command definition
 
 The definition is the immutable, built form of a command. Subclass `AbstractCommandDefinition` and bind its type parameters (self type, source, executor, argument, permission). The builder is the only thing that constructs it.
@@ -596,7 +687,7 @@ public class AcmeCommandDefinition extends AbstractCommandDefinition<
 }
 ```
 
-The base class already gives you `getName()`, `getAliases()`, `getChildren()`, `getChild(name)`, `getParent()`, `getExecutor(type)` and `canExecute(source)` (requirement plus all permissions).
+The base class already gives you `getName()`, `getAliases()`, `getChildren()`, `getChild(name)`, `getParent()`, `getExecutors()`, `hasExecutor(source)` and `canExecute(source)` (requirement plus all permissions).
 
 ### 5. Builder
 
@@ -622,7 +713,7 @@ public class AcmeCommandBuilder extends AbstractCommandBuilder<
 }
 ```
 
-`withDescription`, `withArguments`, `withOptionalArguments`, `withPermission`, `withRequirement`, `withSubCommands` and `register(...)` are all inherited.
+`withDescription`, `withArguments`, `withOptionalArguments`, `withPermission`, `withRequirement`, `withSubCommands` and `register(...)` are all inherited. `register(...)` passes the built definition to your registry, so the definition must never be `null`.
 
 ### 6. Platform and registry
 
@@ -677,28 +768,65 @@ public class AcmeCommandsRegistry implements CommandsRegistry<AcmePlatform, Acme
 }
 ```
 
+A registry should not register host event listeners on its own. Leave that to the user of your platform, as the Velocity registry does.
+
 ### 7. Dispatching input
 
-Prism does not parse or run anything by itself. When your host receives input for a registered command, your registry (or a helper it owns) does the following:
+If your host has no command system of its own, Prism does not parse or run anything by itself. When your host receives input for a registered command, your registry (or a helper it owns) does the following:
 
 1. Walk the definition tree, matching subcommand names with `getChild(...)`.
 2. Check `definition.canExecute(source)` and report a "no permission" error if it fails.
 3. Parse the raw tokens with each argument's `parse(source, token)`, honouring `canUse(source)`, and collect the values into two maps keyed by argument name (required and optional). Catch `ArgumentParseException` and turn it into a user-facing message.
 4. Wrap the values in a `CommandArguments`, passing the parent's `CommandArguments` so that `getAt("../", "key")` and friends work.
-5. Look up the executor with `definition.getExecutor(...)` and call `run(source, args)`.
+5. Check `definition.hasExecutor(source)`, then call `tryInvoke(source, args)` on each executor from `definition.getExecutors()`.
 
 ```java
 CommandArguments<AcmeCommandDefinition, AcmeUser> args =
         new CommandArguments<>(definition, requiredValues, optionalValues, parentArgs);
 
-definition.getExecutor(AcmeExecutor.class)
-        .ifPresentOrElse(
-                executor -> executor.run(user, args),
-                () -> user.sendMessage("This command cannot be run here.")
-        );
+if (!definition.hasExecutor(user)) {
+    user.sendMessage("This command cannot be run here.");
+    return;
+}
+
+definition.getExecutors().forEach(executor -> executor.tryInvoke(user, args));
 ```
 
 For suggestions, call each argument's `getSuggestionsSupplier().getSuggestions(new SuggestionContext<>(source, currentInput, currentRawArg))` and translate the result into whatever your host expects.
+
+### 8. Brigadier hosts (optional)
+
+If your host already speaks Brigadier (Minecraft servers, Velocity), skip step 7. Implement `BrigadierAdapter<Source, Definition>` and let `BrigadierTreeBuilder` build the command tree, parse the hierarchy and wire up suggestions.
+
+| Method                                        | Purpose                                                                      |
+|-----------------------------------------------|------------------------------------------------------------------------------|
+| `visible(definition, source)`                 | Whether the source may see the command at all.                               |
+| `available(argument, source)`                 | Whether the source may use an argument node.                                 |
+| `forcedValues(argument)`                      | Fixed values an argument expands to. Defaults to none.                       |
+| `accepts(argument, source, word)`             | Whether a single word parses for the argument.                               |
+| `nativeType(argument)`                        | The Brigadier `ArgumentType` backing the argument, or `null` for literals.   |
+| `tokens(argument)`                            | How many input words the argument consumes.                                  |
+| `greedy(argument)` / `literal(argument)`      | Node kind.                                                                   |
+| `branches(definition)` / `children(argument)` | The `then(...)` tree of a command or an argument.                            |
+| `command(...)`                                | The Brigadier `Command` for a definition or a path inside its argument tree. |
+| `suggestions(argument, nativeType)`           | The `SuggestionProvider` for an argument, falling back to `nativeType`.      |
+
+Your registry then turns each definition into Brigadier nodes:
+
+```java
+for (String label : adapter.getBuilder().labels(definition)) {
+    LiteralCommandNode<CommandSource> node = adapter.getBuilder().build(definition, label);
+    BrigadierCommand command = new BrigadierCommand(node);
+
+    CommandMeta meta = manager.metaBuilder(command)
+            .plugin(platform.getPlugin())
+            .build();
+
+    manager.register(meta, command);
+}
+```
+
+Read `BukkitCommandDefinitionAdapter` (`platform/brigadier/minecraft`) and `VelocityCommandDefinitionAdapter` (`platform/velocity`) for two complete adapters.
 
 ### Using it
 
@@ -730,6 +858,7 @@ prism
 │   ├── bukkit/            Shared Bukkit API layer: PrismBukkitCommand, arguments, executors, legacy registrar
 │   ├── spigot/            Spigot platform and registry
 │   ├── paper/             Paper platform and registry (async suggestions, Paper-native Brigadier)
+│   ├── velocity/          Velocity platform and registry (VelocityCommand, VelocityPermission, Brigadier adapter)
 │   ├── brigadier/         Platform-independent Brigadier tree builder and adapter
 │   │   └── minecraft/     Minecraft-facing Brigadier bridge
 │   │       ├── V1_13 … V1_21, V26   Per-version adapters
@@ -741,6 +870,9 @@ prism
 ├── gradle-plugin/
 │   └── spigot-nms/        Gradle plugin for Spigot NMS reobfuscation
 ├── buildSrc/              Shared publishing conventions
+├── examples/
+│   ├── paper-plugin/      Paper example plugin
+│   └── velocity-plugin/   Velocity example plugin
 └── test/plugin/           Paper test plugin used to exercise the API on a live server
 ```
 
@@ -748,7 +880,8 @@ prism
 
 **Requirements**
 
-- A JDK that Gradle can use for toolchains. The library itself targets **Java 17**, tests run on **Java 21**, and the Paper test plugin and CI use **Java 25**. Gradle's toolchain resolver can download missing JDKs automatically.
+- A JDK that Gradle can use for toolchains. The library itself targets **Java 17**, tests run on **Java 21**, and the Paper test plugin, the Velocity module and CI use **Java 25**. Gradle's toolchain resolver can download missing JDKs automatically.
+- Gradle itself must run on JDK 25 or newer while the Velocity module is part of the build. Set the Gradle JVM in your IDE accordingly.
 - No separate Gradle install is needed. Use the included wrapper.
 
 ```bash
@@ -781,6 +914,12 @@ To produce the plugin jar instead:
 ```
 
 Its source, [`TestPlugin.java`](examples/paper-plugin/src/main/java/dev/gurwi/prism/example/velocity/plugin/TestPlugin.java), doubles as a handy set of usage examples.
+
+For Velocity, `examples/velocity-plugin` starts a local Velocity proxy with a minimal plugin:
+
+```bash
+./gradlew :examples:velocity-plugin:runVelocity
+```
 
 ## Contributing
 
