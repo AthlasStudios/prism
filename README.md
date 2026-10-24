@@ -122,7 +122,7 @@ Prism compiles against the Spigot 1.13.2 API, and the Brigadier layer has per-ve
 
 The Velocity module targets **Java 25** and the Velocity 4.x API. Velocity has no legacy fallback: commands are always registered through Brigadier.
 
-The BungeeCord module targets **Java 17** and the BungeeCord API `1.21`. Commands are always built as Brigadier trees. They are run and tab-completed through a regular BungeeCord command, and Prism can additionally inject the tree into the command packet so clients get native suggestions, see [BungeeCord](#bungeecord).
+The BungeeCord module targets **Java 11** and the BungeeCord API `1.21`. Commands are always built as Brigadier trees. They are run and tab-completed through a regular BungeeCord command, and Prism can additionally inject the tree into the command packet so clients get native suggestions, see [BungeeCord](#bungeecord).
 
 The JDA module is only a skeleton for now: it has no working registry or arguments yet.
 
@@ -1120,7 +1120,7 @@ prism
 
 **Requirements**
 
-- A JDK that Gradle can use for toolchains. The library itself targets **Java 11** (the BungeeCord module targets **Java 17**), tests run on **Java 21**, and the Paper example plugin, the Velocity module and CI use **Java 25**. Gradle's toolchain resolver can download missing JDKs automatically.
+- A JDK that Gradle can use for toolchains. The library itself targets **Java 11**, tests run on **Java 21**, and the Paper example plugin, the Velocity module and CI use **Java 25**. Gradle's toolchain resolver can download missing JDKs automatically.
 - Gradle itself must run on JDK 25 or newer while the Velocity module is part of the build. Set the Gradle JVM in your IDE accordingly.
 - No separate Gradle install is needed. Use the included wrapper.
 

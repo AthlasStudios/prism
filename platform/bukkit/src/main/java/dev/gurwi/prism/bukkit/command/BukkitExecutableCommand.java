@@ -3,7 +3,9 @@ package dev.gurwi.prism.bukkit.command;
 import dev.gurwi.prism.argument.CommandArguments;
 import dev.gurwi.prism.argument.suggestion.SuggestionContext;
 import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.base.LiteralValues;
 import dev.gurwi.prism.bukkit.argument.LiteralArgument;
+import dev.gurwi.prism.bukkit.argument.StructureRotationArgument;
 import dev.gurwi.prism.bukkit.argument.parser.ArgumentTokens;
 import dev.gurwi.prism.bukkit.argument.parser.LegacyArgumentsParser;
 import dev.gurwi.prism.bukkit.argument.suggestion.ArgumentSuggestion;
@@ -51,6 +53,15 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         BukkitArgument<?, ?> node = null;
 
         for (Level level : levels) {
+            BukkitArgumentsParseException invalid = checkFixedValues(sender, level, args);
+
+            if (invalid != null) {
+                level.definition().getLegacyCommandErrorHandler().onArgumentsParseError(level.definition(), sender, invalid);
+                return false;
+            }
+        }
+
+        for (Level level : levels) {
             try {
                 LegacyArgumentsParser.TreeParseResult result = LegacyArgumentsParser.parseTree(sender, level.definition(), level.args(), args, level.start(), parsed);
 
@@ -91,7 +102,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
 
     @Override
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String @NotNull [] args) {
-        if (args.length == 0) return List.of();
+        if (args.length == 0 || !testPermission(sender)) return List.of();
         return complete(definition, sender, args, 0);
     }
 
@@ -101,7 +112,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
     }
 
     public @NotNull Optional<CompletableFuture<List<String>>> completeAsync(@NotNull CommandSender sender, @NotNull String @NotNull [] args) {
-        if (args.length == 0) return Optional.empty();
+        if (args.length == 0 || !testPermission(sender)) return Optional.empty();
 
         List<CompletableFuture<List<String>>> futures = new ArrayList<>();
         List<String> immediate;
@@ -201,6 +212,134 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
     private @NotNull Optional<BukkitCommandDefinition> findChild(@NotNull BukkitCommandDefinition current, @NotNull CommandSender sender, @NotNull String token) {
         return current.getChild(token.toLowerCase())
                 .filter(candidate -> candidate.canExecute(sender));
+    }
+
+    private @Nullable BukkitArgumentsParseException checkFixedValues(@NotNull CommandSender sender, @NotNull Level level, @NotNull String @NotNull [] all) {
+        String[] tokens = level.args();
+        List<BukkitArgument<?, ?>> arguments = new ArrayList<>(level.definition().getRequiredArguments());
+        arguments.addAll(level.definition().getOptionalArguments());
+
+        int position = 0;
+
+        for (BukkitArgument<?, ?> argument : arguments) {
+            if (position >= tokens.length) {
+                return null;
+            }
+
+            if (argument instanceof LiteralArgument) {
+                if (!tokens[position].equals(argument.getName())) {
+                    return null;
+                }
+
+                position++;
+                continue;
+            }
+
+            int end = Math.min(ArgumentTokens.advance(argument, position, tokens.length), tokens.length);
+            String input = String.join(" ", Arrays.copyOfRange(tokens, position, end));
+
+            if (!allowsFixedValue(argument, input)) {
+                return invalidFixedValue(new FixedValueFailure(argument, input, level.start() + position), all);
+            }
+
+            position = end;
+        }
+
+        if (position >= tokens.length) {
+            return null;
+        }
+
+        FixedValueFailure failure = checkBranches(sender, nodes(level.definition().getArgumentTreeBranches()), tokens, position, level.start());
+
+        return failure == null ? null : invalidFixedValue(failure, all);
+    }
+
+    private @Nullable FixedValueFailure checkBranches(@NotNull CommandSender sender, @NotNull List<BukkitArgument<?, ?>> candidates, @NotNull String @NotNull [] tokens, int position, int base) {
+        if (position >= tokens.length) {
+            return null;
+        }
+
+        FixedValueFailure deepest = null;
+
+        for (BukkitArgument<?, ?> candidate : candidates) {
+            if (!candidate.canUse(sender)) {
+                continue;
+            }
+
+            int end;
+
+            if (candidate instanceof LiteralArgument) {
+                if (!tokens[position].equals(candidate.getName())) {
+                    continue;
+                }
+
+                end = position + 1;
+            } else {
+                end = Math.min(ArgumentTokens.advance(candidate, position, tokens.length), tokens.length);
+                String input = String.join(" ", Arrays.copyOfRange(tokens, position, end));
+
+                if (!allowsFixedValue(candidate, input)) {
+                    FixedValueFailure failure = new FixedValueFailure(candidate, input, base + position);
+
+                    if (deepest == null || failure.position > deepest.position) {
+                        deepest = failure;
+                    }
+
+                    continue;
+                }
+            }
+
+            FixedValueFailure child = checkBranches(sender, nodes(candidate.getArguments()), tokens, end, base);
+
+            if (child == null) {
+                return null;
+            }
+
+            if (deepest == null || child.position >= deepest.position) {
+                deepest = child;
+            }
+        }
+
+        return deepest;
+    }
+
+    private boolean allowsFixedValue(@NotNull BukkitArgument<?, ?> argument, @NotNull String input) {
+        Optional<LiteralValues> fixed = argument.getFixedValues();
+
+        if (fixed.isEmpty()) {
+            return true;
+        }
+
+        if (argument instanceof StructureRotationArgument && input.equals("180")) {
+            return true;
+        }
+
+        String stripped = input.regionMatches(true, 0, "minecraft:", 0, 10) ? input.substring(10) : input;
+
+        for (String value : fixed.get().get()) {
+            if (value.equalsIgnoreCase(input) || value.equalsIgnoreCase(stripped)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private @NotNull BukkitArgumentsParseException invalidFixedValue(@NotNull FixedValueFailure failure, @NotNull String @NotNull [] all) {
+        List<String> values = failure.argument.getFixedValues().map(LiteralValues::get).orElse(List.of());
+        String expected = values.size() <= 10
+                ? String.join(", ", values)
+                : String.join(", ", values.subList(0, 10)) + ", ... (" + (values.size() - 10) + " more)";
+
+        int from = 0;
+
+        for (int i = 0; i < failure.position; i++) {
+            from += all[i].length() + 1;
+        }
+
+        ArgumentParseException cause = new ArgumentParseException(failure.argument, failure.input, "Expected one of " + expected + " got " + failure.input);
+
+        return BukkitArgumentsParseException.invalid(cause, String.join(" ", all), from, from + failure.input.length());
     }
 
     private @Nullable Located locate(@NotNull List<BukkitArgument<?, ?>> arguments, int cursor) {
@@ -314,6 +453,10 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
                 return suggestFrom(node, sender, args, from, last);
             }
 
+            if (!allowsFixedValue(node, joined(args, from, end - 1))) {
+                return List.of();
+            }
+
             try {
                 node.parse(sender, joined(args, from, end - 1));
             } catch (ArgumentParseException e) {
@@ -325,10 +468,6 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
     }
 
     private @NotNull List<String> suggestNode(@NotNull BukkitArgument<?, ?> node, @NotNull CommandSender sender, @NotNull String input) {
-        if (node instanceof LiteralArgument) {
-            return node.getName().toLowerCase().startsWith(input.toLowerCase()) ? List.of(node.getName()) : List.of();
-        }
-
         return suggest(node, sender, input);
     }
 
@@ -347,6 +486,20 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
             return List.of();
         }
 
+        String lowered = input.toLowerCase();
+
+        if (argument instanceof LiteralArgument) {
+            return prefix.isEmpty() && argument.getName().toLowerCase().startsWith(lowered) ? List.of(argument.getName()) : List.of();
+        }
+
+        Optional<LiteralValues> fixed = argument.getFixedValues();
+
+        if (fixed.isPresent()) {
+            return strip(fixed.get().get().stream()
+                    .filter(value -> value.toLowerCase().startsWith(lowered))
+                    .collect(Collectors.toList()), prefix);
+        }
+
         SuggestionContext<CommandSender> context = new SuggestionContext<>(sender, null, input);
         BukkitSuggestionsSupplier<?> suggestions = argument.getSuggestionsSupplier();
 
@@ -358,8 +511,6 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
             List<CompletableFuture<List<String>>> collector = ASYNC.get();
 
             if (collector == null) return List.of();
-
-            String lowered = input.toLowerCase();
 
             collector.add(async.getSuggestions(context).handle((result, error) -> {
                 if (error != null || result == null) return List.of();
@@ -376,7 +527,10 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         if (suggestions instanceof BukkitSuggestionsSupplier.Sync) {
             BukkitSuggestionsSupplier.Sync sync = (BukkitSuggestionsSupplier.Sync) suggestions;
 
-            return strip(sync.getSuggestions(context).stream().map(ArgumentSuggestion::getSuggestion).collect(Collectors.toList()), prefix);
+            return strip(sync.getSuggestions(context).stream()
+                    .map(ArgumentSuggestion::getSuggestion)
+                    .filter(text -> text.toLowerCase().startsWith(lowered))
+                    .collect(Collectors.toList()), prefix);
         }
 
         return List.of();
@@ -435,6 +589,20 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         int start() {
             return start;
         }
+    }
+
+    private static final class FixedValueFailure {
+
+        private final BukkitArgument<?, ?> argument;
+        private final String input;
+        private final int position;
+
+        private FixedValueFailure(@NotNull BukkitArgument<?, ?> argument, @NotNull String input, int position) {
+            this.argument = argument;
+            this.input = input;
+            this.position = position;
+        }
+
     }
 
     private static final class Located {
