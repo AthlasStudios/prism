@@ -128,7 +128,7 @@ The JDA module is only a skeleton for now: it has no working registry or argumen
 
 ## Installation
 
-> Prism is currently in **beta** (`1.0.0-beta.5`). APIs may still change between beta releases.
+> Prism is currently in **beta** (`1.0.0-beta.6`). APIs may still change between beta releases.
 
 Group ID: `dev.gurwi`
 
@@ -147,7 +147,7 @@ repositories {
 }
 
 dependencies {
-  implementation("dev.gurwi:prism-paper:1.0.0-beta.5")
+  implementation("dev.gurwi:prism-paper:1.0.0-beta.6")
 }
 ```
 
@@ -159,7 +159,7 @@ repositories {
 }
 
 dependencies {
-  implementation 'dev.gurwi:prism-paper:1.0.0-beta.5'
+  implementation 'dev.gurwi:prism-paper:1.0.0-beta.6'
 }
 ```
 
@@ -169,7 +169,7 @@ dependencies {
 <dependency>
   <groupId>dev.gurwi</groupId>
   <artifactId>prism-paper</artifactId>
-  <version>1.0.0-beta.5</version>
+  <version>1.0.0-beta.6</version>
 </dependency>
 ```
 
@@ -179,8 +179,8 @@ Swap `prism-paper` for `prism-spigot` if you target Spigot. The individual modul
 
 ```kotlin
 dependencies {
-  implementation("dev.gurwi:prism-velocity:1.0.0-beta.5")   // Velocity
-  implementation("dev.gurwi:prism-bungeecord:1.0.0-beta.5") // BungeeCord
+  implementation("dev.gurwi:prism-velocity:1.0.0-beta.6")   // Velocity
+  implementation("dev.gurwi:prism-bungeecord:1.0.0-beta.6") // BungeeCord
 }
 ```
 
@@ -217,8 +217,8 @@ Compile against Prism without shading it. The API classes come from the `api` mo
 
 ```kotlin
 dependencies {
-  compileOnly("dev.gurwi:prism-paper:1.0.0-beta.5")
-  compileOnly(files("libs/prism-1.0.0-beta.5-API.jar"))
+  compileOnly("dev.gurwi:prism-paper:1.0.0-beta.6")
+  compileOnly(files("libs/prism-1.0.0-beta.6-API.jar"))
 }
 ```
 
@@ -828,7 +828,7 @@ Add the core module (it is published on its own):
 
 ```kotlin
 dependencies {
-  api("dev.gurwi:prism-core:1.0.0-beta.5")
+  api("dev.gurwi:prism-core:1.0.0-beta.6")
 }
 ```
 
@@ -934,19 +934,19 @@ Extend `AbstractCommandBuilder`, implement `build(parent)`, and add whatever con
 public class AcmeCommandBuilder extends AbstractCommandBuilder<
         AcmeCommandBuilder, AcmeCommandDefinition, AcmeUser, AcmeExecutor, AcmeArgument<?, ?>, AcmePermission> {
 
-    public AcmeCommandBuilder(String name, String... aliases) {
-        super(name, aliases);
-    }
+  public AcmeCommandBuilder(String name, String... aliases) {
+    super(name, aliases);
+  }
 
-    public AcmeCommandBuilder executes(AcmeExecutor executor) {
-        return executes(AcmeExecutor.class, executor);
-    }
+  public AcmeCommandBuilder executes(AcmeExecutor executor) {
+    return executes(AcmeExecutor.class, executor);
+  }
 
-    @Override
-    public AcmeCommandDefinition build(@Nullable AcmeCommandDefinition parent) {
-        return new AcmeCommandDefinition(parent, name, aliases, description, requirement, permissions,
-                requiredArguments, optionalArguments, executors, CommandChildrenFactory.create(children));
-    }
+  @Override
+  public AcmeCommandDefinition build(@Nullable AcmeCommandDefinition parent) {
+    return new AcmeCommandDefinition(parent, name, aliases, description, requirement, permissions,
+            requiredArguments, optionalArguments, executors, CommandChildrenFactory.create(children));
+  }
 }
 ```
 
@@ -959,49 +959,49 @@ The platform identifies itself and exposes its registry. The registry is where t
 ```java
 public class AcmePlatform implements Platform<AcmeCommandsRegistry> {
 
-    private final AcmeCommandsRegistry registry = new AcmeCommandsRegistry(this);
+  private final AcmeCommandsRegistry registry = new AcmeCommandsRegistry(this);
 
-    @Override
-    public String getIdentifier() {
-        return "acme";
-    }
+  @Override
+  public String getIdentifier() {
+    return "acme";
+  }
 
-    @Override
-    public AcmeCommandsRegistry getCommandsRegistry() {
-        return registry;
-    }
+  @Override
+  public AcmeCommandsRegistry getCommandsRegistry() {
+    return registry;
+  }
 }
 
 public class AcmeCommandsRegistry implements CommandsRegistry<AcmePlatform, AcmeCommandDefinition> {
 
-    private final AcmePlatform platform;
-    private final Set<AcmeCommandDefinition> commands = new HashSet<>();
+  private final AcmePlatform platform;
+  private final Set<AcmeCommandDefinition> commands = new HashSet<>();
 
-    public AcmeCommandsRegistry(AcmePlatform platform) {
-        this.platform = platform;
-    }
+  public AcmeCommandsRegistry(AcmePlatform platform) {
+    this.platform = platform;
+  }
 
-    @Override
-    public void register(AcmeCommandDefinition definition) {
-        commands.add(definition);
-        // Tell your host about the command (name, aliases, description, ...)
-    }
+  @Override
+  public void register(AcmeCommandDefinition definition) {
+    commands.add(definition);
+    // Tell your host about the command (name, aliases, description, ...)
+  }
 
-    @Override
-    public void unregister(AcmeCommandDefinition definition) {
-        commands.remove(definition);
-        // Remove it from your host
-    }
+  @Override
+  public void unregister(AcmeCommandDefinition definition) {
+    commands.remove(definition);
+    // Remove it from your host
+  }
 
-    @Override
-    public @Unmodifiable Set<AcmeCommandDefinition> getRegisteredCommands() {
-        return Set.copyOf(commands);
-    }
+  @Override
+  public @Unmodifiable Set<AcmeCommandDefinition> getRegisteredCommands() {
+    return Set.copyOf(commands);
+  }
 
-    @Override
-    public AcmePlatform getPlatform() {
-        return platform;
-    }
+  @Override
+  public AcmePlatform getPlatform() {
+    return platform;
+  }
 }
 ```
 
