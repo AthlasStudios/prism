@@ -613,7 +613,7 @@ platform.getCommandsRegistry().unregister(built);
 
 ## Velocity
 
-The Velocity platform (`platform/velocity`) reuses the core builder and the Brigadier tree builder, so commands, subcommands, argument trees, optional arguments and suggestions work as described in the guide. The command class is `VelocityCommand`, and the sender is Velocity's `CommandSource`.
+The Velocity platform (`platform/velocity`) reuses the core builder and the Brigadier tree builder, so commands, subcommands, argument trees, optional arguments and suggestions work as described in the guide. The command class is `BungeecordCommand`, and the sender is Velocity's `CommandSource`.
 
 ### Setup
 
@@ -670,7 +670,7 @@ VelocityPermission.startsWith("myplugin.admin.", knownPermissions);
 
 | Topic                   | Bukkit platforms              | Velocity                              |
 |-------------------------|-------------------------------|---------------------------------------|
-| Command class           | `PrismBukkitCommand`          | `VelocityCommand`                     |
+| Command class           | `PrismBukkitCommand`          | `BungeecordCommand`                     |
 | Sender                  | `CommandSender`               | `CommandSource`                       |
 | Plugin handle           | `JavaPlugin`                  | `Object` (your plugin instance)       |
 | Registration timing     | `onEnable`                    | `ProxyInitializeEvent` or later       |
@@ -715,9 +715,9 @@ All of these live in `dev.gurwi.prism.bukkit.argument`.
 | **Text and color**            | `ColorArgument`, `HexColorArgument`, `MessageArgument`, `TimeArgument`                                                                                                                                                                                       |
 | **Structure**                 | `LiteralArgument`, `FlagArgument`                                                                                                                                                                                                                            |
 
-Velocity arguments live in `dev.gurwi.prism.velocity.argument` and extend `VelocityArgument`. Each one wraps a Brigadier `ArgumentType`.
+Velocity arguments live in `dev.gurwi.prism.velocity.argument` and extend `BungeecordArgument`. Each one wraps a Brigadier `ArgumentType`.
 
-Need something custom? Extend `BukkitArgument` (or `VelocityArgument` on Velocity, or one of the `base` argument classes) and implement `parse(...)`, and optionally provide default suggestions.
+Need something custom? Extend `BukkitArgument` (or `BungeecordArgument` on Velocity, or one of the `base` argument classes) and implement `parse(...)`, and optionally provide default suggestions.
 
 > Greedy arguments must be the last argument of a command and cannot have children.
 
@@ -964,7 +964,7 @@ for (String label : adapter.getBuilder().labels(definition)) {
 }
 ```
 
-Read `BukkitCommandDefinitionAdapter` (`platform/brigadier/minecraft`) and `VelocityCommandDefinitionAdapter` (`platform/velocity`) for two complete adapters.
+Read `BukkitCommandDefinitionAdapter` (`platform/brigadier/minecraft`) and `BungeecordCommandDefinitionAdapter` (`platform/velocity`) for two complete adapters.
 
 ### Using it
 

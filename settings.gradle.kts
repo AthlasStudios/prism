@@ -20,6 +20,7 @@ include(":platform:bukkit")
 include(":platform:spigot")
 include(":platform:paper")
 include(":platform:velocity")
+include(":platform:bungeecord")
 include(":platform:jda")
 
 include(":brigadier:brigadier-api")
@@ -39,6 +40,7 @@ include(":brigadier:nms:V26")
 include(
     ":examples:paper-plugin",
     ":examples:velocity-plugin",
+    ":examples:bungeecord-plugin"
 )
 
 include(
