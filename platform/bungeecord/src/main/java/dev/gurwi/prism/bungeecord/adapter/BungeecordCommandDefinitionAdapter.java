@@ -55,16 +55,16 @@ public class BungeecordCommandDefinitionAdapter implements BrigadierAdapter<Comm
 
     @Override
     public boolean available(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull CommandSender source) {
-        return argument instanceof BungeecordArgument<?, ?> bungeecordArgument && bungeecordArgument.canUse(source);
+        return argument instanceof BungeecordArgument<?, ?> && ((BungeecordArgument<?, ?>) argument).canUse(source);
     }
 
     @Override
     public @Nullable ArgumentType<?> nativeType(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
-        if (!(argument instanceof BungeecordArgument<?, ?> bungeecordArgument) || argument instanceof LiteralArgument) {
+        if (!(argument instanceof BungeecordArgument<?, ?>) || argument instanceof LiteralArgument) {
             return null;
         }
 
-        return bungeecordArgument.getArgumentType();
+        return ((BungeecordArgument<?, ?>) argument).getArgumentType();
     }
 
     @Override
@@ -74,8 +74,10 @@ public class BungeecordCommandDefinitionAdapter implements BrigadierAdapter<Comm
 
     @Override
     public boolean greedy(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
-        return nativeType(argument) instanceof StringArgumentType string
-                && string.getType() == StringArgumentType.StringType.GREEDY_PHRASE;
+        ArgumentType<?> type = nativeType(argument);
+
+        return type instanceof StringArgumentType
+                && ((StringArgumentType) type).getType() == StringArgumentType.StringType.GREEDY_PHRASE;
     }
 
     @Override
@@ -139,20 +141,22 @@ public class BungeecordCommandDefinitionAdapter implements BrigadierAdapter<Comm
 
     @Override
     public @NotNull List<String> forcedValues(@NotNull AbstractArgument<?, ?, ?, ?> argument) {
-        if (!(argument instanceof BungeecordArgument<?, ?> bungeecordArgument) || argument instanceof LiteralArgument) {
+        if (!(argument instanceof BungeecordArgument<?, ?>) || argument instanceof LiteralArgument) {
             return List.of();
         }
 
-        return bungeecordArgument.getFixedValues()
+        return ((BungeecordArgument<?, ?>) argument).getFixedValues()
                 .map(LiteralValues::get)
                 .orElse(List.of());
     }
 
     @Override
     public @Nullable SuggestionProvider<CommandSender> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType) {
-        if (!(argument instanceof BungeecordArgument<?, ?> bungeecordArgument) || argument instanceof LiteralArgument) {
+        if (!(argument instanceof BungeecordArgument<?, ?>) || argument instanceof LiteralArgument) {
             return null;
         }
+
+        BungeecordArgument<?, ?> bungeecordArgument = (BungeecordArgument<?, ?>) argument;
 
         SuggestionsSupplier<CommandSender, CompletableFuture<Collection<ArgumentSuggestion>>> supplier = bungeecordArgument.getSuggestionsSupplier();
 

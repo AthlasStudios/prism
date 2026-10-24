@@ -5,7 +5,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public interface ArgumentSuggestion {
 
@@ -17,7 +19,7 @@ public interface ArgumentSuggestion {
     }
 
     static @NotNull @Unmodifiable Collection<ArgumentSuggestion> of(@NotNull Collection<String> suggestions) {
-        return suggestions.stream().map(ArgumentSuggestion::of).toList();
+        return suggestions.stream().map(ArgumentSuggestion::of).collect(Collectors.toUnmodifiableList());
     }
 
     final class Simple implements ArgumentSuggestion {
@@ -36,7 +38,9 @@ public interface ArgumentSuggestion {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof Simple other)) return false;
+            if (!(o instanceof Simple)) return false;
+
+            Simple other = (Simple) o;
             return Objects.equals(suggestion, other.suggestion);
         }
 

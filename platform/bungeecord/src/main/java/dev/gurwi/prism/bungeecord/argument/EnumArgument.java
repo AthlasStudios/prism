@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class EnumArgument<E extends Enum<E>> extends BungeecordArgument<EnumArgument<E>, E> {
 
@@ -21,7 +22,7 @@ public class EnumArgument<E extends Enum<E>> extends BungeecordArgument<EnumArgu
 
         List<String> values = Arrays.stream(enumClass.getEnumConstants())
                 .map(value -> value.name().toLowerCase())
-                .toList();
+                .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
         withFixedValues(values);

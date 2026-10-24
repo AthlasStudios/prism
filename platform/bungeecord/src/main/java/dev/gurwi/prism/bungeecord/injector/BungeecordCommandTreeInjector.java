@@ -119,8 +119,8 @@ public final class BungeecordCommandTreeInjector implements Listener {
 
             CommandNode<?> args = child.getChild("args");
 
-            if (askServer == null && args instanceof ArgumentCommandNode<?, ?> argument) {
-                askServer = (SuggestionProvider<Object>) argument.getCustomSuggestions();
+            if (askServer == null && args instanceof ArgumentCommandNode<?, ?>) {
+                askServer = (SuggestionProvider<Object>) ((ArgumentCommandNode<?, ?>) args).getCustomSuggestions();
             }
         }
 
@@ -136,7 +136,8 @@ public final class BungeecordCommandTreeInjector implements Listener {
     private @NotNull CommandNode<Object> copy(@NotNull CommandNode<CommandSender> node, @NotNull CommandSender source, @Nullable SuggestionProvider<Object> askServer) {
         ArgumentBuilder<Object, ?> builder;
 
-        if (node instanceof ArgumentCommandNode<CommandSender, ?> argument) {
+        if (node instanceof ArgumentCommandNode<?, ?>) {
+            ArgumentCommandNode<CommandSender, ?> argument = (ArgumentCommandNode<CommandSender, ?>) node;
             RequiredArgumentBuilder<Object, ?> required = required(argument.getName(), argument.getType());
 
             if (argument.getCustomSuggestions() != null && askServer != null) {
@@ -165,7 +166,7 @@ public final class BungeecordCommandTreeInjector implements Listener {
         try {
             Object value = Class.forName("net.md_5.bungee.netty.PipelineUtils").getField("MINECRAFT_ENCODER").get(null);
 
-            return value instanceof String name ? name : DEFAULT_ENCODER;
+            return value instanceof String ? (String) value : DEFAULT_ENCODER;
         } catch (Throwable throwable) {
             return DEFAULT_ENCODER;
         }

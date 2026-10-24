@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public abstract class BungeecordArgument<Impl extends BungeecordArgument<Impl, T>, T> extends AbstractTreeArgument<
         Impl,
@@ -58,7 +59,7 @@ public abstract class BungeecordArgument<Impl extends BungeecordArgument<Impl, T
     }
 
     public Impl replaceSuggestions(Collection<String> suggestions) {
-        return replaceSuggestions(ignored -> CompletableFuture.completedFuture(suggestions.stream().map(ArgumentSuggestion::of).toList()));
+        return replaceSuggestions(ignored -> CompletableFuture.completedFuture(suggestions.stream().map(ArgumentSuggestion::of).collect(Collectors.toUnmodifiableList())));
     }
 
     public Impl replaceSuggestions(String... suggestions) {

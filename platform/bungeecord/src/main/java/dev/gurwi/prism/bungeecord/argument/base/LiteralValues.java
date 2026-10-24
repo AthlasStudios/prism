@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public interface LiteralValues extends Supplier<List<String>> {
 
@@ -27,7 +28,7 @@ public interface LiteralValues extends Supplier<List<String>> {
 
         return of(Arrays.stream(type.getEnumConstants())
                 .map(constant -> constant.name().toLowerCase(Locale.ROOT))
-                .toList()
+                .collect(Collectors.toUnmodifiableList())
         );
     }
 
