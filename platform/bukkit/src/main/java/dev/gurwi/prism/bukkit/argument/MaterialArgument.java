@@ -19,7 +19,7 @@ public class MaterialArgument extends BukkitArgument<MaterialArgument, Material>
                 .map(material -> material.name().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        replaceSuggestions(values);
+        includeSuggestionsUnlessNative(values);
         withFixedValues(values);
     }
 

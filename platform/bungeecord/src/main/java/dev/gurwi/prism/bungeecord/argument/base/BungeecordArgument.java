@@ -29,12 +29,12 @@ public abstract class BungeecordArgument<Impl extends BungeecordArgument<Impl, T
         BungeecordArgument<?, ?>,
         BungeecordPermission,
         SuggestionsSupplier<CommandSender, CompletableFuture<Collection<ArgumentSuggestion>>>
-> implements BungeecordExecutorContainerBuilder<Impl>, BungeecordUsageRequirementContainer<Impl> {
+        > implements BungeecordExecutorContainerBuilder<Impl>, BungeecordUsageRequirementContainer<Impl> {
 
     private @Nullable LiteralValues fixedValues;
 
     public BungeecordArgument(String name) {
-        super(name, SuggestionsSupplier.empty());
+        super(name);
     }
 
     public Impl withFixedValues(LiteralValues values) {
@@ -65,6 +65,33 @@ public abstract class BungeecordArgument<Impl extends BungeecordArgument<Impl, T
     public Impl replaceSuggestions(String... suggestions) {
         replaceSuggestions(List.of(suggestions));
         return self();
+    }
+
+    public Impl includeSuggestions(ArgumentSuggestion... suggestions) {
+        return includeSuggestions(ignored -> CompletableFuture.completedFuture(List.of(suggestions)));
+    }
+
+    public Impl includeSuggestions(CompletableFuture<Collection<String>> suggestions) {
+        return includeSuggestions(ctx -> suggestions.thenApply(ArgumentSuggestion::of));
+    }
+
+    public Impl includeSuggestions(Collection<String> suggestions) {
+        return includeSuggestions(ignored -> CompletableFuture.completedFuture(suggestions.stream().map(ArgumentSuggestion::of).collect(Collectors.toUnmodifiableList())));
+    }
+
+    public Impl includeSuggestions(String... suggestions) {
+        return includeSuggestions(List.of(suggestions));
+    }
+
+    public Impl includeSuggestionsUnlessNative(Collection<String> suggestions) {
+        Collection<ArgumentSuggestion> mapped = ArgumentSuggestion.of(suggestions);
+        Collection<ArgumentSuggestion> none = List.of();
+
+        return includeSuggestions(ctx -> CompletableFuture.completedFuture(ctx.hasNativeSuggestions() ? none : mapped));
+    }
+
+    public Impl includeSuggestionsUnlessNative(String... suggestions) {
+        return includeSuggestionsUnlessNative(List.of(suggestions));
     }
 
     public boolean hasExecutor(@NotNull CommandSender source) {

@@ -10,7 +10,7 @@ public class BooleanArgument extends BukkitArgument<BooleanArgument, Boolean> {
     public BooleanArgument(String name) {
         super(name);
 
-        replaceSuggestions("true", "false");
+        includeSuggestionsUnlessNative("true", "false");
         withFixedValues("true", "false");
     }
 

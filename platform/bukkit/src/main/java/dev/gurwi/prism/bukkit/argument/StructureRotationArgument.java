@@ -19,7 +19,7 @@ public class StructureRotationArgument extends BukkitArgument<StructureRotationA
                 .map(rotation -> rotation.name().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        replaceSuggestions(values);
+        includeSuggestionsUnlessNative(values);
         withFixedValues(values);
     }
 

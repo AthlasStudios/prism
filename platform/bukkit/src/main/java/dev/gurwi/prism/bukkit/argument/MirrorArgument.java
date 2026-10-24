@@ -19,7 +19,7 @@ public class MirrorArgument extends BukkitArgument<MirrorArgument, Mirror> {
                 .map(mirror -> mirror.name().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        replaceSuggestions(values);
+        includeSuggestionsUnlessNative(values);
         withFixedValues(values);
     }
 

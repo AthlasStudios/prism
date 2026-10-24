@@ -27,7 +27,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 
 public class BungeecordCommandDefinitionAdapter implements BrigadierAdapter<CommandSender, BungeecordCommandDefinition> {
 
@@ -158,43 +157,58 @@ public class BungeecordCommandDefinitionAdapter implements BrigadierAdapter<Comm
 
         BungeecordArgument<?, ?> bungeecordArgument = (BungeecordArgument<?, ?>) argument;
 
-        SuggestionsSupplier<CommandSender, CompletableFuture<Collection<ArgumentSuggestion>>> supplier = bungeecordArgument.getSuggestionsSupplier();
+        List<SuggestionsSupplier<CommandSender, CompletableFuture<Collection<ArgumentSuggestion>>>> suppliers = bungeecordArgument.getCustomSuggestions();
+
+        if (suppliers.isEmpty()) {
+            return null;
+        }
+
+        boolean nativeProvided = BrigadierAdapter.providesSuggestions(nativeType);
 
         return (context, suggestionsBuilder) -> {
             String remaining = suggestionsBuilder.getRemaining();
             String lowered = remaining.toLowerCase(Locale.ROOT);
 
             SuggestionContext<CommandSender> suggestionContext =
-                    new SuggestionContext<>(context.getSource(), suggestionsBuilder.getInput(), remaining);
+                    new SuggestionContext<>(context.getSource(), suggestionsBuilder.getInput(), remaining, nativeProvided);
 
-            CompletableFuture<Collection<ArgumentSuggestion>> supplied = supplier.getSuggestions(suggestionContext);
+            List<CompletableFuture<Collection<ArgumentSuggestion>>> parts = new ArrayList<>(suppliers.size());
 
-            if (supplied == null) {
-                supplied = CompletableFuture.completedFuture(List.of());
+            for (SuggestionsSupplier<CommandSender, CompletableFuture<Collection<ArgumentSuggestion>>> supplier : suppliers) {
+                CompletableFuture<Collection<ArgumentSuggestion>> supplied = supplier.getSuggestions(suggestionContext);
+
+                if (supplied == null) {
+                    parts.add(CompletableFuture.completedFuture(Collections.emptyList()));
+                } else {
+                    parts.add(supplied.exceptionally(error -> Collections.emptyList()));
+                }
             }
 
-            return supplied
-                    .handle((suggestions, error) -> {
-                        boolean added = false;
+            return CompletableFuture.allOf(parts.toArray(new CompletableFuture[0])).thenCompose(ignored -> {
+                Set<String> seen = new HashSet<>();
+                boolean added = false;
 
-                        if (error == null && suggestions != null) {
-                            for (ArgumentSuggestion suggestion : suggestions) {
-                                String text = suggestion.getSuggestion();
+                for (CompletableFuture<Collection<ArgumentSuggestion>> part : parts) {
+                    Collection<ArgumentSuggestion> suggestions = part.join();
 
-                                if (!text.toLowerCase(Locale.ROOT).startsWith(lowered)) continue;
+                    if (suggestions == null) continue;
 
-                                suggestionsBuilder.suggest(text);
-                                added = true;
-                            }
-                        }
+                    for (ArgumentSuggestion suggestion : suggestions) {
+                        String text = suggestion.getSuggestion();
 
-                        if (!added && nativeType != null) {
-                            return nativeType.listSuggestions(context, suggestionsBuilder);
-                        }
+                        if (!text.toLowerCase(Locale.ROOT).startsWith(lowered) || !seen.add(text)) continue;
 
-                        return suggestionsBuilder.buildFuture();
-                    })
-                    .thenCompose(Function.identity());
+                        suggestionsBuilder.suggest(text);
+                        added = true;
+                    }
+                }
+
+                if (!added && nativeType != null) {
+                    return nativeType.listSuggestions(context, suggestionsBuilder);
+                }
+
+                return suggestionsBuilder.buildFuture();
+            });
         };
     }
 

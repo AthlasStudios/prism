@@ -2,6 +2,7 @@ package dev.gurwi.prism.brigadier;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.ArgumentType;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import dev.gurwi.prism.argument.AbstractArgument;
 import dev.gurwi.prism.command.AbstractCommandDefinition;
@@ -12,6 +13,18 @@ import java.util.List;
 import java.util.Map;
 
 public interface BrigadierAdapter<Source, Definition extends AbstractCommandDefinition<Definition, ?, ?, ?, ?>> {
+
+    static boolean providesSuggestions(@Nullable ArgumentType<?> nativeType) {
+        if (nativeType == null) {
+            return false;
+        }
+
+        if (nativeType instanceof BoolArgumentType) {
+            return true;
+        }
+
+        return !nativeType.getClass().getName().startsWith("com.mojang.brigadier.arguments.");
+    }
 
     boolean visible(@NotNull Definition definition, @NotNull Source source);
 

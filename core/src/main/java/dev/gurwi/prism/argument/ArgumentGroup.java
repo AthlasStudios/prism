@@ -27,4 +27,14 @@ public interface ArgumentGroup {
         return args;
     }
 
+    @SafeVarargs
+    @Contract("_, _ -> param2")
+    static <Source, Suggestions extends SuggestionsSupplier<Source, ?>, T extends AbstractArgument<?, ?, Source, Suggestions>> T[] includeSuggestions(Suggestions supplier, T @NotNull ... args) {
+        for (T arg : args) {
+            arg.includeSuggestions(supplier);
+        }
+
+        return args;
+    }
+
 }

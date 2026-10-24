@@ -19,7 +19,7 @@ public class ParticleArgument extends BukkitArgument<ParticleArgument, Particle>
                 .map(material -> material.name().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        replaceSuggestions(values);
+        includeSuggestionsUnlessNative(values);
         withFixedValues(values);
     }
 

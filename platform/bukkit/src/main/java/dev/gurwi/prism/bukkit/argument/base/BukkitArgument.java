@@ -21,12 +21,10 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> extends AbstractTreeArgument<Impl, T, BukkitCommandDefinition, CommandSender, BukkitCommandExecutor<? extends CommandSender>, BukkitArgument<?, ?>, BukkitPermission, BukkitSuggestionsSupplier<?>> implements BukkitExecutorContainerBuilder<Impl>, BukkitRequirementContainerBuilder<Impl> {
 
-    // TODO -> FORCE SPECIFIC VALUES IN LEGACY EXECUTOR
-
     private @Nullable LiteralValues fixedValues;
 
     public BukkitArgument(String name) {
-        super(name, BukkitSuggestionsSupplier.empty());
+        super(name);
     }
 
     public Impl withFixedValues(LiteralValues values) {
@@ -43,7 +41,7 @@ public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> ex
     }
 
     public Impl replaceSuggestions(ArgumentSuggestion... suggestions) {
-        return replaceSuggestions(ctx -> Arrays.asList(suggestions));
+        return replaceSuggestions(BukkitSuggestionsSupplier.sync(Arrays.asList(suggestions)));
     }
 
     public Impl replaceSuggestions(Collection<String> suggestions) {
@@ -56,6 +54,30 @@ public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> ex
 
     public Impl replaceSuggestions(CompletableFuture<Collection<String>> suggestions) {
         return replaceSuggestions(BukkitSuggestionsSupplier.stringsAsync(suggestions));
+    }
+
+    public Impl includeSuggestions(ArgumentSuggestion... suggestions) {
+        return includeSuggestions(BukkitSuggestionsSupplier.sync(Arrays.asList(suggestions)));
+    }
+
+    public Impl includeSuggestions(Collection<String> suggestions) {
+        return includeSuggestions(BukkitSuggestionsSupplier.strings(suggestions));
+    }
+
+    public Impl includeSuggestions(String... suggestions) {
+        return includeSuggestions(BukkitSuggestionsSupplier.strings(Arrays.asList(suggestions)));
+    }
+
+    public Impl includeSuggestions(CompletableFuture<Collection<String>> suggestions) {
+        return includeSuggestions(BukkitSuggestionsSupplier.stringsAsync(suggestions));
+    }
+
+    public Impl includeSuggestionsUnlessNative(Collection<String> suggestions) {
+        return includeSuggestions(BukkitSuggestionsSupplier.unlessNative(BukkitSuggestionsSupplier.strings(suggestions)));
+    }
+
+    public Impl includeSuggestionsUnlessNative(String... suggestions) {
+        return includeSuggestionsUnlessNative(Arrays.asList(suggestions));
     }
 
     public Impl withPermissions(Collection<BukkitPermission> permissions) {

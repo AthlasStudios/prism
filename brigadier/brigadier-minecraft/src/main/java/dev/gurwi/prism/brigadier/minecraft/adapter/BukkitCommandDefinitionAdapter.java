@@ -32,6 +32,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<MinecraftCommandSource, BukkitCommandDefinition> {
 
@@ -149,13 +150,18 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
     public @Nullable SuggestionProvider<MinecraftCommandSource> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType) {
         BukkitArgument<?, ?> bukkitArgument = (BukkitArgument<?, ?>) argument;
 
-        BukkitSuggestionsSupplier<?> declared = bukkitArgument.getSuggestionsSupplier();
-
-        if (declared == null || BukkitSuggestionsSupplier.isEmpty(declared)) {
+        if (nativeType != null && !primitive(nativeType)) {
             return null;
         }
 
-        if (nativeType != null && !primitive(nativeType)) {
+        boolean nativeProvided = BrigadierAdapter.providesSuggestions(nativeType);
+
+        List<BukkitSuggestionsSupplier<?>> suppliers = new ArrayList<>();
+
+        bukkitArgument.getSuggestionsSupplier().ifPresent(suppliers::add);
+        suppliers.addAll(bukkitArgument.getIncludedSuggestions());
+
+        if (suppliers.isEmpty()) {
             return null;
         }
 
@@ -164,26 +170,29 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
             String remaining = suggestionsBuilder.getRemaining();
 
             SuggestionContext<CommandSender> suggestionContext =
-                    new SuggestionContext<>(sender, suggestionsBuilder.getInput(), remaining);
+                    new SuggestionContext<>(sender, suggestionsBuilder.getInput(), remaining, nativeProvided);
 
-            BukkitSuggestionsSupplier<?> supplier = bukkitArgument.getSuggestionsSupplier();
+            List<CompletableFuture<Collection<ArgumentSuggestion>>> parts = new ArrayList<>(suppliers.size());
 
-            if (supplier instanceof BukkitSuggestionsSupplier.Async async) {
+            for (BukkitSuggestionsSupplier<?> supplier : suppliers) {
+                parts.add(BukkitSuggestionsSupplier.resolve(supplier, suggestionContext));
+            }
 
-                return async.getSuggestions(suggestionContext).handle((suggestions, error) -> {
-                    if (error == null && suggestions != null) {
-                        applySuggestions(suggestionsBuilder, suggestions, remaining);
+            return CompletableFuture.allOf(parts.toArray(new CompletableFuture[0])).handle((ignored, error) -> {
+                Set<String> seen = new HashSet<>();
+
+                for (CompletableFuture<Collection<ArgumentSuggestion>> part : parts) {
+                    if (part.isCompletedExceptionally()) continue;
+
+                    Collection<ArgumentSuggestion> suggestions = part.join();
+
+                    if (suggestions != null) {
+                        applySuggestions(suggestionsBuilder, suggestions, remaining, seen);
                     }
+                }
 
-                    return suggestionsBuilder.build();
-                });
-            }
-
-            if (supplier instanceof BukkitSuggestionsSupplier.Sync sync) {
-                applySuggestions(suggestionsBuilder, sync.getSuggestions(suggestionContext), remaining);
-            }
-
-            return suggestionsBuilder.buildFuture();
+                return suggestionsBuilder.build();
+            });
         };
     }
 
@@ -191,13 +200,13 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
         return type.getClass().getName().startsWith("com.mojang.brigadier.arguments.");
     }
 
-    private static void applySuggestions(@NotNull SuggestionsBuilder builder, @NotNull Collection<ArgumentSuggestion> suggestions, @NotNull String remaining) {
+    private static void applySuggestions(@NotNull SuggestionsBuilder builder, @NotNull Collection<ArgumentSuggestion> suggestions, @NotNull String remaining, @NotNull Set<String> seen) {
         String lowered = remaining.toLowerCase(Locale.ROOT);
 
         for (ArgumentSuggestion suggestion : suggestions) {
             String text = suggestion.getSuggestion();
 
-            if (!text.toLowerCase(Locale.ROOT).startsWith(lowered)) {
+            if (!text.toLowerCase(Locale.ROOT).startsWith(lowered) || !seen.add(text)) {
                 continue;
             }
 

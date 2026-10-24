@@ -28,12 +28,12 @@ public abstract class VelocityArgument<Impl extends VelocityArgument<Impl, T>, T
         VelocityArgument<?, ?>,
         VelocityPermission,
         SuggestionsSupplier<CommandSource, CompletableFuture<Collection<ArgumentSuggestion>>>
-> implements VelocityExecutorContainerBuilder<Impl>, VelocityUsageRequirementContainer<Impl> {
+        > implements VelocityExecutorContainerBuilder<Impl>, VelocityUsageRequirementContainer<Impl> {
 
     private @Nullable LiteralValues fixedValues;
 
     public VelocityArgument(String name) {
-        super(name, SuggestionsSupplier.empty());
+        super(name);
     }
 
     public Impl withFixedValues(LiteralValues values) {
@@ -64,6 +64,33 @@ public abstract class VelocityArgument<Impl extends VelocityArgument<Impl, T>, T
     public Impl replaceSuggestions(String... suggestions) {
         replaceSuggestions(List.of(suggestions));
         return self();
+    }
+
+    public Impl includeSuggestions(ArgumentSuggestion... suggestions) {
+        return includeSuggestions(_ -> CompletableFuture.completedFuture(List.of(suggestions)));
+    }
+
+    public Impl includeSuggestions(CompletableFuture<Collection<String>> suggestions) {
+        return includeSuggestions(ctx -> suggestions.thenApply(ArgumentSuggestion::of));
+    }
+
+    public Impl includeSuggestions(Collection<String> suggestions) {
+        return includeSuggestions(_ -> CompletableFuture.completedFuture(suggestions.stream().map(ArgumentSuggestion::of).toList()));
+    }
+
+    public Impl includeSuggestions(String... suggestions) {
+        return includeSuggestions(List.of(suggestions));
+    }
+
+    public Impl includeSuggestionsUnlessNative(Collection<String> suggestions) {
+        Collection<ArgumentSuggestion> mapped = ArgumentSuggestion.of(suggestions);
+        Collection<ArgumentSuggestion> none = List.of();
+
+        return includeSuggestions(ctx -> CompletableFuture.completedFuture(ctx.hasNativeSuggestions() ? none : mapped));
+    }
+
+    public Impl includeSuggestionsUnlessNative(String... suggestions) {
+        return includeSuggestionsUnlessNative(List.of(suggestions));
     }
 
     public boolean hasExecutor(@NotNull CommandSource source) {

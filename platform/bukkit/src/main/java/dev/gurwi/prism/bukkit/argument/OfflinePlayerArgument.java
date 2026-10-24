@@ -1,6 +1,8 @@
 package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.suggestion.ArgumentSuggestion;
+import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -16,18 +18,17 @@ public class OfflinePlayerArgument extends BukkitArgument<OfflinePlayerArgument,
     public OfflinePlayerArgument(String name) {
         super(name);
 
-        replaceSuggestions(Bukkit.getOnlinePlayers()
+        includeSuggestions(BukkitSuggestionsSupplier.unlessNative(ctx -> ArgumentSuggestion.of(Bukkit.getOnlinePlayers()
                 .stream()
                 .map(Player::getName)
                 .collect(Collectors.toUnmodifiableList())
-        );
+        )));
 
-        includeSuggestions(
-                Arrays.stream(Bukkit.getOfflinePlayers())
-                        .filter(offlinePlayer -> offlinePlayer.hasPlayedBefore() && offlinePlayer.getName() != null)
-                        .map(OfflinePlayer::getName)
-                        .collect(Collectors.toUnmodifiableList())
-        );
+        includeSuggestions(BukkitSuggestionsSupplier.sync(ctx -> Arrays.stream(Bukkit.getOfflinePlayers())
+                .filter(offlinePlayer -> offlinePlayer.hasPlayedBefore() && offlinePlayer.getName() != null)
+                .map(offlinePlayer -> ArgumentSuggestion.of(offlinePlayer.getName()))
+                .collect(Collectors.toUnmodifiableList())
+        ));
     }
 
     @Override

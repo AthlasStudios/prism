@@ -20,13 +20,13 @@ public abstract class AbstractTreeArgument<
         Argument extends AbstractArgument<?, ?, ? extends Source, ?>,
         Permission extends PermissionNode<?, Source>,
         Suggestions extends SuggestionsSupplier<Source, ?>
-> extends AbstractArgument<Impl, T, Source, Suggestions> implements TreeBuilder<Impl, AbstractTreeArgument<?, ?, Definition, Source, Executor, Argument, Permission, Suggestions>>, ExecutorContainerBuilder<Impl, Executor> {
+        > extends AbstractArgument<Impl, T, Source, Suggestions> implements TreeBuilder<Impl, AbstractTreeArgument<?, ?, Definition, Source, Executor, Argument, Permission, Suggestions>>, ExecutorContainerBuilder<Impl, Executor> {
 
     protected final Map<Class<? extends Executor>, Executor> executors = new HashMap<>();
     protected final List<AbstractTreeArgument<?, ?, Definition, Source, Executor, Argument, Permission, Suggestions>> arguments = new ArrayList<>();
 
-    public AbstractTreeArgument(String name, Suggestions defaultSuggestions) {
-        super(name, defaultSuggestions);
+    public AbstractTreeArgument(String name) {
+        super(name);
     }
 
     @Override

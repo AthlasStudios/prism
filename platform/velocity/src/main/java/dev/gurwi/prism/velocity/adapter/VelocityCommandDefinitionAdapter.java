@@ -28,7 +28,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 
 public class VelocityCommandDefinitionAdapter implements BrigadierAdapter<CommandSource, VelocityCommandDefinition> {
 
@@ -155,40 +154,61 @@ public class VelocityCommandDefinitionAdapter implements BrigadierAdapter<Comman
             return null;
         }
 
-        SuggestionsSupplier<CommandSource, CompletableFuture<Collection<ArgumentSuggestion>>> supplier = velocityArgument.getSuggestionsSupplier();
+        List<SuggestionsSupplier<CommandSource, CompletableFuture<Collection<ArgumentSuggestion>>>> suppliers = velocityArgument.getCustomSuggestions();
+
+        if (suppliers.isEmpty()) {
+            return null;
+        }
+
+        boolean nativeProvided = BrigadierAdapter.providesSuggestions(nativeType);
 
         return (context, suggestionsBuilder) -> {
             String remaining = suggestionsBuilder.getRemaining();
             String lowered = remaining.toLowerCase(Locale.ROOT);
 
             SuggestionContext<CommandSource> suggestionContext =
-                    new SuggestionContext<>(context.getSource(), suggestionsBuilder.getInput(), remaining);
+                    new SuggestionContext<>(context.getSource(), suggestionsBuilder.getInput(), remaining, nativeProvided);
 
-            return supplier.getSuggestions(suggestionContext)
-                    .handle((suggestions, error) -> {
-                        boolean added = false;
+            List<CompletableFuture<Collection<ArgumentSuggestion>>> parts = new ArrayList<>(suppliers.size());
 
-                        if (error == null && suggestions != null) {
-                            for (ArgumentSuggestion suggestion : suggestions) {
-                                String text = suggestion.getSuggestion();
+            for (SuggestionsSupplier<CommandSource, CompletableFuture<Collection<ArgumentSuggestion>>> supplier : suppliers) {
+                CompletableFuture<Collection<ArgumentSuggestion>> supplied = supplier.getSuggestions(suggestionContext);
 
-                                if (!text.toLowerCase(Locale.ROOT).startsWith(lowered)) continue;
+                if (supplied == null) {
+                    parts.add(CompletableFuture.completedFuture(List.of()));
+                } else {
+                    parts.add(supplied.exceptionally(error -> List.of()));
+                }
+            }
 
-                                suggestion.getTooltip().ifPresentOrElse(
-                                        tooltip -> suggestionsBuilder.suggest(text, VelocityBrigadierMessage.tooltip(tooltip)),
-                                        () -> suggestionsBuilder.suggest(text)
-                                );
-                                added = true;
-                            }
-                        }
+            return CompletableFuture.allOf(parts.toArray(new CompletableFuture[0])).thenCompose(ignored -> {
+                Set<String> seen = new HashSet<>();
+                boolean added = false;
 
-                        if (!added && nativeType != null) {
-                            return nativeType.listSuggestions(context, suggestionsBuilder);
-                        }
+                for (CompletableFuture<Collection<ArgumentSuggestion>> part : parts) {
+                    Collection<ArgumentSuggestion> suggestions = part.join();
 
-                        return suggestionsBuilder.buildFuture();
-                    })
-                    .thenCompose(Function.identity());
+                    if (suggestions == null) continue;
+
+                    for (ArgumentSuggestion suggestion : suggestions) {
+                        String text = suggestion.getSuggestion();
+
+                        if (!text.toLowerCase(Locale.ROOT).startsWith(lowered) || !seen.add(text)) continue;
+
+                        suggestion.getTooltip().ifPresentOrElse(
+                                tooltip -> suggestionsBuilder.suggest(text, VelocityBrigadierMessage.tooltip(tooltip)),
+                                () -> suggestionsBuilder.suggest(text)
+                        );
+                        added = true;
+                    }
+                }
+
+                if (!added && nativeType != null) {
+                    return nativeType.listSuggestions(context, suggestionsBuilder);
+                }
+
+                return suggestionsBuilder.buildFuture();
+            });
         };
     }
 

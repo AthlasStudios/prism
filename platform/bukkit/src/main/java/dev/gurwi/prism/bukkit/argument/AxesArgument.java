@@ -14,7 +14,7 @@ public class AxesArgument extends BukkitArgument<AxesArgument, Set<Axis>> {
     public AxesArgument(String name) {
         super(name);
 
-        replaceSuggestions("x", "y", "z", "xy", "xz", "yz", "xyz");
+        includeSuggestionsUnlessNative("x", "y", "z", "xy", "xz", "yz", "xyz");
     }
 
     @Override

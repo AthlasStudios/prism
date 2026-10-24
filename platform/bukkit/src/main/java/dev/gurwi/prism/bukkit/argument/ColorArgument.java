@@ -18,7 +18,7 @@ public class ColorArgument extends BukkitArgument<ColorArgument, ChatColor> {
                 .map(color -> color.name().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        replaceSuggestions(values);
+        includeSuggestionsUnlessNative(values);
         withFixedValues(values);
     }
 

@@ -1,6 +1,8 @@
 package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.suggestion.ArgumentSuggestion;
+import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -14,11 +16,11 @@ public class WorldArgument extends BukkitArgument<WorldArgument, World> {
     public WorldArgument(String name) {
         super(name);
 
-        replaceSuggestions(Bukkit.getWorlds()
+        includeSuggestions(BukkitSuggestionsSupplier.unlessNative(ctx -> ArgumentSuggestion.of(Bukkit.getWorlds()
                 .stream()
                 .map(World::getName)
                 .collect(Collectors.toUnmodifiableList())
-        );
+        )));
     }
 
     @Override

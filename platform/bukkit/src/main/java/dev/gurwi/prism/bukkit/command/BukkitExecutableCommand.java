@@ -501,39 +501,44 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         }
 
         SuggestionContext<CommandSender> context = new SuggestionContext<>(sender, null, input);
-        BukkitSuggestionsSupplier<?> suggestions = argument.getSuggestionsSupplier();
+        Set<String> immediate = new LinkedHashSet<>();
 
-        if (suggestions instanceof BukkitSuggestionsSupplier.Async) {
-            BukkitSuggestionsSupplier.Async async = (BukkitSuggestionsSupplier.Async) suggestions;
+        for (BukkitSuggestionsSupplier<?> suggestions : argument.getCustomSuggestions()) {
+            if (suggestions instanceof BukkitSuggestionsSupplier.Async) {
+                BukkitSuggestionsSupplier.Async async = (BukkitSuggestionsSupplier.Async) suggestions;
 
-            if (!AsyncCommandSuggestEvent.hasListeners()) throw new UnsupportedOperationException("Async suggestions are not supported on bukkit or they were disabled.");
+                if (!AsyncCommandSuggestEvent.hasListeners()) throw new UnsupportedOperationException("Async suggestions are not supported on bukkit or they were disabled.");
 
-            List<CompletableFuture<List<String>>> collector = ASYNC.get();
+                List<CompletableFuture<List<String>>> collector = ASYNC.get();
 
-            if (collector == null) return List.of();
+                if (collector == null) continue;
 
-            collector.add(async.getSuggestions(context).handle((result, error) -> {
-                if (error != null || result == null) return List.of();
+                collector.add(async.getSuggestions(context).handle((result, error) -> {
+                    if (error != null || result == null) return List.of();
 
-                return strip(result.stream()
+                    return strip(result.stream()
+                            .map(ArgumentSuggestion::getSuggestion)
+                            .filter(text -> text.toLowerCase().startsWith(lowered))
+                            .collect(Collectors.toList()), prefix);
+                }));
+
+                continue;
+            }
+
+            if (suggestions instanceof BukkitSuggestionsSupplier.Sync) {
+                BukkitSuggestionsSupplier.Sync sync = (BukkitSuggestionsSupplier.Sync) suggestions;
+                Collection<ArgumentSuggestion> result = sync.getSuggestions(context);
+
+                if (result == null) continue;
+
+                immediate.addAll(strip(result.stream()
                         .map(ArgumentSuggestion::getSuggestion)
                         .filter(text -> text.toLowerCase().startsWith(lowered))
-                        .collect(Collectors.toList()), prefix);
-            }));
-
-            return List.of();
+                        .collect(Collectors.toList()), prefix));
+            }
         }
 
-        if (suggestions instanceof BukkitSuggestionsSupplier.Sync) {
-            BukkitSuggestionsSupplier.Sync sync = (BukkitSuggestionsSupplier.Sync) suggestions;
-
-            return strip(sync.getSuggestions(context).stream()
-                    .map(ArgumentSuggestion::getSuggestion)
-                    .filter(text -> text.toLowerCase().startsWith(lowered))
-                    .collect(Collectors.toList()), prefix);
-        }
-
-        return List.of();
+        return new ArrayList<>(immediate);
     }
 
     private @NotNull List<String> strip(@NotNull List<String> values, @NotNull String prefix) {

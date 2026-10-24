@@ -19,7 +19,7 @@ public class DisplaySlotArgument extends BukkitArgument<DisplaySlotArgument, Dis
                 .map(slot -> slot.name().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        replaceSuggestions(values);
+        includeSuggestionsUnlessNative(values);
         withFixedValues(values);
     }
 

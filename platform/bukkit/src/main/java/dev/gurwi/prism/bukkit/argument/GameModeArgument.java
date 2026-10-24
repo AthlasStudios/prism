@@ -19,7 +19,7 @@ public class GameModeArgument extends BukkitArgument<GameModeArgument, GameMode>
                 .map(gameMode -> gameMode.name().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        replaceSuggestions(values);
+        includeSuggestionsUnlessNative(values);
         withFixedValues(values);
     }
 

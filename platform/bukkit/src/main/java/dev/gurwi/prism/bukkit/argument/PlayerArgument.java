@@ -1,6 +1,8 @@
 package dev.gurwi.prism.bukkit.argument;
 
 import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
+import dev.gurwi.prism.bukkit.argument.suggestion.ArgumentSuggestion;
+import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -14,11 +16,11 @@ public class PlayerArgument extends BukkitArgument<PlayerArgument, Player> {
     public PlayerArgument(String name) {
         super(name);
 
-        replaceSuggestions(Bukkit.getOnlinePlayers()
+        includeSuggestions(BukkitSuggestionsSupplier.unlessNative(ctx -> ArgumentSuggestion.of(Bukkit.getOnlinePlayers()
                 .stream()
                 .map(Player::getName)
                 .collect(Collectors.toUnmodifiableList())
-        );
+        )));
     }
 
     @Override

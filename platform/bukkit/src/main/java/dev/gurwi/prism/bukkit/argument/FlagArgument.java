@@ -273,17 +273,25 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
             return CompletableFuture.completedFuture(matching(fixed, lowered));
         }
 
-        BukkitSuggestionsSupplier<?> supplier = inner.getSuggestionsSupplier();
+        List<CompletableFuture<Collection<ArgumentSuggestion>>> parts = new ArrayList<>();
 
-        if (supplier instanceof BukkitSuggestionsSupplier.Async) {
-            return ((BukkitSuggestionsSupplier.Async) supplier).getSuggestions(innerContext).thenApply(suggestions -> matching(suggestions, lowered));
+        for (BukkitSuggestionsSupplier<?> supplier : inner.getCustomSuggestions()) {
+            parts.add(BukkitSuggestionsSupplier.resolve(supplier, innerContext).exceptionally(error -> List.of()));
         }
 
-        if (supplier instanceof BukkitSuggestionsSupplier.Sync) {
-            return CompletableFuture.completedFuture(matching(((BukkitSuggestionsSupplier.Sync) supplier).getSuggestions(innerContext), lowered));
+        if (parts.isEmpty()) {
+            return CompletableFuture.completedFuture(List.of());
         }
 
-        return CompletableFuture.completedFuture(List.of());
+        return CompletableFuture.allOf(parts.toArray(new CompletableFuture[0])).thenApply(ignored -> {
+            List<ArgumentSuggestion> all = new ArrayList<>();
+
+            for (CompletableFuture<Collection<ArgumentSuggestion>> part : parts) {
+                all.addAll(part.join());
+            }
+
+            return matching(all, lowered);
+        });
     }
 
     private static @NotNull ArgumentSuggestion suggestion(@NotNull String literal, @Nullable String description) {
