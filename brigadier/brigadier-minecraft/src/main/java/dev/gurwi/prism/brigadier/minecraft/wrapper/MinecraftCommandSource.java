@@ -20,6 +20,8 @@ public interface MinecraftCommandSource {
 
     Location getLocation();
 
+//    Optional<Object> getHandle();
+
     @Contract(value = "_, _, _ -> new", pure = true)
     static @NotNull MinecraftCommandSource create(Supplier<CommandSender> sender, Supplier<Entity> entity, Supplier<Location> location) {
         return new MinecraftCommandSource() {

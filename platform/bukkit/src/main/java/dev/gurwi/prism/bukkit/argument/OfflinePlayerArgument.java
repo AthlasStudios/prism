@@ -8,6 +8,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class OfflinePlayerArgument extends BukkitArgument<OfflinePlayerArgument, OfflinePlayer> {
@@ -19,6 +20,13 @@ public class OfflinePlayerArgument extends BukkitArgument<OfflinePlayerArgument,
                 .stream()
                 .map(Player::getName)
                 .collect(Collectors.toUnmodifiableList())
+        );
+
+        includeSuggestions(
+                Arrays.stream(Bukkit.getOfflinePlayers())
+                        .filter(offlinePlayer -> offlinePlayer.hasPlayedBefore() && offlinePlayer.getName() != null)
+                        .map(OfflinePlayer::getName)
+                        .collect(Collectors.toUnmodifiableList())
         );
     }
 

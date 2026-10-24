@@ -11,6 +11,8 @@ import java.util.concurrent.CompletableFuture;
 
 public interface BukkitSuggestionsSupplier<Result> extends SuggestionsSupplier<CommandSender, Result> {
 
+    Sync EMPTY = ctx -> Collections.emptyList();
+
     @Contract(pure = true)
     static @NotNull Sync sync(Sync suggestions) {
         return suggestions;
@@ -40,7 +42,11 @@ public interface BukkitSuggestionsSupplier<Result> extends SuggestionsSupplier<C
     }
 
     static @NotNull BukkitSuggestionsSupplier<?> empty() {
-        return sync(Collections.emptyList());
+        return EMPTY;
+    }
+
+    static boolean isEmpty(BukkitSuggestionsSupplier<?> supplier) {
+        return supplier == EMPTY;
     }
 
     @FunctionalInterface

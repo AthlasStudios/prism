@@ -60,17 +60,22 @@ public class ArgumentMappings {
                 (argument, source, resolver) -> resolver.resolve(source).get(0)
         ));
 
-        register(dev.gurwi.prism.bukkit.argument.base.EntitySelectorArgument.OneEntity.class, ArgumentMapper.constant(
+        register(OfflinePlayerArgument.class, ArgumentMapper.constant(
+                MinecraftArgumentType.player(),
+                (argument, source, resolver) -> resolver.resolve(source).get(0)
+        ));
+
+        register(EntitySelectorArgument.OneEntity.class, ArgumentMapper.constant(
                 MinecraftArgumentType.entity(),
                 (argument, source, resolver) -> resolver.resolve(source).get(0)
         ));
 
-        register(dev.gurwi.prism.bukkit.argument.base.EntitySelectorArgument.ManyEntities.class, ArgumentMapper.constant(
+        register(EntitySelectorArgument.ManyEntities.class, ArgumentMapper.constant(
                 MinecraftArgumentType.entities(),
                 (argument, source, resolver) -> resolver.resolve(source)
         ));
 
-        register(dev.gurwi.prism.bukkit.argument.base.EntitySelectorArgument.OnePlayer.class, ArgumentMapper.constant(
+        register(EntitySelectorArgument.OnePlayer.class, ArgumentMapper.constant(
                 MinecraftArgumentType.player(),
                 (argument, source, resolver) -> resolver.resolve(source).get(0)
         ));

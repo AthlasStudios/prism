@@ -55,5 +55,4 @@ public class NativeBackedArgumentType<Native, Argument> implements ArgumentType<
         return nativeType.getExamples();
     }
 
-
 }

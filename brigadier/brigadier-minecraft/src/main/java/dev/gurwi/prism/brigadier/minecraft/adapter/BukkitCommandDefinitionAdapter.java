@@ -149,7 +149,13 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
     public @Nullable SuggestionProvider<MinecraftCommandSource> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType) {
         BukkitArgument<?, ?> bukkitArgument = (BukkitArgument<?, ?>) argument;
 
-        if (bukkitArgument.getSuggestionsSupplier() == null) {
+        BukkitSuggestionsSupplier<?> declared = bukkitArgument.getSuggestionsSupplier();
+
+        if (declared == null || BukkitSuggestionsSupplier.isEmpty(declared)) {
+            return null;
+        }
+
+        if (nativeType != null && !primitive(nativeType)) {
             return null;
         }
 
@@ -179,6 +185,10 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
 
             return suggestionsBuilder.buildFuture();
         };
+    }
+
+    private static boolean primitive(@NotNull ArgumentType<?> type) {
+        return type.getClass().getName().startsWith("com.mojang.brigadier.arguments.");
     }
 
     private static void applySuggestions(@NotNull SuggestionsBuilder builder, @NotNull Collection<ArgumentSuggestion> suggestions, @NotNull String remaining) {

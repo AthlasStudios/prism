@@ -33,6 +33,9 @@ public class PaperExample extends JavaPlugin {
         BukkitCommandDefinition build = new PrismBukkitCommand("testa", "pr")
                 .withDescription("Prism command tester")
                 .withArguments(
+                        new PlayerArgument("player"),
+                        new OfflinePlayerArgument("offlinePlayer"),
+                        new EntitySelectorArgument.OnePlayer("idk"),
                         new ColorArgument("color")
                 )
                 .executes((sender, args) -> {
