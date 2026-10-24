@@ -18,6 +18,7 @@ A code-first command framework that lets you build commands directly in Java wit
 ![Paper](https://img.shields.io/badge/Paper-supported-1C6BA0?style=flat-square)
 ![Spigot](https://img.shields.io/badge/Spigot-supported-ED8106?style=flat-square)
 ![Velocity](https://img.shields.io/badge/Velocity-experimental-00AEEF?style=flat-square)
+![BungeeCord](https://img.shields.io/badge/BungeeCord-experimental-C9A227?style=flat-square)
 
 [Documentation](https://docs.gurwi.dev/prism) · [Issues](https://github.com/AthlasStudios/prism/issues)
 
@@ -52,6 +53,11 @@ A code-first command framework that lets you build commands directly in Java wit
   - [Setup](#setup)
   - [Permissions](#permissions)
   - [Differences from Bukkit](#differences-from-bukkit)
+- [BungeeCord](#bungeecord)
+  - [Setup](#setup-1)
+  - [Command tree injection](#command-tree-injection)
+  - [Permissions and requirements](#permissions-and-requirements-1)
+  - [Differences from Bukkit](#differences-from-bukkit-1)
 - [Platform configuration](#platform-configuration)
 - [Built-in argument types](#built-in-argument-types)
 - [Implementing your own platform](#implementing-your-own-platform)
@@ -70,7 +76,7 @@ Most command frameworks lean on annotations and reflection: you describe a comma
 - **Compile-time safety.** Arguments, executors and requirements are real typed objects, not strings buried in annotations.
 - **Composability.** Commands are values. Build them in loops, share argument definitions, and assemble trees programmatically.
 - **Discoverability.** Your IDE's autocomplete is the documentation. Everything hangs off one builder.
-- **One API, many platforms.** The core is platform-agnostic; Spigot, Paper (with native Brigadier support), Velocity and others plug in on top.
+- **One API, many platforms.** The core is platform-agnostic; Spigot, Paper (with native Brigadier support), Velocity, BungeeCord and others plug in on top.
 
 ```java
 new PrismBukkitCommand("heal")
@@ -95,7 +101,7 @@ new PrismBukkitCommand("heal")
 - 🔐 **Permissions and usage requirements** at the command and argument level
 - 🧭 **Per-sender-type executors** for players, console, remote console, command blocks and proxied senders
 - ⚡ **Native Brigadier integration** (client-side validation, colored syntax, native suggestions) with an automatic **legacy fallback**
-- 🛰️ **Velocity support** built on the same Brigadier tree builder
+- 🛰️ **Velocity and BungeeCord support** built on the same Brigadier tree builder
 - 📖 **Built-in help generator** that renders clickable usage for a command tree
 - ♻️ **Runtime registration and unregistration** of commands
 - 🧩 **Shaded bundles** so you ship a single dependency
@@ -108,16 +114,21 @@ new PrismBukkitCommand("heal")
 | Spigot (and forks)                | `prism-spigot`                         | Supported         |
 | Paper (and forks)                 | `prism-paper`                          | Supported         |
 | Brigadier (Minecraft 1.13 → 26.x) | bundled in the Spigot and Paper builds | Supported         |
-| Velocity                          | `platform/velocity`                    | 🧪 Experimental   |
+| Velocity                          | `prism-velocity`                       | 🧪 Experimental   |
+| BungeeCord (and forks)            | `prism-bungeecord`                     | 🧪 Experimental   |
 | JDA (Discord)                     | `platform/jda`                         | 🚧 In development |
 
 Prism compiles against the Spigot 1.13.2 API, and the Brigadier layer has per-version adapters for Minecraft **1.13 through 1.21 and 26.x**. If Brigadier can't be initialized on your server version, Prism logs a warning and falls back to legacy registration, so commands keep working.
 
 The Velocity module targets **Java 25** and the Velocity 4.x API. Velocity has no legacy fallback: commands are always registered through Brigadier.
 
+The BungeeCord module targets **Java 17** and the BungeeCord API `1.21`. Commands are always built as Brigadier trees. They are run and tab-completed through a regular BungeeCord command, and Prism can additionally inject the tree into the command packet so clients get native suggestions, see [BungeeCord](#bungeecord).
+
+The JDA module is only a skeleton for now: it has no working registry or arguments yet.
+
 ## Installation
 
-> Prism is currently in **beta** (`1.0.0-beta.4`). APIs may still change between beta releases.
+> Prism is currently in **beta** (`1.0.0-beta.5`). APIs may still change between beta releases.
 
 Group ID: `dev.gurwi`
 
@@ -136,7 +147,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.gurwi:prism-paper:1.0.0-beta.4")
+    implementation("dev.gurwi:prism-paper:1.0.0-beta.5")
 }
 ```
 
@@ -148,7 +159,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'dev.gurwi:prism-paper:1.0.0-beta.4'
+    implementation 'dev.gurwi:prism-paper:1.0.0-beta.5'
 }
 ```
 
@@ -158,11 +169,22 @@ dependencies {
 <dependency>
     <groupId>dev.gurwi</groupId>
     <artifactId>prism-paper</artifactId>
-    <version>1.0.0-beta.4</version>
+    <version>1.0.0-beta.5</version>
 </dependency>
 ```
 
-Swap `prism-paper` for `prism-spigot` if you target Spigot. The individual modules (`prism-core`, `prism-bukkit`, `prism-brigadier` and `prism-brigadier-minecraft`) are published too, but most projects should use a bundle.
+Swap `prism-paper` for `prism-spigot` if you target Spigot. The individual modules (`prism-core`, `prism-bukkit`, `prism-brigadier-api` and `prism-brigadier-minecraft`) are published too, but most projects should use a bundle.
+
+**Velocity and BungeeCord** have no bundle. Depend on the platform module directly (it pulls in `prism-core` and `prism-brigadier-api`):
+
+```kotlin
+dependencies {
+    implementation("dev.gurwi:prism-velocity:1.0.0-beta.5")   // Velocity
+    implementation("dev.gurwi:prism-bungeecord:1.0.0-beta.5") // BungeeCord
+}
+```
+
+Velocity ships Brigadier itself. BungeeCord does not expose it to plugins, so shade `com.mojang:brigadier` into your BungeeCord plugin as well (the [example plugin](examples/bungeecord-plugin/build.gradle.kts) uses `1.0.18`).
 
 Prism is a library, not a standalone plugin, so **shade it into your own plugin jar** (for example with the [Shadow](https://github.com/GradleUp/shadow) plugin) and relocate it to avoid conflicts with other plugins that bundle Prism.
 
@@ -195,8 +217,8 @@ Compile against Prism without shading it. The API classes come from the `api` mo
 
 ```kotlin
 dependencies {
-    compileOnly("dev.gurwi:prism-paper:1.0.0-beta.4")
-    compileOnly(files("libs/prism-1.0.0-beta.4-API.jar"))
+    compileOnly("dev.gurwi:prism-paper:1.0.0-beta.5")
+    compileOnly(files("libs/prism-1.0.0-beta.5-API.jar"))
 }
 ```
 
@@ -613,7 +635,7 @@ platform.getCommandsRegistry().unregister(built);
 
 ## Velocity
 
-The Velocity platform (`platform/velocity`) reuses the core builder and the Brigadier tree builder, so commands, subcommands, argument trees, optional arguments and suggestions work as described in the guide. The command class is `BungeecordCommand`, and the sender is Velocity's `CommandSource`.
+The Velocity platform (`platform/velocity`) reuses the core builder and the Brigadier tree builder, so commands, subcommands, argument trees, optional arguments and suggestions work as described in the guide. The command class is `VelocityCommand`, and the sender is Velocity's `CommandSource`. The executors are `executes(...)` (any `CommandSource`), `executesPlayer(...)` and `executesConsole(...)`.
 
 ### Setup
 
@@ -643,7 +665,7 @@ public class MyPlugin {
 }
 ```
 
-- `VelocityPlatform.configure(plugin, server)` takes your plugin instance as a plain `Object`. Velocity has no plugin handle: `@Plugin` is an annotation, and the instance of your main class is the plugin.
+- `VelocityPlatform.configure(plugin, server)` takes your plugin instance as a plain `Object`. Velocity has no plugin handle: `@Plugin` is an annotation, and the instance of your main class is the plugin. The class must carry `@Plugin`, otherwise `configure` throws an `IllegalArgumentException`.
 - Prism does not register any Velocity event listener. `register(...)` talks to Velocity's `CommandManager` immediately, so calling it before `ProxyInitializeEvent` is your responsibility to avoid.
 - Velocity injects the SLF4J `Logger`, not `java.util.logging.Logger`.
 
@@ -670,7 +692,7 @@ VelocityPermission.startsWith("myplugin.admin.", knownPermissions);
 
 | Topic                   | Bukkit platforms              | Velocity                              |
 |-------------------------|-------------------------------|---------------------------------------|
-| Command class           | `PrismBukkitCommand`          | `BungeecordCommand`                     |
+| Command class           | `PrismBukkitCommand`          | `VelocityCommand`                     |
 | Sender                  | `CommandSender`               | `CommandSource`                       |
 | Plugin handle           | `JavaPlugin`                  | `Object` (your plugin instance)       |
 | Registration timing     | `onEnable`                    | `ProxyInitializeEvent` or later       |
@@ -679,9 +701,79 @@ VelocityPermission.startsWith("myplugin.admin.", knownPermissions);
 | Brigadier fallback      | Legacy registrar              | None, Brigadier only                  |
 | Suggestion tooltips     | `LiteralMessage`              | `VelocityBrigadierMessage`            |
 
+## BungeeCord
+
+The BungeeCord platform (`platform/bungeecord`) reuses the core builder and the Brigadier tree builder, so commands, subcommands, argument trees, optional arguments and suggestions work as described in the guide. The command class is `BungeecordCommand`, and the sender is BungeeCord's `CommandSender`. The executors are `executes(...)` (any `CommandSender`), `executesPlayer(...)` (`ProxiedPlayer`) and `executesConsole(...)`.
+
+### Setup
+
+Create the platform in `onEnable` and register commands right after.
+
+```java
+public class MyPlugin extends Plugin {
+
+    private BungeecordPlatform platform;
+
+    @Override
+    public void onEnable() {
+        this.platform = BungeecordPlatform.configure(this).init();
+
+        new BungeecordCommand("hello")
+                .withOptionalArguments(new IntegerArgument("n", 0, 10))
+                .executes((sender, args) -> sender.sendMessage("Hello World!"))
+                .register(platform);
+    }
+}
+```
+
+`register(...)` adds one BungeeCord `Command` per label (name and aliases) to the `PluginManager`. Input is parsed and executed by a Brigadier dispatcher behind it, and tab completion comes from the same tree. Unregistering a command removes those commands again.
+
+Arguments live in `dev.gurwi.prism.bungeecord.argument` and extend `BungeecordArgument`, see [Built-in argument types](#built-in-argument-types).
+
+### Command tree injection
+
+BungeeCord's own tab completion does not know about Prism's argument types. To fix that, Prism hooks each player's connection on login and rewrites the command packet sent to the client, so the client sees your real command tree with typed arguments and native syntax highlighting.
+
+This relies on BungeeCord internals. If the layout is not what Prism expects, it logs a message and carries on without injection: commands still run, and tab completion still works through the regular BungeeCord path. You can turn it off:
+
+```java
+BungeecordPlatform platform = BungeecordPlatform.configure(this)
+        .disableCommandTreeInjection()
+        .init();
+```
+
+### Permissions and requirements
+
+```java
+new BungeecordCommand("admin")
+        .withPermission("myplugin.admin", "myplugin.staff")
+        .withPlayerRequirement(player -> player.getServer() != null)
+        .executesPlayer((player, args) -> player.sendMessage("Hello admin"))
+        .register(platform);
+```
+
+Permissions are only enforced for `ProxiedPlayer` senders: the console always passes. Available requirement helpers are `withRequirement`, `withPlayerRequirement` and `withConsoleRequirement`.
+
+BungeeCord cannot enumerate the permissions a player holds, so `BungeecordPermission.startsWith(prefix, knownPermissions)` works the same way as on Velocity: it tests the nodes you supply.
+
+### Differences from Bukkit
+
+| Topic                   | Bukkit platforms              | BungeeCord                            |
+|-------------------------|-------------------------------|---------------------------------------|
+| Command class           | `PrismBukkitCommand`          | `BungeecordCommand`                   |
+| Sender                  | `CommandSender`               | `CommandSender` (BungeeCord's)        |
+| Plugin handle           | `JavaPlugin`                  | `Plugin`                              |
+| Executors               | Player, console, remote console, proxy, block | Generic, player, console |
+| Operators               | Always pass permission checks | No operator concept                   |
+| Non-player permissions  | Checked normally              | Console always passes                 |
+| `startsWith` permission | Matches effective permissions | Matches a supplied set of known nodes |
+| Client-side tree        | Native Brigadier              | Optional packet injection             |
+| Brigadier fallback      | Legacy registrar              | None, Brigadier only                  |
+| Suggestion tooltips     | `LiteralMessage`              | Not supported                         |
+
 ## Platform configuration
 
-Both `PaperPlatform.configure(plugin)` and `SpigotPlatform.configure(plugin)` return a builder. Finish with `.init()`. `VelocityPlatform.configure(plugin, server)` works the same way.
+Both `PaperPlatform.configure(plugin)` and `SpigotPlatform.configure(plugin)` return a builder. Finish with `.init()`. `VelocityPlatform.configure(plugin, server)` and `BungeecordPlatform.configure(plugin)` work the same way.
 
 | Option                                         | Platform      | Description                                                                      |
 |------------------------------------------------|---------------|----------------------------------------------------------------------------------|
@@ -690,6 +782,7 @@ Both `PaperPlatform.configure(plugin)` and `SpigotPlatform.configure(plugin)` re
 | `disableAsyncSuggestions()`                    | Paper         | Don't register the async tab-completion listener.                                |
 | `registerPermissions(boolean)`                 | Paper, Spigot | Toggle command permission registration. Defaults to `true`.                      |
 | `withGlobalLegacyCommandErrorHandler(handler)` | Paper, Spigot | Set the default handler for argument-parse errors on legacy-registered commands. |
+| `disableCommandTreeInjection()`                | BungeeCord    | Don't rewrite the command packet sent to clients. Enabled by default.            |
 
 ```java
 PaperPlatform platform = PaperPlatform.configure(this)
@@ -715,21 +808,27 @@ All of these live in `dev.gurwi.prism.bukkit.argument`.
 | **Text and color**            | `ColorArgument`, `HexColorArgument`, `MessageArgument`, `TimeArgument`                                                                                                                                                                                       |
 | **Structure**                 | `LiteralArgument`, `FlagArgument`                                                                                                                                                                                                                            |
 
-Velocity arguments live in `dev.gurwi.prism.velocity.argument` and extend `BungeecordArgument`. Each one wraps a Brigadier `ArgumentType`.
+Velocity and BungeeCord have a smaller, platform-neutral set. Velocity arguments live in `dev.gurwi.prism.velocity.argument` and extend `VelocityArgument`; BungeeCord arguments live in `dev.gurwi.prism.bungeecord.argument` and extend `BungeecordArgument`. Each one wraps a Brigadier `ArgumentType`.
 
-Need something custom? Extend `BukkitArgument` (or `BungeecordArgument` on Velocity, or one of the `base` argument classes) and implement `parse(...)`, and optionally provide default suggestions.
+| Category       | Arguments (Velocity and BungeeCord)                                                                 |
+|----------------|-----------------------------------------------------------------------------------------------------|
+| **Primitives** | `StringArgument`, `GreedyStringArgument`, `QuotedStringArgument`, `BooleanArgument`, `IntegerArgument`, `LongArgument`, `FloatArgument`, `DoubleArgument` |
+| **Ranges**     | `IntegerRangeArgument`, `LongRangeArgument`, `FloatRangeArgument`, `DoubleRangeArgument`            |
+| **Other**      | `EnumArgument`, `LiteralArgument`                                                                   |
+
+Need something custom? Extend `BukkitArgument` (or `VelocityArgument` on Velocity, `BungeecordArgument` on BungeeCord, or one of the `base` argument classes) and implement `parse(...)`, and optionally provide default suggestions.
 
 > Greedy arguments must be the last argument of a command and cannot have children.
 
 ## Implementing your own platform
 
-`core` knows nothing about Minecraft, Discord or any other host. A platform is a thin layer that supplies six things on top of it, and everything else (the fluent builder, argument trees, subcommands, requirements, `CommandArguments`) comes for free. The `platform/bukkit` module is the full-featured reference, `platform/velocity` is a compact Brigadier-only reference, and `platform/jda` is a minimal skeleton that follows the same layout.
+`core` knows nothing about Minecraft, Discord or any other host. A platform is a thin layer that supplies six things on top of it, and everything else (the fluent builder, argument trees, subcommands, requirements, `CommandArguments`) comes for free. The `platform/bukkit` module is the full-featured reference, `platform/velocity` and `platform/bungeecord` are compact Brigadier-only references, and `platform/jda` is a minimal skeleton that follows the same layout.
 
 Add the core module (it is published on its own):
 
 ```kotlin
 dependencies {
-    api("dev.gurwi:prism-core:1.0.0-beta.4")
+    api("dev.gurwi:prism-core:1.0.0-beta.5")
 }
 ```
 
@@ -934,7 +1033,7 @@ For suggestions, call each argument's `getSuggestionsSupplier().getSuggestions(n
 
 ### 8. Brigadier hosts (optional)
 
-If your host already speaks Brigadier (Minecraft servers, Velocity), skip step 7. Implement `BrigadierAdapter<Source, Definition>` and let `BrigadierTreeBuilder` build the command tree, parse the hierarchy and wire up suggestions.
+If your host already speaks Brigadier (Minecraft servers, Velocity) or you can run a `CommandDispatcher` behind it (BungeeCord), skip step 7. Implement `BrigadierAdapter<Source, Definition>` and let `BrigadierTreeBuilder` build the command tree, parse the hierarchy and wire up suggestions.
 
 | Method                                        | Purpose                                                                      |
 |-----------------------------------------------|------------------------------------------------------------------------------|
@@ -964,7 +1063,7 @@ for (String label : adapter.getBuilder().labels(definition)) {
 }
 ```
 
-Read `BukkitCommandDefinitionAdapter` (`platform/brigadier/minecraft`) and `BungeecordCommandDefinitionAdapter` (`platform/velocity`) for two complete adapters.
+Read `BukkitCommandDefinitionAdapter` (`brigadier/brigadier-minecraft`), `VelocityCommandDefinitionAdapter` (`platform/velocity`) and `BungeecordCommandDefinitionAdapter` (`platform/bungeecord`) for three complete adapters.
 
 ### Using it
 
@@ -997,30 +1096,32 @@ prism
 │   ├── spigot/            Spigot platform and registry
 │   ├── paper/             Paper platform and registry (async suggestions, Paper-native Brigadier)
 │   ├── velocity/          Velocity platform and registry (VelocityCommand, VelocityPermission, Brigadier adapter)
-│   ├── brigadier/         Platform-independent Brigadier tree builder and adapter
-│   │   └── minecraft/     Minecraft-facing Brigadier bridge
-│   │       ├── V1_13 … V1_21, V26   Per-version adapters
-│   │       └── brigadier-paper      Paper-native adapter
+│   ├── bungeecord/        BungeeCord platform and registry (BungeecordCommand, command shim, tree injector)
 │   └── jda/               Discord (JDA) platform, in development
-├── publish/
-│   ├── paper/             Aggregates modules into the `prism-paper` bundle
-│   └── spigot/            Aggregates modules into the `prism-spigot` bundle
-├── gradle-plugin/
+├── brigadier/
+│   ├── brigadier-api/     Platform-independent Brigadier tree builder and adapter
+│   ├── brigadier-minecraft/  Minecraft-facing Brigadier bridge
+│   ├── brigadier-paper/   Paper-native adapter
+│   └── nms/               Per-version adapters: V1_13 … V1_21, V26
+├── bundles/
+│   ├── paper-bundle/      Aggregates modules into the `prism-paper` bundle
+│   └── spigot-bundle/     Aggregates modules into the `prism-spigot` bundle
+├── build-logic/
 │   └── spigot-nms/        Gradle plugin for Spigot NMS reobfuscation
 ├── buildSrc/              Shared publishing conventions
 ├── plugin/
 │   └── bukkit-plugin/     Standalone Prism plugin (`api/` for dependents, `plugin/` for the jar)
-├── examples/
-│   ├── paper-plugin/      Paper example plugin
-│   └── velocity-plugin/   Velocity example plugin
-└── test/plugin/           Paper test plugin used to exercise the API on a live server
+└── examples/
+    ├── paper-plugin/      Paper example plugin
+    ├── velocity-plugin/   Velocity example plugin
+    └── bungeecord-plugin/ BungeeCord example plugin
 ```
 
 ## Building from source
 
 **Requirements**
 
-- A JDK that Gradle can use for toolchains. The library itself targets **Java 17**, tests run on **Java 21**, and the Paper test plugin, the Velocity module and CI use **Java 25**. Gradle's toolchain resolver can download missing JDKs automatically.
+- A JDK that Gradle can use for toolchains. The library itself targets **Java 11** (the BungeeCord module targets **Java 17**), tests run on **Java 21**, and the Paper example plugin, the Velocity module and CI use **Java 25**. Gradle's toolchain resolver can download missing JDKs automatically.
 - Gradle itself must run on JDK 25 or newer while the Velocity module is part of the build. Set the Gradle JVM in your IDE accordingly.
 - No separate Gradle install is needed. Use the included wrapper.
 
@@ -1041,24 +1142,30 @@ Tests use [JUnit](https://junit.org/) with [MockBukkit](https://github.com/MockB
 
 ## Trying it out on a server
 
-The `examples` module is a sample plugin that exercises most of the API (subcommands, argument trees, flags, async and sync suggestions, and many built-in argument types). Start a local Paper server with it installed:
+The `examples/paper-plugin` module is a sample plugin that exercises most of the API (subcommands, argument trees, flags, async and sync suggestions, and many built-in argument types). Start a local Paper server with it installed:
 
 ```bash
-./gradlew :test:plugin:runServer
+./gradlew :examples:paper-plugin:runServer
 ```
 
 To produce the plugin jar instead:
 
 ```bash
-./gradlew :test:plugin:shadowJar
+./gradlew :examples:paper-plugin:shadowJar
 ```
 
-Its source, [`TestPlugin.java`](examples/paper-plugin/src/main/java/dev/gurwi/prism/example/velocity/plugin/TestPlugin.java), doubles as a handy set of usage examples.
+Its source, [`PaperExample.java`](examples/paper-plugin/src/main/java/dev/gurwi/prism/example/paper/plugin/PaperExample.java), doubles as a handy set of usage examples.
 
 For Velocity, `examples/velocity-plugin` starts a local Velocity proxy with a minimal plugin:
 
 ```bash
 ./gradlew :examples:velocity-plugin:runVelocity
+```
+
+For BungeeCord, `examples/bungeecord-plugin` starts a local Waterfall proxy with a minimal plugin:
+
+```bash
+./gradlew :examples:bungeecord-plugin:runWaterfall
 ```
 
 ## Contributing
