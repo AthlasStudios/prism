@@ -10,12 +10,6 @@ dependencies {
     compileOnly("com.destroystokyo.paper:paper-api:1.13.2-R0.1-SNAPSHOT")
 }
 
-configurations.runtimeClasspath {
-    attributes {
-        attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 16)
-    }
-}
-
 tasks {
     assemble {
         dependsOn("shadowJar")

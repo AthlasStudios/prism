@@ -10,11 +10,3 @@ dependencies {
     compileOnly("net.md-5:bungeecord-api:1.21-R0.2")
     compileOnly("io.netty:netty-transport:4.1.118.Final")
 }
-
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
-}
-
-tasks.withType<JavaCompile>().configureEach {
-    options.release.set(17)
-}

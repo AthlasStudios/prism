@@ -15,12 +15,6 @@ dependencies {
     testImplementation(testFixtures(project(":platform:bukkit")))
 }
 
-configurations.runtimeClasspath {
-    attributes {
-        attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 16)
-    }
-}
-
 tasks {
     assemble {
         dependsOn("shadowJar")
