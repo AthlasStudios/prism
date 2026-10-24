@@ -84,7 +84,7 @@ new PrismBukkitCommand("heal")
         .withPermission("myplugin.heal")
         .withArguments(new PlayerArgument("target"))
         .executes((sender, args) -> {
-            Player target = args.get("target");
+Player target = args.get("target");
             target.setHealth(20);
             sender.sendMessage("Healed " + target.getName());
         })
@@ -143,11 +143,11 @@ Each artifact is a self-contained bundle that already includes the core, Bukkit 
 
 ```kotlin
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    implementation("dev.gurwi:prism-paper:1.0.0-beta.5")
+  implementation("dev.gurwi:prism-paper:1.0.0-beta.5")
 }
 ```
 
@@ -155,11 +155,11 @@ dependencies {
 
 ```groovy
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    implementation 'dev.gurwi:prism-paper:1.0.0-beta.5'
+  implementation 'dev.gurwi:prism-paper:1.0.0-beta.5'
 }
 ```
 
@@ -167,9 +167,9 @@ dependencies {
 
 ```xml
 <dependency>
-    <groupId>dev.gurwi</groupId>
-    <artifactId>prism-paper</artifactId>
-    <version>1.0.0-beta.5</version>
+  <groupId>dev.gurwi</groupId>
+  <artifactId>prism-paper</artifactId>
+  <version>1.0.0-beta.5</version>
 </dependency>
 ```
 
@@ -179,8 +179,8 @@ Swap `prism-paper` for `prism-spigot` if you target Spigot. The individual modul
 
 ```kotlin
 dependencies {
-    implementation("dev.gurwi:prism-velocity:1.0.0-beta.5")   // Velocity
-    implementation("dev.gurwi:prism-bungeecord:1.0.0-beta.5") // BungeeCord
+  implementation("dev.gurwi:prism-velocity:1.0.0-beta.5")   // Velocity
+  implementation("dev.gurwi:prism-bungeecord:1.0.0-beta.5") // BungeeCord
 }
 ```
 
@@ -217,8 +217,8 @@ Compile against Prism without shading it. The API classes come from the `api` mo
 
 ```kotlin
 dependencies {
-    compileOnly("dev.gurwi:prism-paper:1.0.0-beta.5")
-    compileOnly(files("libs/prism-1.0.0-beta.5-API.jar"))
+  compileOnly("dev.gurwi:prism-paper:1.0.0-beta.5")
+  compileOnly(files("libs/prism-1.0.0-beta.5-API.jar"))
 }
 ```
 
@@ -231,24 +231,24 @@ Get the API through `PrismPluginAPI.getAPI()`. It returns `null` when Prism is n
 ```java
 public class MyPlugin extends JavaPlugin {
 
-    @Override
-    public void onEnable() {
-        PrismPluginAPI api = PrismPluginAPI.getAPI();
+  @Override
+  public void onEnable() {
+    PrismPluginAPI api = PrismPluginAPI.getAPI();
 
-        if (api == null) {
-            getLogger().severe("Prism is not installed");
-            getServer().getPluginManager().disablePlugin(this);
-            return;
-        }
-
-        BukkitCommandsRegistry<?> registry = api.createRegistry(this);
-
-        registry.register(
-                new PrismBukkitCommand("hello")
-                        .executes((sender, args) -> sender.sendMessage("Hello!"))
-                        .build()
-        );
+    if (api == null) {
+      getLogger().severe("Prism is not installed");
+      getServer().getPluginManager().disablePlugin(this);
+      return;
     }
+
+    BukkitCommandsRegistry<?> registry = api.createRegistry(this);
+
+    registry.register(
+            new PrismBukkitCommand("hello")
+                    .executes((sender, args) -> sender.sendMessage("Hello!"))
+                    .build()
+    );
+  }
 }
 ```
 
@@ -271,16 +271,16 @@ If you only want commands registered, implement `PrismCommandProvider` on your m
 ```java
 public class MyPlugin extends JavaPlugin implements PrismCommandProvider {
 
-    @Override
-    public Collection<? extends PrismBukkitCommand> getCommands() {
-        return List.of(
-                new PrismBukkitCommand("hello")
-                        .executes((sender, args) -> sender.sendMessage("Hello!")),
+  @Override
+  public Collection<? extends PrismBukkitCommand> getCommands() {
+    return List.of(
+            new PrismBukkitCommand("hello")
+                    .executes((sender, args) -> sender.sendMessage("Hello!")),
 
-                new PrismBukkitCommand("ping")
-                        .executes((sender, args) -> sender.sendMessage("Pong!"))
-        );
-    }
+            new PrismBukkitCommand("ping")
+                    .executes((sender, args) -> sender.sendMessage("Pong!"))
+    );
+  }
 }
 ```
 
@@ -291,7 +291,7 @@ By default each plugin gets its own registry, created from Prism's `config.yml`,
 ```java
 @Override
 public BukkitCommandsRegistry<?> getRegistry() {
-    return PrismPluginAPI.getAPI().getDefaultRegistry();
+  return PrismPluginAPI.getAPI().getDefaultRegistry();
 }
 ```
 
@@ -301,7 +301,7 @@ A provider does not have to be your main class. Register any provider by hand wi
 PrismPluginAPI.getAPI().registerProvider(this, () -> List.of(
         new PrismBukkitCommand("hello")
                 .executes((sender, args) -> sender.sendMessage("Hello!"))
-), null);
+        ), null);
 ```
 
 Passing `null` as the registry uses the provider's `getRegistry()`, then falls back to a per-plugin registry. Your plugin must still declare `depend: [prism]`; Prism logs a warning for providers that don't.
@@ -331,12 +331,12 @@ Do this once, in `onEnable`.
 ```java
 public class MyPlugin extends JavaPlugin {
 
-    private PaperPlatform platform;
+  private PaperPlatform platform;
 
-    @Override
-    public void onEnable() {
-        this.platform = PaperPlatform.configure(this).init();
-    }
+  @Override
+  public void onEnable() {
+    this.platform = PaperPlatform.configure(this).init();
+  }
 }
 ```
 
@@ -345,12 +345,12 @@ public class MyPlugin extends JavaPlugin {
 ```java
 public class MyPlugin extends JavaPlugin {
 
-    private SpigotPlatform platform;
+  private SpigotPlatform platform;
 
-    @Override
-    public void onEnable() {
-        this.platform = SpigotPlatform.configure(this).init();
-    }
+  @Override
+  public void onEnable() {
+    this.platform = SpigotPlatform.configure(this).init();
+  }
 }
 ```
 
@@ -364,11 +364,11 @@ new PrismBukkitCommand("teleport", "tp")
         .withPermission("myplugin.teleport")
         .withArguments(new LocationArgument("location"))
         .executesPlayer((player, args) -> {
-            Location location = args.get("location");
+Location location = args.get("location");
             player.teleport(location);
             player.sendMessage("Teleported!");
         })
-        .register(platform);
+                .register(platform);
 ```
 
 That's it. The first argument is the command name; any further strings are aliases. Tab completion, argument parsing and error messages come for free.
@@ -388,10 +388,10 @@ new PrismBukkitCommand("give")
                 new MaterialArgument("material"),
                 new IntegerArgument("amount", 1, 64)
         )
-        .executes((sender, args) -> {
-            Player target = args.get("target");
-            Material material = args.get("material");
-            int amount = args.get("amount");
+                .executes((sender, args) -> {
+Player target = args.get("target");
+Material material = args.get("material");
+int amount = args.get("amount");
 
             target.getInventory().addItem(new ItemStack(material, amount));
         })
@@ -415,11 +415,11 @@ new PrismBukkitCommand("number")
         .withArguments(new IntegerArgument("number", 0, 10))
         .withOptionalArguments(new FloatArgument("float", 0.1f, 9.9f))
         .executes((sender, args) -> {
-            int number = args.get("number");
-            float scale = args.getOptional("float", 1.0f); // with a default
+int number = args.get("number");
+float scale = args.getOptional("float", 1.0f); // with a default
             sender.sendMessage(number + " x " + scale);
         })
-        .register(platform);
+                .register(platform);
 ```
 
 `getOptional(key)` returns an `Optional<T>`, and `getOptional(key, defaultValue)` returns the value or your default.
@@ -434,15 +434,15 @@ new PrismBukkitCommand("team", "t")
         .withSubCommands(
                 new PrismBukkitCommand("create")
                         .withArguments(new StringArgument("name"))
-                        .executes((sender, args) -> {
-                            sender.sendMessage("Created team " + args.get("name"));
-                        }),
+        .executes((sender, args) -> {
+        sender.sendMessage("Created team " + args.get("name"));
+        }),
 
-                new PrismBukkitCommand("join")
+        new PrismBukkitCommand("join")
                         .withArguments(new StringArgument("name"))
-                        .executesPlayer((player, args) -> {
-                            player.sendMessage("Joined team " + args.get("name"));
-                        })
+        .executesPlayer((player, args) -> {
+        player.sendMessage("Joined team " + args.get("name"));
+        })
         )
         .register(platform);
 ```
@@ -455,9 +455,9 @@ new PrismBukkitCommand("paint")
         .withSubCommands(
                 new PrismBukkitCommand("call")
                         .executes((sender, args) -> {
-                            // Read "color" from the parent command
-                            sender.sendMessage("Color: " + args.getAt("../", "color"));
-                        })
+        // Read "color" from the parent command
+        sender.sendMessage("Color: " + args.getAt("../", "color"));
+        })
         )
         .register(platform);
 ```
@@ -474,18 +474,18 @@ new PrismBukkitCommand("prism", "pri")
         .then(
                 new MaterialArgument("material")
                         .executes((sender, args) -> {
-                            Material material = args.get("material");
+Material material = args.get("material");
                             sender.sendMessage("Selected material " + material);
                         })
-        )
-        .then(
+                                )
+                                .then(
                 new GameModeArgument("gamemode")
                         .executes((sender, args) -> {
-                            GameMode gameMode = args.get("gamemode");
+GameMode gameMode = args.get("gamemode");
                             sender.sendMessage("Selected game mode " + gameMode);
                         })
-        )
-        .register(platform);
+                                )
+                                .register(platform);
 ```
 
 Branches can be nested further by calling `.then(...)` on an argument. Argument names must be unique among siblings, and Prism throws an `IllegalArgumentException` if you reuse one or try to add an argument beneath itself.
@@ -525,7 +525,7 @@ A sender that has no matching executor gets "This command cannot be run by this 
 ```java
 new PrismBukkitCommand("admin")
         .withPermission("myplugin.admin", "myplugin.staff")
-        // ...
+// ...
 ```
 
 For wildcard-style checks, `BukkitPermission.startsWith("myplugin.")` matches any effective permission with that prefix. Velocity has no equivalent, see [Velocity permissions](#permissions).
@@ -556,10 +556,10 @@ new IntegerArgument("number", 0, 10).replaceSuggestions("5", "10");
 ```java
 new StringArgument("kit").replaceSuggestions(
         BukkitSuggestionsSupplier.sync(ctx -> List.of(
-                ArgumentSuggestion.of("starter", "The default starter kit"),
+        ArgumentSuggestion.of("starter", "The default starter kit"),
                 ArgumentSuggestion.of("vip", "Perks for VIP players")
         ))
-);
+                );
 ```
 
 **Asynchronous suggestions** (for database or network lookups) return a `CompletableFuture`:
@@ -567,9 +567,9 @@ new StringArgument("kit").replaceSuggestions(
 ```java
 new StringArgument("player").replaceSuggestions(
         BukkitSuggestionsSupplier.async(ctx -> CompletableFuture.supplyAsync(() ->
-                List.of(ArgumentSuggestion.of("alpha", "first async value"))
+        List.of(ArgumentSuggestion.of("alpha", "first async value"))
         ))
-);
+        );
 ```
 
 The `SuggestionContext` passed in gives you access to the current raw input (`ctx.getCurrentRawArg()`) so you can filter results. Helpers `BukkitSuggestionsSupplier.strings(...)` and `stringsAsync(...)` cover the plain-string cases.
@@ -586,13 +586,13 @@ On Brigadier platforms Prism also filters suggestions by the text already typed 
 new PrismBukkitCommand("flagger")
         .withArguments(
                 new FlagArgument("flags").flags(
-                        Flag.valued(new ColorArgument("color"), 'c'),
-                        Flag.presence("enable", 'e')
+        Flag.valued(new ColorArgument("color"), 'c'),
+        Flag.presence("enable", 'e')
                 )
-        )
-        .executesPlayer((player, args) -> {
-            ParsedFlags flags = args.get("flags");
-            Optional<ChatColor> color = flags.get("color");
+                        )
+                        .executesPlayer((player, args) -> {
+ParsedFlags flags = args.get("flags");
+Optional<ChatColor> color = flags.get("color");
 
             color.ifPresent(c -> player.sendMessage("Color: " + c.name()));
         })
@@ -619,8 +619,8 @@ A command can be registered in two equivalent ways:
 ```java
 // 1. Directly from the builder
 BukkitCommandDefinition definition = new PrismBukkitCommand("hello")
-        .executes((sender, args) -> sender.sendMessage("Hello!"))
-        .register(platform);
+                .executes((sender, args) -> sender.sendMessage("Hello!"))
+                .register(platform);
 
 // 2. Build first, register later
 BukkitCommandDefinition built = new PrismBukkitCommand("hello")
@@ -645,23 +645,23 @@ Create the platform in your plugin constructor and register commands from your `
 @Plugin(id = "my-plugin")
 public class MyPlugin {
 
-    private final ProxyServer server;
-    private final VelocityPlatform platform;
+  private final ProxyServer server;
+  private final VelocityPlatform platform;
 
-    @Inject
-    public MyPlugin(ProxyServer server) {
-        this.server = server;
-        this.platform = VelocityPlatform.configure(this, server).init();
-    }
+  @Inject
+  public MyPlugin(ProxyServer server) {
+    this.server = server;
+    this.platform = VelocityPlatform.configure(this, server).init();
+  }
 
-    @Subscribe
-    public void onProxyInit(ProxyInitializeEvent event) {
-        new VelocityCommand("hello")
-                .executes((source, args) -> {
-                    source.sendPlainMessage("Hello World!");
-                })
-                .register(platform);
-    }
+  @Subscribe
+  public void onProxyInit(ProxyInitializeEvent event) {
+    new VelocityCommand("hello")
+            .executes((source, args) -> {
+              source.sendPlainMessage("Hello World!");
+            })
+            .register(platform);
+  }
 }
 ```
 
@@ -712,17 +712,17 @@ Create the platform in `onEnable` and register commands right after.
 ```java
 public class MyPlugin extends Plugin {
 
-    private BungeecordPlatform platform;
+  private BungeecordPlatform platform;
 
-    @Override
-    public void onEnable() {
-        this.platform = BungeecordPlatform.configure(this).init();
+  @Override
+  public void onEnable() {
+    this.platform = BungeecordPlatform.configure(this).init();
 
-        new BungeecordCommand("hello")
-                .withOptionalArguments(new IntegerArgument("n", 0, 10))
-                .executes((sender, args) -> sender.sendMessage("Hello World!"))
-                .register(platform);
-    }
+    new BungeecordCommand("hello")
+            .withOptionalArguments(new IntegerArgument("n", 0, 10))
+            .executes((sender, args) -> sender.sendMessage("Hello World!"))
+            .register(platform);
+  }
 }
 ```
 
@@ -828,7 +828,7 @@ Add the core module (it is published on its own):
 
 ```kotlin
 dependencies {
-    api("dev.gurwi:prism-core:1.0.0-beta.5")
+  api("dev.gurwi:prism-core:1.0.0-beta.5")
 }
 ```
 
@@ -853,15 +853,15 @@ Implement `PermissionNode<Permission, Source>`. `permission()` returns your host
 ```java
 public record AcmePermission(String node) implements PermissionNode<String, AcmeUser> {
 
-    @Override
-    public String permission() {
-        return node;
-    }
+  @Override
+  public String permission() {
+    return node;
+  }
 
-    @Override
-    public boolean hasPermission(AcmeUser user) {
-        return user.hasPermission(node);
-    }
+  @Override
+  public boolean hasPermission(AcmeUser user) {
+    return user.hasPermission(node);
+  }
 }
 ```
 
@@ -877,25 +877,25 @@ public interface AcmeSuggestions<T> extends SuggestionsSupplier<AcmeUser, Collec
 public abstract class AcmeArgument<Impl extends AcmeArgument<Impl, T>, T>
         extends AbstractArgument<Impl, T, AcmeUser, AcmeSuggestions<T>> {
 
-    public AcmeArgument(String name, AcmeSuggestions<T> defaultSuggestions) {
-        super(name, defaultSuggestions);
-    }
+  public AcmeArgument(String name, AcmeSuggestions<T> defaultSuggestions) {
+    super(name, defaultSuggestions);
+  }
 }
 
 public class AcmeIntegerArgument extends AcmeArgument<AcmeIntegerArgument, Integer> {
 
-    public AcmeIntegerArgument(String name) {
-        super(name, ctx -> List.of());
-    }
+  public AcmeIntegerArgument(String name) {
+    super(name, ctx -> List.of());
+  }
 
-    @Override
-    public Integer parse(AcmeUser source, String value) throws ArgumentParseException {
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            throw new ArgumentParseException(this, value, "'" + value + "' is not a number");
-        }
+  @Override
+  public Integer parse(AcmeUser source, String value) throws ArgumentParseException {
+    try {
+      return Integer.parseInt(value);
+    } catch (NumberFormatException e) {
+      throw new ArgumentParseException(this, value, "'" + value + "' is not a number");
     }
+  }
 }
 ```
 
@@ -911,20 +911,20 @@ The definition is the immutable, built form of a command. Subclass `AbstractComm
 public class AcmeCommandDefinition extends AbstractCommandDefinition<
         AcmeCommandDefinition, AcmeUser, AcmeExecutor, AcmeArgument<?, ?>, AcmePermission> {
 
-    protected AcmeCommandDefinition(@Nullable AcmeCommandDefinition parent, String name, List<String> aliases,
-                                    String description, UsageRequirement<AcmeUser> requirement,
-                                    Set<AcmePermission> permissions,
-                                    List<AcmeArgument<?, ?>> requiredArguments,
-                                    List<AcmeArgument<?, ?>> optionalArguments,
-                                    Map<Class<? extends AcmeExecutor>, AcmeExecutor> executors,
-                                    CommandChildrenFactory<AcmeCommandDefinition> childrenFactory) {
-        super(parent, name, aliases, description, requirement, permissions,
-                requiredArguments, optionalArguments, executors, childrenFactory);
-    }
+  protected AcmeCommandDefinition(@Nullable AcmeCommandDefinition parent, String name, List<String> aliases,
+                                  String description, UsageRequirement<AcmeUser> requirement,
+                                  Set<AcmePermission> permissions,
+                                  List<AcmeArgument<?, ?>> requiredArguments,
+                                  List<AcmeArgument<?, ?>> optionalArguments,
+                                  Map<Class<? extends AcmeExecutor>, AcmeExecutor> executors,
+                                  CommandChildrenFactory<AcmeCommandDefinition> childrenFactory) {
+    super(parent, name, aliases, description, requirement, permissions,
+            requiredArguments, optionalArguments, executors, childrenFactory);
+  }
 }
 ```
 
-The base class already gives you `getName()`, `getAliases()`, `getChildren()`, `getChild(name)`, `getParent()`, `getExecutors()`, `hasExecutor(source)` and `canExecute(source)` (requirement plus all permissions).
+The base class already gives you `getName()`, `getAliases()`, `getChildren()`, `getChild(name)`, `getParent()`, `getExecutor(type)`, `getExecutors()` and `canExecute(source)` (requirement plus all permissions).
 
 ### 5. Builder
 
@@ -1015,18 +1015,17 @@ If your host has no command system of its own, Prism does not parse or run anyth
 2. Check `definition.canExecute(source)` and report a "no permission" error if it fails.
 3. Parse the raw tokens with each argument's `parse(source, token)`, honouring `canUse(source)`, and collect the values into two maps keyed by argument name (required and optional). Catch `ArgumentParseException` and turn it into a user-facing message.
 4. Wrap the values in a `CommandArguments`, passing the parent's `CommandArguments` so that `getAt("../", "key")` and friends work.
-5. Check `definition.hasExecutor(source)`, then call `tryInvoke(source, args)` on each executor from `definition.getExecutors()`.
+5. Look up the executor with `definition.getExecutor(...)` and call `run(source, args)` on it.
 
 ```java
 CommandArguments<AcmeCommandDefinition, AcmeUser> args =
         new CommandArguments<>(definition, requiredValues, optionalValues, parentArgs);
 
-if (!definition.hasExecutor(user)) {
-    user.sendMessage("This command cannot be run here.");
-    return;
-}
-
-definition.getExecutors().forEach(executor -> executor.tryInvoke(user, args));
+definition.getExecutor(AcmeExecutor.class)
+        .ifPresentOrElse(
+        executor -> executor.run(user, args),
+                () -> user.sendMessage("This command cannot be run here.")
+        );
 ```
 
 For suggestions, call each argument's `getSuggestionsSupplier().getSuggestions(new SuggestionContext<>(source, currentInput, currentRawArg))` and translate the result into whatever your host expects.
@@ -1052,12 +1051,12 @@ Your registry then turns each definition into Brigadier nodes:
 
 ```java
 for (String label : adapter.getBuilder().labels(definition)) {
-    LiteralCommandNode<CommandSource> node = adapter.getBuilder().build(definition, label);
-    BrigadierCommand command = new BrigadierCommand(node);
+LiteralCommandNode<CommandSource> node = adapter.getBuilder().build(definition, label);
+BrigadierCommand command = new BrigadierCommand(node);
 
-    CommandMeta meta = manager.metaBuilder(command)
-            .plugin(platform.getPlugin())
-            .build();
+CommandMeta meta = manager.metaBuilder(command)
+        .plugin(platform.getPlugin())
+        .build();
 
     manager.register(meta, command);
 }
@@ -1075,7 +1074,7 @@ AcmePlatform platform = new AcmePlatform();
 new AcmeCommandBuilder("greet")
         .withArguments(new AcmeIntegerArgument("times"))
         .executes((user, args) -> {
-            int times = args.get("times");
+int times = args.get("times");
             user.sendMessage("Hello! ".repeat(times));
         })
         .register(platform);
