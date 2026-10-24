@@ -89,10 +89,7 @@ public class AsyncTabCompleter implements Listener {
     private @Nullable BukkitCommandDefinition find(@NotNull String label) {
 
         return platform.getCommandsRegistry().getRegisteredCommands().stream()
-                .filter(command -> {
-                    System.out.println("Looked at: " + command.getName());
-                    return command.getName().equalsIgnoreCase(label);
-                })
+                .filter(command -> command.getName().equalsIgnoreCase(label))
                 .findFirst()
                 .orElse(null);
     }
