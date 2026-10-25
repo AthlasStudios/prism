@@ -61,6 +61,10 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
             return List.of();
         }
 
+        if (bukkitArgument.isFixedValuesUnlessNative() && builder.resolveType(argument) != null) {
+            return List.of();
+        }
+
         return bukkitArgument.getFixedValues()
                 .map(LiteralValues::get)
                 .orElse(List.of());

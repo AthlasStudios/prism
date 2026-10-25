@@ -22,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> extends AbstractTreeArgument<Impl, T, BukkitCommandDefinition, CommandSender, BukkitCommandExecutor<? extends CommandSender>, BukkitArgument<?, ?>, BukkitPermission, BukkitSuggestionsSupplier<?>> implements BukkitExecutorContainerBuilder<Impl>, BukkitRequirementContainerBuilder<Impl> {
 
     private @Nullable LiteralValues fixedValues;
+    private boolean fixedValuesUnlessNative;
 
     public BukkitArgument(String name) {
         super(name);
@@ -29,7 +30,22 @@ public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> ex
 
     public Impl withFixedValues(LiteralValues values) {
         this.fixedValues = Objects.requireNonNull(values, "values");
+        this.fixedValuesUnlessNative = false;
         return self();
+    }
+
+    public Impl withFixedValuesUnlessNative(LiteralValues values) {
+        this.fixedValues = Objects.requireNonNull(values, "values");
+        this.fixedValuesUnlessNative = true;
+        return self();
+    }
+
+    public Impl withFixedValuesUnlessNative(String... values) {
+        return withFixedValuesUnlessNative(LiteralValues.of(values));
+    }
+
+    public Impl withFixedValuesUnlessNative(Collection<String> values) {
+        return withFixedValuesUnlessNative(LiteralValues.of(values));
     }
 
     public Impl withFixedValues(String... values) {
@@ -45,11 +61,15 @@ public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> ex
     }
 
     public Impl replaceSuggestions(Collection<String> suggestions) {
+        if (isBlank(suggestions)) {
+            return replaceSuggestions((BukkitSuggestionsSupplier<?>) null);
+        }
+
         return replaceSuggestions(BukkitSuggestionsSupplier.strings(suggestions));
     }
 
     public Impl replaceSuggestions(String... suggestions) {
-        return replaceSuggestions(BukkitSuggestionsSupplier.strings(Arrays.asList(suggestions)));
+        return replaceSuggestions(Arrays.asList(suggestions));
     }
 
     public Impl replaceSuggestions(CompletableFuture<Collection<String>> suggestions) {
@@ -61,11 +81,15 @@ public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> ex
     }
 
     public Impl includeSuggestions(Collection<String> suggestions) {
+        if (isBlank(suggestions)) {
+            return self();
+        }
+
         return includeSuggestions(BukkitSuggestionsSupplier.strings(suggestions));
     }
 
     public Impl includeSuggestions(String... suggestions) {
-        return includeSuggestions(BukkitSuggestionsSupplier.strings(Arrays.asList(suggestions)));
+        return includeSuggestions(Arrays.asList(suggestions));
     }
 
     public Impl includeSuggestions(CompletableFuture<Collection<String>> suggestions) {
@@ -98,6 +122,14 @@ public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> ex
 
     public Optional<LiteralValues> getFixedValues() {
         return Optional.ofNullable(fixedValues);
+    }
+
+    public boolean isFixedValuesUnlessNative() {
+        return fixedValuesUnlessNative;
+    }
+
+    private static boolean isBlank(Collection<String> suggestions) {
+        return suggestions == null || suggestions.stream().allMatch(value -> value == null || value.isEmpty());
     }
 
 }
