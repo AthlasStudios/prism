@@ -115,7 +115,7 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
     }
 
     private @NotNull RequiredArgumentBuilder<SourceStack, ?> mapArgument(@NotNull ArgumentCommandNode<MinecraftCommandSource, ?> node, @NotNull Map<String, NativeBackedArgumentType<?, ?>> scope) {
-        ArgumentType<?> type = node.getType() instanceof NativeBackedArgumentType<?, ?> backed ? backed.nativeType() : node.getType();
+        ArgumentType<?> type = node.getType() instanceof NativeBackedArgumentType<?, ?> backed ? backed.getNativeType() : node.getType();
         RequiredArgumentBuilder<SourceStack, ?> builder = argument(node.getName(), type);
 
         if (node.getCustomSuggestions() != null) {

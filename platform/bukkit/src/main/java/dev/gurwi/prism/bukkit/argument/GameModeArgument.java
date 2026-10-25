@@ -20,7 +20,7 @@ public class GameModeArgument extends BukkitArgument<GameModeArgument, GameMode>
                 .collect(Collectors.toUnmodifiableList());
 
         includeSuggestionsUnlessNative(values);
-        withFixedValues(values);
+        withFixedValuesUnlessNative(values);
     }
 
     @Override

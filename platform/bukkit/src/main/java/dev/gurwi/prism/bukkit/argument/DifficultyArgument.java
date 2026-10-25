@@ -20,7 +20,7 @@ public class DifficultyArgument extends BukkitArgument<DifficultyArgument, Diffi
                 .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
-        withFixedValues(values);
+        withFixedValuesUnlessNative(values);
     }
 
     @Override

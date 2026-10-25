@@ -5,10 +5,11 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import org.jetbrains.annotations.NotNull;
 
-public interface BrigadierCompatibleArgument<T> {
+public interface BrigadierCompatibleArgument<T> extends NativeTypeHolder {
 
+    @Override
     @NotNull
-    ArgumentType<T> brigadierType();
+    ArgumentType<T> getNativeType();
 
     @SuppressWarnings("unchecked")
     default <S> T fromBrigadier(@NotNull CommandContext<S> context, @NotNull String node) throws CommandSyntaxException {

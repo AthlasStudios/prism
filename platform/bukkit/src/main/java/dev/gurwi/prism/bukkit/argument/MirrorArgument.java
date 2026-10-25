@@ -20,7 +20,7 @@ public class MirrorArgument extends BukkitArgument<MirrorArgument, Mirror> {
                 .collect(Collectors.toUnmodifiableList());
 
         includeSuggestionsUnlessNative(values);
-        withFixedValues(values);
+        withFixedValuesUnlessNative(values);
     }
 
     @Override

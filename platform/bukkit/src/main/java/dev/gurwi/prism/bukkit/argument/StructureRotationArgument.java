@@ -20,7 +20,7 @@ public class StructureRotationArgument extends BukkitArgument<StructureRotationA
                 .collect(Collectors.toUnmodifiableList());
 
         includeSuggestionsUnlessNative(values);
-        withFixedValues(values);
+        withFixedValuesUnlessNative(values);
     }
 
     @Override

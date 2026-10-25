@@ -37,6 +37,9 @@ public class PaperExample extends JavaPlugin {
                         new OfflinePlayerArgument("offlinePlayer"),
                         new EntitySelectorArgument.OnePlayer("idk"),
                         new ColorArgument("color")
+                                .replaceSuggestions(
+                                        "ciano"
+                                )
                 )
                 .executes((sender, args) -> {
                     sender.sendMessage("This works");

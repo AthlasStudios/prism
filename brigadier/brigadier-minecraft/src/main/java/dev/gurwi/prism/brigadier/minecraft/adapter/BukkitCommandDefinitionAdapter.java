@@ -14,6 +14,7 @@ import dev.gurwi.prism.argument.suggestion.SuggestionContext;
 import dev.gurwi.prism.brigadier.BrigadierAdapter;
 import dev.gurwi.prism.brigadier.BrigadierCompatibleArgument;
 import dev.gurwi.prism.brigadier.BrigadierTreeBuilder;
+import dev.gurwi.prism.brigadier.NativeTypeHolder;
 import dev.gurwi.prism.brigadier.NodeSpec;
 import dev.gurwi.prism.brigadier.minecraft.argument.mapping.ArgumentMappings;
 import dev.gurwi.prism.brigadier.minecraft.argument.mapping.BoundArgumentMapper;
@@ -61,13 +62,25 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
             return List.of();
         }
 
-        if (bukkitArgument.isFixedValuesUnlessNative() && builder.resolveType(argument) != null) {
+        List<String> values = bukkitArgument.getFixedValues()
+                .map(LiteralValues::get)
+                .orElse(List.of());
+
+        if (values.isEmpty()) {
+            return values;
+        }
+
+        ArgumentType<?> resolved = builder.resolveType(argument);
+
+        if (bukkitArgument.isFixedValuesUnlessNative() && resolved != null) {
             return List.of();
         }
 
-        return bukkitArgument.getFixedValues()
-                .map(LiteralValues::get)
-                .orElse(List.of());
+        if (bukkitArgument.getSuggestionsSupplier().isPresent()) {
+            return List.of();
+        }
+
+        return values;
     }
 
     @Override
@@ -154,18 +167,22 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
     public @Nullable SuggestionProvider<MinecraftCommandSource> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType) {
         BukkitArgument<?, ?> bukkitArgument = (BukkitArgument<?, ?>) argument;
 
-        if (nativeType != null && !primitive(nativeType)) {
-            return null;
-        }
+        Optional<BukkitSuggestionsSupplier<?>> replaced = bukkitArgument.getSuggestionsSupplier();
 
         boolean nativeProvided = BrigadierAdapter.providesSuggestions(nativeType);
+        ArgumentType<?> nativeSuggester = nativeType instanceof NativeTypeHolder ? ((NativeTypeHolder) nativeType).getNativeType() : nativeType;
 
         List<BukkitSuggestionsSupplier<?>> suppliers = new ArrayList<>();
 
-        bukkitArgument.getSuggestionsSupplier().ifPresent(suppliers::add);
-        suppliers.addAll(bukkitArgument.getIncludedSuggestions());
+        for (BukkitSuggestionsSupplier<?> included : bukkitArgument.getIncludedSuggestions()) {
+            if (nativeProvided && included instanceof BukkitSuggestionsSupplier.UnlessNative) {
+                continue;
+            }
 
-        if (suppliers.isEmpty()) {
+            suppliers.add(included);
+        }
+
+        if (suppliers.isEmpty() && replaced.isEmpty()) {
             return null;
         }
 
@@ -176,7 +193,15 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
             SuggestionContext<CommandSender> suggestionContext =
                     new SuggestionContext<>(sender, suggestionsBuilder.getInput(), remaining, nativeProvided);
 
-            List<CompletableFuture<Collection<ArgumentSuggestion>>> parts = new ArrayList<>(suppliers.size());
+            CompletableFuture<Collection<ArgumentSuggestion>> replacedPart = replaced
+                    .map(supplier -> BukkitSuggestionsSupplier.resolveRaw(supplier, suggestionContext))
+                    .orElse(null);
+
+            List<CompletableFuture<Collection<ArgumentSuggestion>>> parts = new ArrayList<>(suppliers.size() + 1);
+
+            if (replacedPart != null) {
+                parts.add(replacedPart);
+            }
 
             for (BukkitSuggestionsSupplier<?> supplier : suppliers) {
                 parts.add(BukkitSuggestionsSupplier.resolve(supplier, suggestionContext));
@@ -184,6 +209,7 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
 
             return CompletableFuture.allOf(parts.toArray(new CompletableFuture[0])).handle((ignored, error) -> {
                 Set<String> seen = new HashSet<>();
+                boolean deferred = replacedPart != null && nativeType != null && !replacedPart.isCompletedExceptionally() && replacedPart.join() == null;
 
                 for (CompletableFuture<Collection<ArgumentSuggestion>> part : parts) {
                     if (part.isCompletedExceptionally()) continue;
@@ -195,13 +221,13 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
                     }
                 }
 
-                return suggestionsBuilder.build();
-            });
-        };
-    }
+                if (deferred) {
+                    return nativeSuggester.listSuggestions(context, suggestionsBuilder);
+                }
 
-    private static boolean primitive(@NotNull ArgumentType<?> type) {
-        return type.getClass().getName().startsWith("com.mojang.brigadier.arguments.");
+                return CompletableFuture.completedFuture(suggestionsBuilder.build());
+            }).thenCompose(future -> future);
+        };
     }
 
     private static void applySuggestions(@NotNull SuggestionsBuilder builder, @NotNull Collection<ArgumentSuggestion> suggestions, @NotNull String remaining, @NotNull Set<String> seen) {

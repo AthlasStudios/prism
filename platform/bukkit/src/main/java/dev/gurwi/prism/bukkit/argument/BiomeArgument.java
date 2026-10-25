@@ -20,7 +20,7 @@ public class BiomeArgument extends BukkitArgument<BiomeArgument, Biome> {
                 .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
-        withFixedValues(values);
+        withFixedValuesUnlessNative(values);
     }
 
     @Override

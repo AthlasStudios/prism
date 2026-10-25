@@ -1045,7 +1045,7 @@ If your host already speaks Brigadier (Minecraft servers, Velocity) or you can r
 | `greedy(argument)` / `literal(argument)`      | Node kind.                                                                   |
 | `branches(definition)` / `children(argument)` | The `then(...)` tree of a command or an argument.                            |
 | `command(...)`                                | The Brigadier `Command` for a definition or a path inside its argument tree. |
-| `suggestions(argument, nativeType)`           | The `SuggestionProvider` for an argument, falling back to `nativeType`.      |
+| `suggestions(argument, nativeType)`           | The `SuggestionProvider` for an argument, falling back to `getNativeType`.      |
 
 Your registry then turns each definition into Brigadier nodes:
 

@@ -20,7 +20,7 @@ public class MaterialArgument extends BukkitArgument<MaterialArgument, Material>
                 .collect(Collectors.toUnmodifiableList());
 
         includeSuggestionsUnlessNative(values);
-        withFixedValues(values);
+        withFixedValuesUnlessNative(values);
     }
 
     @Override

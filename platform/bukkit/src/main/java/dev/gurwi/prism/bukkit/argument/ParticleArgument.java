@@ -20,7 +20,7 @@ public class ParticleArgument extends BukkitArgument<ParticleArgument, Particle>
                 .collect(Collectors.toUnmodifiableList());
 
         includeSuggestionsUnlessNative(values);
-        withFixedValues(values);
+        withFixedValuesUnlessNative(values);
     }
 
     @Override

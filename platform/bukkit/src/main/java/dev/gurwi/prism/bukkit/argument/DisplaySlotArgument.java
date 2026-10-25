@@ -20,7 +20,7 @@ public class DisplaySlotArgument extends BukkitArgument<DisplaySlotArgument, Dis
                 .collect(Collectors.toUnmodifiableList());
 
         includeSuggestionsUnlessNative(values);
-        withFixedValues(values);
+        withFixedValuesUnlessNative(values);
     }
 
     @Override

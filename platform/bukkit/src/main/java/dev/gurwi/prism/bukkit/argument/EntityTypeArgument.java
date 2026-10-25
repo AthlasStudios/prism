@@ -20,7 +20,7 @@ public class EntityTypeArgument extends BukkitArgument<EntityTypeArgument, Entit
                 .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
-        withFixedValues(values);
+        withFixedValuesUnlessNative(values);
     }
 
     @Override

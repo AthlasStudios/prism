@@ -6,13 +6,14 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import dev.gurwi.prism.brigadier.NativeTypeHolder;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
-public class NativeBackedArgumentType<Native, Argument> implements ArgumentType<Argument> {
+public class NativeBackedArgumentType<Native, Argument> implements ArgumentType<Argument>, NativeTypeHolder {
 
     private final ArgumentType<Native> nativeType;
     private final ArgumentResultConverter<Native, Argument> converter;
@@ -27,7 +28,8 @@ public class NativeBackedArgumentType<Native, Argument> implements ArgumentType<
         return new NativeBackedArgumentType<>(nativeType, converter);
     }
 
-    public ArgumentType<Native> nativeType() {
+    @Override
+    public @NotNull ArgumentType<Native> getNativeType() {
         return nativeType;
     }
 

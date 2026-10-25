@@ -20,7 +20,7 @@ public class EnchantmentArgument extends BukkitArgument<EnchantmentArgument, Enc
                 .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
-        withFixedValues(values);
+        withFixedValuesUnlessNative(values);
     }
 
     @Override

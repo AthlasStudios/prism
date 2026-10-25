@@ -11,7 +11,7 @@ public class BooleanArgument extends BukkitArgument<BooleanArgument, Boolean> {
         super(name);
 
         includeSuggestionsUnlessNative("true", "false");
-        withFixedValues("true", "false");
+        withFixedValuesUnlessNative("true", "false");
     }
 
     @Override

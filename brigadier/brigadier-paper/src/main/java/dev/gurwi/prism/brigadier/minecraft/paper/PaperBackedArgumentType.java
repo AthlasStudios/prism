@@ -3,13 +3,14 @@ package dev.gurwi.prism.brigadier.minecraft.paper;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import dev.gurwi.prism.brigadier.NativeTypeHolder;
 import io.papermc.paper.command.brigadier.argument.CustomArgumentType;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 
-final class PaperBackedArgumentType<Native, Argument> implements CustomArgumentType<Argument, Native> {
+final class PaperBackedArgumentType<Native, Argument> implements CustomArgumentType<Argument, Native>, NativeTypeHolder {
 
     private final ArgumentType<Native> nativeType;
     private final Function<Native, Argument> converter;

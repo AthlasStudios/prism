@@ -22,7 +22,7 @@ public class PotionEffectTypeArgument extends BukkitArgument<PotionEffectTypeArg
                 .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
-        withFixedValues(values);
+        withFixedValuesUnlessNative(values);
     }
 
     @Override

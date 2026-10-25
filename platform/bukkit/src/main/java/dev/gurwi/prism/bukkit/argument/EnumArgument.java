@@ -22,7 +22,7 @@ public class EnumArgument<E extends Enum<E>> extends BukkitArgument<EnumArgument
                 .collect(Collectors.toUnmodifiableList());
 
         replaceSuggestions(values);
-        withFixedValues(values);
+        withFixedValuesUnlessNative(values);
     }
 
     @Override

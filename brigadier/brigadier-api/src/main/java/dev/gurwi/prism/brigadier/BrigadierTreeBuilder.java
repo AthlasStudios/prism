@@ -162,7 +162,7 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
             return override;
         }
 
-        return argument instanceof BrigadierCompatibleArgument<?> ? ((BrigadierCompatibleArgument<?>) argument).brigadierType() : null;
+        return argument instanceof BrigadierCompatibleArgument<?> ? ((BrigadierCompatibleArgument<?>) argument).getNativeType() : null;
     }
 
     public @NotNull List<NodeSpec> specs(@NotNull Definition definition) {
@@ -450,12 +450,14 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
             return null;
         }
 
-        if (resolved == null) {
+        if (resolved == null || nodeSpec.argument().getSuggestionsSupplier().isPresent()) {
             return user;
         }
 
+        ArgumentType<?> suggester = resolved instanceof NativeTypeHolder ? ((NativeTypeHolder) resolved).getNativeType() : resolved;
+
         return (context, builder) -> {
-            CompletableFuture<Suggestions> nativeSuggestions = resolved.listSuggestions(context, builder.createOffset(builder.getStart()));
+            CompletableFuture<Suggestions> nativeSuggestions = suggester.listSuggestions(context, builder.createOffset(builder.getStart()));
             CompletableFuture<Suggestions> userSuggestions = user.getSuggestions(context, builder.createOffset(builder.getStart()));
 
             return userSuggestions.thenCombine(nativeSuggestions, (first, second) -> Suggestions.merge(builder.getInput(), List.of(first, second)));

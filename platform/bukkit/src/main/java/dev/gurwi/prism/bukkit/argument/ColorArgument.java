@@ -19,7 +19,7 @@ public class ColorArgument extends BukkitArgument<ColorArgument, ChatColor> {
                 .collect(Collectors.toUnmodifiableList());
 
         includeSuggestionsUnlessNative(values);
-        withFixedValues(values);
+        withFixedValuesUnlessNative(values);
     }
 
     @Override

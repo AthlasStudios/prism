@@ -41,41 +41,71 @@ public interface BukkitSuggestionsSupplier<Result> extends SuggestionsSupplier<C
     }
 
     static @NotNull Sync unlessNative(@NotNull Sync suggestions) {
-        return ctx -> {
-            if (ctx.hasNativeSuggestions()) {
-                Collection<ArgumentSuggestion> none = Collections.emptyList();
-                return none;
-            }
-
-            return suggestions.getSuggestions(ctx);
-        };
+        return new UnlessNativeSync(suggestions);
     }
 
     static @NotNull Async unlessNativeAsync(@NotNull Async suggestions) {
-        return ctx -> {
-            if (ctx.hasNativeSuggestions()) {
-                Collection<ArgumentSuggestion> none = Collections.emptyList();
-                return CompletableFuture.completedFuture(none);
-            }
-
-            return suggestions.getSuggestions(ctx);
-        };
+        return new UnlessNativeAsync(suggestions);
     }
 
     static @NotNull CompletableFuture<Collection<ArgumentSuggestion>> resolve(@NotNull BukkitSuggestionsSupplier<?> supplier, @NotNull SuggestionContext<CommandSender> context) {
+        return resolveRaw(supplier, context).thenApply(suggestions -> suggestions != null ? suggestions : Collections.emptyList());
+    }
+
+    static @NotNull CompletableFuture<Collection<ArgumentSuggestion>> resolveRaw(@NotNull BukkitSuggestionsSupplier<?> supplier, @NotNull SuggestionContext<CommandSender> context) {
         if (supplier instanceof Async) {
             CompletableFuture<Collection<ArgumentSuggestion>> future = ((Async) supplier).getSuggestions(context);
 
-            return future != null ? future : CompletableFuture.completedFuture(Collections.<ArgumentSuggestion>emptyList());
+            return future != null ? future : CompletableFuture.completedFuture(Collections.emptyList());
         }
 
         if (supplier instanceof Sync) {
-            Collection<ArgumentSuggestion> suggestions = ((Sync) supplier).getSuggestions(context);
-
-            return CompletableFuture.completedFuture(suggestions != null ? suggestions : Collections.<ArgumentSuggestion>emptyList());
+            return CompletableFuture.completedFuture(((Sync) supplier).getSuggestions(context));
         }
 
-        return CompletableFuture.completedFuture(Collections.<ArgumentSuggestion>emptyList());
+        return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    interface UnlessNative {
+
+    }
+
+    final class UnlessNativeSync implements Sync, UnlessNative {
+
+        private final Sync delegate;
+
+        private UnlessNativeSync(Sync delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public Collection<ArgumentSuggestion> getSuggestions(SuggestionContext<CommandSender> ctx) {
+            if (ctx.hasNativeSuggestions()) {
+                return null;
+            }
+
+            return delegate.getSuggestions(ctx);
+        }
+
+    }
+
+    final class UnlessNativeAsync implements Async, UnlessNative {
+
+        private final Async delegate;
+
+        private UnlessNativeAsync(Async delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public CompletableFuture<Collection<ArgumentSuggestion>> getSuggestions(SuggestionContext<CommandSender> ctx) {
+            if (ctx.hasNativeSuggestions()) {
+                return CompletableFuture.completedFuture(null);
+            }
+
+            return delegate.getSuggestions(ctx);
+        }
+
     }
 
     @FunctionalInterface
