@@ -19,7 +19,7 @@ public class WeatherArgument extends BukkitArgument<WeatherArgument, WeatherType
                 .map(weatherType -> weatherType.name().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        replaceSuggestions(values);
+        includeSuggestionsUnlessNative(values);
         withFixedValuesUnlessNative(values);
     }
 

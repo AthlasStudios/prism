@@ -19,7 +19,7 @@ public class SoundArgument extends BukkitArgument<SoundArgument, Sound> {
                 .map(sound -> sound.name().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        replaceSuggestions(values);
+        includeSuggestionsUnlessNative(values);
         withFixedValuesUnlessNative(values);
     }
 

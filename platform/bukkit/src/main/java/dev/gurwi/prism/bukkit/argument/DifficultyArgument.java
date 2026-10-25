@@ -19,7 +19,7 @@ public class DifficultyArgument extends BukkitArgument<DifficultyArgument, Diffi
                 .map(difficulty -> difficulty.name().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        replaceSuggestions(values);
+        includeSuggestionsUnlessNative(values);
         withFixedValuesUnlessNative(values);
     }
 

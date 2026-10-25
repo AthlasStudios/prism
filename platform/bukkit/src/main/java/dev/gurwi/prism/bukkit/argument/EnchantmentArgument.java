@@ -19,7 +19,7 @@ public class EnchantmentArgument extends BukkitArgument<EnchantmentArgument, Enc
                 .map(enchantment -> enchantment.getName().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        replaceSuggestions(values);
+        includeSuggestionsUnlessNative(values);
         withFixedValuesUnlessNative(values);
     }
 

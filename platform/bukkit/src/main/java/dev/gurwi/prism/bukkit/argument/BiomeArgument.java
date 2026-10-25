@@ -19,7 +19,7 @@ public class BiomeArgument extends BukkitArgument<BiomeArgument, Biome> {
                 .map(biome -> biome.name().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        replaceSuggestions(values);
+        includeSuggestionsUnlessNative(values);
         withFixedValuesUnlessNative(values);
     }
 

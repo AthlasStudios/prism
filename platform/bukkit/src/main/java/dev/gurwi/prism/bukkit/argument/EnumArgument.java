@@ -21,7 +21,7 @@ public class EnumArgument<E extends Enum<E>> extends BukkitArgument<EnumArgument
                 .map(value -> value.name().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        replaceSuggestions(values);
+        includeSuggestionsUnlessNative(values);
         withFixedValuesUnlessNative(values);
     }
 

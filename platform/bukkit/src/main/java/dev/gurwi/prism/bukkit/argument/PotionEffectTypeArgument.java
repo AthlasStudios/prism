@@ -21,7 +21,7 @@ public class PotionEffectTypeArgument extends BukkitArgument<PotionEffectTypeArg
                 .map(type -> type.getName().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        replaceSuggestions(values);
+        includeSuggestionsUnlessNative(values);
         withFixedValuesUnlessNative(values);
     }
 
