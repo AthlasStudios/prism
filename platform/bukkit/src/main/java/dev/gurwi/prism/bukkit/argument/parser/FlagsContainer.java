@@ -8,17 +8,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public final class ParsedFlags {
+public final class FlagsContainer {
 
-    private static final ParsedFlags EMPTY = new ParsedFlags(Map.of());
+    private static final FlagsContainer EMPTY = new FlagsContainer(Map.of());
 
     private final Map<String, List<Object>> values;
 
-    public ParsedFlags(@NotNull Map<String, List<Object>> values) {
+    public FlagsContainer(@NotNull Map<String, List<Object>> values) {
         this.values = Map.copyOf(values);
     }
 
-    public static @NotNull ParsedFlags empty() {
+    public static @NotNull FlagsContainer empty() {
         return EMPTY;
     }
 

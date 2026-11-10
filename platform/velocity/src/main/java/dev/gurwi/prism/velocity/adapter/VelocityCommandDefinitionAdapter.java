@@ -13,10 +13,12 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import dev.gurwi.prism.argument.AbstractArgument;
 import dev.gurwi.prism.argument.CommandArguments;
+import dev.gurwi.prism.argument.ParsedArgument;
 import dev.gurwi.prism.argument.suggestion.SuggestionContext;
 import dev.gurwi.prism.argument.suggestion.SuggestionsSupplier;
 import dev.gurwi.prism.brigadier.BrigadierAdapter;
 import dev.gurwi.prism.brigadier.BrigadierTreeBuilder;
+import dev.gurwi.prism.brigadier.HierarchyArgumentsResolver;
 import dev.gurwi.prism.brigadier.NodeSpec;
 import dev.gurwi.prism.velocity.argument.LiteralArgument;
 import dev.gurwi.prism.velocity.argument.base.LiteralValues;
@@ -241,76 +243,25 @@ public class VelocityCommandDefinitionAdapter implements BrigadierAdapter<Comman
         return Command.SINGLE_SUCCESS;
     }
 
-    private @Nullable CommandArguments<VelocityCommandDefinition, CommandSource> parseHierarchy(@NotNull VelocityCommandDefinition target, @NotNull CommandContext<CommandSource> context, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {
-        Deque<VelocityCommandDefinition> hierarchy = new ArrayDeque<>();
-        VelocityCommandDefinition current = target;
-
-        while (current != null) {
-            hierarchy.addFirst(current);
-            current = current.getParent().orElse(null);
-        }
-
-        CommandArguments<VelocityCommandDefinition, CommandSource> parsed = null;
-
-        for (VelocityCommandDefinition level : hierarchy) {
-            parsed = parseLevel(level, context, parsed, level == target ? path : List.of(), forced);
-        }
-
-        return parsed;
-    }
-
-    private @NotNull CommandArguments<VelocityCommandDefinition, CommandSource> parseLevel(@NotNull VelocityCommandDefinition level, @NotNull CommandContext<CommandSource> context, CommandArguments<VelocityCommandDefinition, CommandSource> parent, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {
-        Map<AbstractArgument<?, ?, ?, ?>, List<NodeSpec>> grouped = new LinkedHashMap<>();
-
-        for (NodeSpec spec : builder.specs(level)) {
-            grouped.computeIfAbsent(spec.argument(), _ -> new ArrayList<>()).add(spec);
-        }
-
-        Map<String, Object> required = new HashMap<>();
-        Map<String, Object> optional = new HashMap<>();
-
-        for (Map.Entry<AbstractArgument<?, ?, ?, ?>, List<NodeSpec>> entry : grouped.entrySet()) {
-            VelocityArgument<?, ?> argument = (VelocityArgument<?, ?>) entry.getKey();
-            NodeSpec spec = entry.getValue().getFirst();
-
-            if (spec.literal() || !argument.isListed()) {
-                continue;
+    private @NotNull CommandArguments<VelocityCommandDefinition, CommandSource> parseHierarchy(@NotNull VelocityCommandDefinition target, @NotNull CommandContext<CommandSource> context, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {
+        return HierarchyArgumentsResolver.resolve(builder, this, target, path, forced, context.getInput(), new HierarchyArgumentsResolver.Reader() {
+            @Override
+            public boolean present(@NotNull NodeSpec spec) {
+                return VelocityCommandDefinitionAdapter.this.present(context, spec.name());
             }
 
-            String fixed = forced.get(argument);
+            @Override
+            public @NotNull ParsedArgument<?> read(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull List<NodeSpec> specs) {
+                String name = specs.getFirst().name();
 
-            if (fixed == null && spec.optional() && !present(context, spec.name())) {
-                continue;
+                return new ParsedArgument<>(HierarchyArgumentsResolver.raw(context, name), VelocityCommandDefinitionAdapter.this.read(context, name));
             }
 
-            Object value = fixed != null ? parseFixed(argument, fixed) : read(context, spec.name());
-
-            if (spec.optional()) {
-                optional.put(argument.getName(), value);
-            } else {
-                required.put(argument.getName(), value);
+            @Override
+            public @NotNull ParsedArgument<?> parseFixed(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull String value) throws CommandSyntaxException {
+                return new ParsedArgument<>(value, VelocityCommandDefinitionAdapter.this.parseFixed((VelocityArgument<?, ?>) argument, value));
             }
-        }
-
-        for (int index = 0; index < path.size(); index++) {
-            VelocityArgument<?, ?> argument = (VelocityArgument<?, ?>) path.get(index);
-
-            if (literal(argument) || !argument.isListed()) {
-                continue;
-            }
-
-            String fixed = forced.get(argument);
-
-            if (fixed != null) {
-                required.put(argument.getName(), parseFixed(argument, fixed));
-                continue;
-            }
-
-            List<NodeSpec> specs = builder.treeSpecs(level, path.subList(0, index + 1));
-            required.put(argument.getName(), read(context, specs.getFirst().name()));
-        }
-
-        return new CommandArguments<>(level, required, optional, parent);
+        });
     }
 
     private @NotNull Object parseFixed(@NotNull VelocityArgument<?, ?> argument, @NotNull String value) throws CommandSyntaxException {

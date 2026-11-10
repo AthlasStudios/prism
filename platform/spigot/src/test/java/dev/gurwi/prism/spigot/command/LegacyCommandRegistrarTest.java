@@ -1,13 +1,11 @@
 package dev.gurwi.prism.spigot.command;
 
 import dev.gurwi.prism.bukkit.command.BukkitExecutableCommand;
-import dev.gurwi.prism.bukkit.command.PrismBukkitCommand;
-import dev.gurwi.prism.spigot.SpigotPlatform;
+import dev.gurwi.prism.bukkit.command.PrismCommand;
+import dev.gurwi.prism.spigot.SpigotCommandPlatform;
 import dev.gurwi.prism.test.bukkit.BukkitTest;
 import org.bukkit.command.Command;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,12 +13,12 @@ class LegacyCommandRegistrarTest extends BukkitTest {
 
     @Test
     void testCommandMapLookup() {
-        SpigotPlatform.configure(plugin)
+        SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new PrismBukkitCommand(
+                        new PrismCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"
@@ -39,12 +37,12 @@ class LegacyCommandRegistrarTest extends BukkitTest {
 
     @Test
     void testCommandMetadata() {
-        SpigotPlatform.configure(plugin)
+        SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new PrismBukkitCommand(
+                        new PrismCommand(
                                 "prism",
                                 "pr"
                         )
@@ -66,12 +64,12 @@ class LegacyCommandRegistrarTest extends BukkitTest {
 
     @Test
     void testCommandMapRegistration() {
-        SpigotPlatform.configure(plugin)
+        SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new PrismBukkitCommand(
+                        new PrismCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"
@@ -95,12 +93,12 @@ class LegacyCommandRegistrarTest extends BukkitTest {
 
     @Test
     void testRegisteredCommands() {
-        var registry = SpigotPlatform.configure(plugin)
+        var registry = SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry();
 
-        var definition = new PrismBukkitCommand(
+        var definition = new PrismCommand(
                 "prism",
                 "Prism command",
                 "pr"
@@ -116,12 +114,12 @@ class LegacyCommandRegistrarTest extends BukkitTest {
 
     @Test
     void testUnregistration() {
-        var registry = SpigotPlatform.configure(plugin)
+        var registry = SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry();
 
-        var definition = new PrismBukkitCommand(
+        var definition = new PrismCommand(
                 "prism",
                 "Prism command",
                 "pr"

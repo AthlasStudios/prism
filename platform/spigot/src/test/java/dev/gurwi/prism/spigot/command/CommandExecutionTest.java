@@ -1,8 +1,8 @@
 package dev.gurwi.prism.spigot.command;
 
 import dev.gurwi.prism.bukkit.command.BukkitExecutableCommand;
-import dev.gurwi.prism.bukkit.command.PrismBukkitCommand;
-import dev.gurwi.prism.spigot.SpigotPlatform;
+import dev.gurwi.prism.bukkit.command.PrismCommand;
+import dev.gurwi.prism.spigot.SpigotCommandPlatform;
 import dev.gurwi.prism.test.bukkit.BukkitTest;
 import org.bukkit.command.Command;
 import org.junit.jupiter.api.Test;
@@ -17,12 +17,12 @@ class CommandExecutionTest extends BukkitTest {
 
     @Test
     void testCommandIsRegistered() {
-        SpigotPlatform.configure(plugin)
+        SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new PrismBukkitCommand(
+                        new PrismCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"
@@ -47,12 +47,12 @@ class CommandExecutionTest extends BukkitTest {
     void testCommandExecution() {
         PlayerMock player = server.addPlayer();
 
-        SpigotPlatform.configure(plugin)
+        SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new PrismBukkitCommand(
+                        new PrismCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"
@@ -78,12 +78,12 @@ class CommandExecutionTest extends BukkitTest {
     void testAliasExecution() {
         PlayerMock player = server.addPlayer();
 
-        SpigotPlatform.configure(plugin)
+        SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new PrismBukkitCommand(
+                        new PrismCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"
@@ -109,12 +109,12 @@ class CommandExecutionTest extends BukkitTest {
 //    void testCommandExecutionThrowsWhenNoExecutorIsPresent() {
 //        PlayerMock player = server.addPlayer();
 //
-//        SpigotPlatform.configure(plugin)
+//        SpigotCommandPlatform.configure(plugin)
 //                .disableBrigadier()
 //                .init()
 //                .getCommandsRegistry()
 //                .register(
-//                        new PrismBukkitCommand(
+//                        new PrismCommand(
 //                                "prism",
 //                                "Prism command",
 //                                "pr"

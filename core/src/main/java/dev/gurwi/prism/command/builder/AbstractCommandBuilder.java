@@ -5,7 +5,7 @@ import dev.gurwi.prism.command.AbstractCommandDefinition;
 import dev.gurwi.prism.command.CommandExecutor;
 import dev.gurwi.prism.permission.PermissionNode;
 import dev.gurwi.prism.platform.CommandsRegistry;
-import dev.gurwi.prism.platform.Platform;
+import dev.gurwi.prism.platform.CommandPlatform;
 import dev.gurwi.prism.requirement.UsageRequirement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -98,7 +98,7 @@ public abstract class AbstractCommandBuilder<
         return definition;
     }
 
-    public Definition register(@NotNull Platform<? extends CommandsRegistry<?, Definition>> platform) {
+    public Definition register(@NotNull CommandPlatform<? extends CommandsRegistry<?, Definition>> platform) {
         return register(platform.getCommandsRegistry());
     }
 

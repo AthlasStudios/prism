@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
-public abstract class BukkitPlatformConfiguration<Platform extends BukkitPlatform<?, ?>> {
+public abstract class BukkitCommandPlatformConfiguration<CommandPlatform extends BukkitCommandPlatform<?, ?>> {
 
     private final boolean disableBrigadier;
     private final boolean disableLegacyRegistrar;
@@ -15,7 +15,7 @@ public abstract class BukkitPlatformConfiguration<Platform extends BukkitPlatfor
     private final LegacyCommandExecutionErrorHandler legacyCommandErrorHandle;
 
     @Contract(pure = true)
-    protected BukkitPlatformConfiguration(@NotNull Builder<?, ?> builder) {
+    protected BukkitCommandPlatformConfiguration(@NotNull Builder<?, ?> builder) {
         this.disableBrigadier = builder.disableBrigadier;
         this.registerPermissions = builder.registerPermissions;
         this.disableLegacyRegistrar = builder.disableLegacyRegistrar;
@@ -39,7 +39,7 @@ public abstract class BukkitPlatformConfiguration<Platform extends BukkitPlatfor
         return Optional.ofNullable(legacyCommandErrorHandle);
     }
 
-    public abstract static class Builder<Platform extends BukkitPlatform<?, ?>, Builder extends BukkitPlatformConfiguration.Builder<Platform, Builder>> {
+    public abstract static class Builder<CommandPlatform extends BukkitCommandPlatform<?, ?>, Builder extends BukkitCommandPlatformConfiguration.Builder<CommandPlatform, Builder>> {
 
         private final Plugin plugin;
 
@@ -78,7 +78,7 @@ public abstract class BukkitPlatformConfiguration<Platform extends BukkitPlatfor
             return plugin;
         }
 
-        public abstract @NotNull Platform init();
+        public abstract @NotNull CommandPlatform init();
 
     }
 

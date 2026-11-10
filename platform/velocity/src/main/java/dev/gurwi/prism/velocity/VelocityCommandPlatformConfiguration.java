@@ -4,9 +4,9 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
 import org.jetbrains.annotations.NotNull;
 
-public class VelocityPlatformConfiguration {
+public class VelocityCommandPlatformConfiguration {
 
-    private VelocityPlatformConfiguration(@NotNull Builder builder) {
+    private VelocityCommandPlatformConfiguration(@NotNull Builder builder) {
 
     }
 
@@ -22,8 +22,8 @@ public class VelocityPlatformConfiguration {
             this.server = server;
         }
 
-        public @NotNull VelocityPlatform init() {
-            return new VelocityPlatform(plugin, server, new VelocityPlatformConfiguration(this));
+        public @NotNull VelocityCommandPlatform init() {
+            return new VelocityCommandPlatform(plugin, server, new VelocityCommandPlatformConfiguration(this));
         }
 
     }

@@ -1,17 +1,17 @@
 package dev.gurwi.prism.example.paper.plugin;
 
-import dev.gurwi.prism.bukkit.BukkitPlatform;
+import dev.gurwi.prism.bukkit.BukkitCommandPlatform;
 import dev.gurwi.prism.bukkit.argument.*;
 import dev.gurwi.prism.bukkit.argument.base.EntitySelectorArgument;
-import dev.gurwi.prism.bukkit.argument.parser.ParsedFlags;
+import dev.gurwi.prism.bukkit.argument.parser.FlagsContainer;
 import dev.gurwi.prism.bukkit.argument.suggestion.ArgumentSuggestion;
 import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.bukkit.argument.type.Flag;
 import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
-import dev.gurwi.prism.bukkit.command.PrismBukkitCommand;
+import dev.gurwi.prism.bukkit.command.PrismCommand;
 import dev.gurwi.prism.bukkit.util.CommandHelp;
-import dev.gurwi.prism.paper.PaperPlatform;
+import dev.gurwi.prism.paper.PaperCommandPlatform;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
@@ -27,10 +27,10 @@ public class PaperExample extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        PaperPlatform platform = PaperPlatform.configure(this)
+        PaperCommandPlatform platform = PaperCommandPlatform.configure(this)
                 .init();
 
-        BukkitCommandDefinition build = new PrismBukkitCommand("testa", "pr")
+        BukkitCommandDefinition build = new PrismCommand("testa", "pr")
                 .withDescription("Prism command tester")
                 .withArguments(
                         new PlayerArgument("player"),
@@ -45,12 +45,12 @@ public class PaperExample extends JavaPlugin {
                     sender.sendMessage("This works");
                 })
                 .withSubCommands(
-                        new PrismBukkitCommand("call")
+                        new PrismCommand("call")
                                 .executes((sender, args) -> {
                                     sender.sendMessage("Called team " + args.getAt("../", "color"));
                                 }),
 
-                        new PrismBukkitCommand("teleport")
+                        new PrismCommand("teleport")
                                 .withArguments(
                                         new LocationArgument("location")
                                 )
@@ -60,7 +60,7 @@ public class PaperExample extends JavaPlugin {
                                     player.sendMessage("Teleported to " + location);
                                 }),
 
-                        new PrismBukkitCommand("number")
+                        new PrismCommand("number")
                                 .withArguments(
                                         new IntegerArgument("number", 0, 10)
                                                 .replaceSuggestions("5", "10")
@@ -73,7 +73,7 @@ public class PaperExample extends JavaPlugin {
                                     sender.sendMessage("Number is " + number);
                                 }),
 
-                        new PrismBukkitCommand("gamemode")
+                        new PrismCommand("gamemode")
                                 .withArguments(
                                         new GameModeArgument("gamemode")
                                 )
@@ -82,7 +82,7 @@ public class PaperExample extends JavaPlugin {
                                     sender.sendMessage("Selected game mode " + gameMode);
                                 }),
 
-                        new PrismBukkitCommand("select")
+                        new PrismCommand("select")
                                 .withArguments(
                                         new EntitySelectorArgument.ManyEntities("entities")
                                 )
@@ -91,7 +91,7 @@ public class PaperExample extends JavaPlugin {
                                     sender.sendMessage("Selected entities " + entities);
                                 }),
 
-                        new PrismBukkitCommand("range")
+                        new PrismCommand("range")
                                 .withArguments(
                                         new IntegerRangeArgument("range")
                                 )
@@ -100,7 +100,7 @@ public class PaperExample extends JavaPlugin {
                                     sender.sendMessage("Selected range " + range.getLowerBound() + " " + range.getUpperBound());
                                 }),
 
-                        new PrismBukkitCommand("hex")
+                        new PrismCommand("hex")
                                 .withArguments(new HexColorArgument("hex"))
                                 .executes((sender, args) -> {
                                     Color color = args.get("hex");
@@ -111,28 +111,28 @@ public class PaperExample extends JavaPlugin {
                                     sender.sendMessage(message);
                                 }),
 
-                        new PrismBukkitCommand("material")
+                        new PrismCommand("material")
                                 .withArguments(new MaterialArgument("material"))
                                 .executes((sender, args) -> {
                                     Material material = args.get("material");
                                     sender.sendMessage("Selected material " + material);
                                 }),
 
-                        new PrismBukkitCommand("particle")
+                        new PrismCommand("particle")
                                 .withArguments(new ParticleArgument("particle"))
                                 .executes((sender, args) -> {
                                     Particle particle = args.get("particle");
                                     sender.sendMessage("Selected particle " + particle);
                                 }),
 
-                        new PrismBukkitCommand("difficulty")
+                        new PrismCommand("difficulty")
                                 .withArguments(new DifficultyArgument("difficulty"))
                                 .executes((sender, args) -> {
                                     Difficulty difficulty = args.get("difficulty");
                                     sender.sendMessage("Selected difficulty " + difficulty.name());
                                 }),
 
-                        new PrismBukkitCommand("idk")
+                        new PrismCommand("idk")
                                 .withArguments(
                                         new StringArgument("string")
                                                 .replaceSuggestions(
@@ -153,7 +153,7 @@ public class PaperExample extends JavaPlugin {
 
         StringArgument string = new StringArgument("string");
 
-        new PrismBukkitCommand("prism", "pri")
+        new PrismCommand("prism", "pri")
                 .withArguments(
                         new ItemStackPredicateArgument("predicate")
                 )
@@ -186,7 +186,7 @@ public class PaperExample extends JavaPlugin {
                 })
                 .register(platform);
 
-        BukkitCommandDefinition definition = new PrismBukkitCommand("flagger")
+        BukkitCommandDefinition definition = new PrismCommand("flagger")
                 .withArguments(
                         new FlagArgument("flags")
                                 .flags(
@@ -195,9 +195,11 @@ public class PaperExample extends JavaPlugin {
                                 )
                 )
                 .executesPlayer((player, args) -> {
-                    ParsedFlags flags = args.get("flags");
+                    FlagsContainer flags = args.get("flags");
                     Optional<ChatColor> color = flags.get("color");
 
+                    player.sendMessage(args.fullInput());
+                    player.sendMessage(args.getRaw("flags"));
                     color.ifPresent(c -> player.sendMessage("Color: " + c.name()));
                 })
                 .register(platform);
@@ -215,7 +217,7 @@ public class PaperExample extends JavaPlugin {
 //        }, 20 * 10); TODO -> RECHECK I THINK AN ERROR OCCURED
     }
 
-    public static BukkitCommandDefinition register(BukkitPlatform<?, ?> platform, Plugin plugin) {
+    public static BukkitCommandDefinition register(BukkitCommandPlatform<?, ?> platform, Plugin plugin) {
         BukkitSuggestionsSupplier.Async slow = context -> CompletableFuture.supplyAsync(() -> {
             plugin.getLogger().info("async supplier on " + Thread.currentThread().getName() + " input=" + context.getCurrentRawArg());
 
@@ -242,7 +244,7 @@ public class PaperExample extends JavaPlugin {
             );
         };
 
-        return new PrismBukkitCommand("asynctest")
+        return new PrismCommand("asynctest")
                 .withArguments(
                         new StringArgument("slow").replaceSuggestions(slow),
                         new StringArgument("fast").replaceSuggestions(instant)

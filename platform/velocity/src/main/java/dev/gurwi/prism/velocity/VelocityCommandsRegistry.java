@@ -13,14 +13,14 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 
-public class VelocityCommandsRegistry implements CommandsRegistry<VelocityPlatform, VelocityCommandDefinition> {
+public class VelocityCommandsRegistry implements CommandsRegistry<VelocityCommandPlatform, VelocityCommandDefinition> {
 
     private final VelocityCommandDefinitionAdapter adapter = new VelocityCommandDefinitionAdapter();
     private final Map<VelocityCommandDefinition, Set<String>> registeredCommands = new LinkedHashMap<>();
 
-    private final VelocityPlatform platform;
+    private final VelocityCommandPlatform platform;
 
-    public VelocityCommandsRegistry(@NotNull VelocityPlatform platform) {
+    public VelocityCommandsRegistry(@NotNull VelocityCommandPlatform platform) {
         this.platform = platform;
     }
 
@@ -57,7 +57,7 @@ public class VelocityCommandsRegistry implements CommandsRegistry<VelocityPlatfo
     }
 
     @Override
-    public VelocityPlatform getPlatform() {
+    public VelocityCommandPlatform getPlatform() {
         return platform;
     }
 

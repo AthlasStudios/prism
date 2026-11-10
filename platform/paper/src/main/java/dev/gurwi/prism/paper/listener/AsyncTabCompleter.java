@@ -3,7 +3,7 @@ package dev.gurwi.prism.paper.listener;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.event.AsyncCommandSuggestEvent;
-import dev.gurwi.prism.paper.PaperPlatform;
+import dev.gurwi.prism.paper.PaperCommandPlatform;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -23,9 +23,9 @@ public class AsyncTabCompleter implements Listener {
 
     private static final long TIMEOUT_MILLIS = 500;
 
-    private final PaperPlatform platform;
+    private final PaperCommandPlatform platform;
 
-    public AsyncTabCompleter(PaperPlatform platform) {
+    public AsyncTabCompleter(PaperCommandPlatform platform) {
         this.platform = platform;
     }
 

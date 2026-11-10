@@ -12,10 +12,12 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.md_5.bungee.api.CommandSender;
 import dev.gurwi.prism.argument.AbstractArgument;
 import dev.gurwi.prism.argument.CommandArguments;
+import dev.gurwi.prism.argument.ParsedArgument;
 import dev.gurwi.prism.argument.suggestion.SuggestionContext;
 import dev.gurwi.prism.argument.suggestion.SuggestionsSupplier;
 import dev.gurwi.prism.brigadier.BrigadierAdapter;
 import dev.gurwi.prism.brigadier.BrigadierTreeBuilder;
+import dev.gurwi.prism.brigadier.HierarchyArgumentsResolver;
 import dev.gurwi.prism.brigadier.NodeSpec;
 import dev.gurwi.prism.bungeecord.argument.LiteralArgument;
 import dev.gurwi.prism.bungeecord.argument.base.LiteralValues;
@@ -241,76 +243,25 @@ public class BungeecordCommandDefinitionAdapter implements BrigadierAdapter<Comm
         return Command.SINGLE_SUCCESS;
     }
 
-    private @Nullable CommandArguments<BungeecordCommandDefinition, CommandSender> parseHierarchy(@NotNull BungeecordCommandDefinition target, @NotNull CommandContext<CommandSender> context, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {
-        Deque<BungeecordCommandDefinition> hierarchy = new ArrayDeque<>();
-        BungeecordCommandDefinition current = target;
-
-        while (current != null) {
-            hierarchy.addFirst(current);
-            current = current.getParent().orElse(null);
-        }
-
-        CommandArguments<BungeecordCommandDefinition, CommandSender> parsed = null;
-
-        for (BungeecordCommandDefinition level : hierarchy) {
-            parsed = parseLevel(level, context, parsed, level == target ? path : List.of(), forced);
-        }
-
-        return parsed;
-    }
-
-    private @NotNull CommandArguments<BungeecordCommandDefinition, CommandSender> parseLevel(@NotNull BungeecordCommandDefinition level, @NotNull CommandContext<CommandSender> context, CommandArguments<BungeecordCommandDefinition, CommandSender> parent, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {
-        Map<AbstractArgument<?, ?, ?, ?>, List<NodeSpec>> grouped = new LinkedHashMap<>();
-
-        for (NodeSpec spec : builder.specs(level)) {
-            grouped.computeIfAbsent(spec.argument(), ignored -> new ArrayList<>()).add(spec);
-        }
-
-        Map<String, Object> required = new HashMap<>();
-        Map<String, Object> optional = new HashMap<>();
-
-        for (Map.Entry<AbstractArgument<?, ?, ?, ?>, List<NodeSpec>> entry : grouped.entrySet()) {
-            BungeecordArgument<?, ?> argument = (BungeecordArgument<?, ?>) entry.getKey();
-            NodeSpec spec = entry.getValue().get(0);
-
-            if (spec.literal() || !argument.isListed()) {
-                continue;
+    private @NotNull CommandArguments<BungeecordCommandDefinition, CommandSender> parseHierarchy(@NotNull BungeecordCommandDefinition target, @NotNull CommandContext<CommandSender> context, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {
+        return HierarchyArgumentsResolver.resolve(builder, this, target, path, forced, context.getInput(), new HierarchyArgumentsResolver.Reader() {
+            @Override
+            public boolean present(@NotNull NodeSpec spec) {
+                return BungeecordCommandDefinitionAdapter.this.present(context, spec.name());
             }
 
-            String fixed = forced.get(argument);
+            @Override
+            public @NotNull ParsedArgument<?> read(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull List<NodeSpec> specs) {
+                String name = specs.get(0).name();
 
-            if (fixed == null && spec.optional() && !present(context, spec.name())) {
-                continue;
+                return new ParsedArgument<>(HierarchyArgumentsResolver.raw(context, name), BungeecordCommandDefinitionAdapter.this.read(context, name));
             }
 
-            Object value = fixed != null ? parseFixed(argument, fixed) : read(context, spec.name());
-
-            if (spec.optional()) {
-                optional.put(argument.getName(), value);
-            } else {
-                required.put(argument.getName(), value);
+            @Override
+            public @NotNull ParsedArgument<?> parseFixed(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull String value) throws CommandSyntaxException {
+                return new ParsedArgument<>(value, BungeecordCommandDefinitionAdapter.this.parseFixed((BungeecordArgument<?, ?>) argument, value));
             }
-        }
-
-        for (int index = 0; index < path.size(); index++) {
-            BungeecordArgument<?, ?> argument = (BungeecordArgument<?, ?>) path.get(index);
-
-            if (literal(argument) || !argument.isListed()) {
-                continue;
-            }
-
-            String fixed = forced.get(argument);
-
-            if (fixed != null) {
-                required.put(argument.getName(), parseFixed(argument, fixed));
-                continue;
-            }
-
-            List<NodeSpec> specs = builder.treeSpecs(level, path.subList(0, index + 1));
-            required.put(argument.getName(), read(context, specs.get(0).name()));
-        }
-
-        return new CommandArguments<>(level, required, optional, parent);
+        });
     }
 
     private @NotNull Object parseFixed(@NotNull BungeecordArgument<?, ?> argument, @NotNull String value) throws CommandSyntaxException {

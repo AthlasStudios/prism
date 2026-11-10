@@ -1,14 +1,14 @@
 package dev.gurwi.prism.paper;
 
-import dev.gurwi.prism.bukkit.BukkitPlatformConfiguration;
+import dev.gurwi.prism.bukkit.BukkitCommandPlatformConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-public class PaperPlatformConfiguration extends BukkitPlatformConfiguration<PaperPlatform> {
+public class PaperCommandPlatformConfiguration extends BukkitCommandPlatformConfiguration<PaperCommandPlatform> {
 
     private final boolean disableAsyncSuggestions;
 
-    private PaperPlatformConfiguration(@NotNull Builder builder) {
+    private PaperCommandPlatformConfiguration(@NotNull Builder builder) {
         super(builder);
 
         this.disableAsyncSuggestions = builder.disableAsyncSuggestions;
@@ -18,7 +18,7 @@ public class PaperPlatformConfiguration extends BukkitPlatformConfiguration<Pape
         return disableAsyncSuggestions;
     }
 
-    public static class Builder extends BukkitPlatformConfiguration.Builder<PaperPlatform, Builder> {
+    public static class Builder extends BukkitCommandPlatformConfiguration.Builder<PaperCommandPlatform, Builder> {
 
         private boolean disableAsyncSuggestions = false;
 
@@ -37,13 +37,13 @@ public class PaperPlatformConfiguration extends BukkitPlatformConfiguration<Pape
         }
 
         @Override
-        public @NotNull PaperPlatform init() {
+        public @NotNull PaperCommandPlatform init() {
             //if (isLegacyRegistrarDisabled() && ...) throw new IllegalStateException("Cannot disable both legacy registrar and brigadier");
-            return new PaperPlatform(getPlugin(), new PaperPlatformConfiguration(this));
+            return new PaperCommandPlatform(getPlugin(), new PaperCommandPlatformConfiguration(this));
         }
 
-//        public PaperPlatform init(BootstrapContext context) {
-//            return new PaperPlatform(getPlugin(), new PaperPlatformConfiguration(this));
+//        public PaperCommandPlatform init(BootstrapContext context) {
+//            return new PaperCommandPlatform(getPlugin(), new PaperCommandPlatformConfiguration(this));
 //        }
 
     }

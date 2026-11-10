@@ -1,8 +1,8 @@
 package dev.gurwi.prism.spigot.command;
 
-import dev.gurwi.prism.bukkit.command.PrismBukkitCommand;
+import dev.gurwi.prism.bukkit.command.PrismCommand;
 import dev.gurwi.prism.bukkit.permission.BukkitPermission;
-import dev.gurwi.prism.spigot.SpigotPlatform;
+import dev.gurwi.prism.spigot.SpigotCommandPlatform;
 import dev.gurwi.prism.test.bukkit.BukkitTest;
 import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
@@ -14,11 +14,11 @@ class CommandPermissionTest extends BukkitTest {
 
     @Test
     void testCommandIsPermittedWithoutPermissions() {
-        var platform = SpigotPlatform.configure(plugin)
+        var platform = SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init();
 
-        var definition = new PrismBukkitCommand("prism")
+        var definition = new PrismCommand("prism")
                 .executesPlayer((sender, args) -> {})
                 .build();
 
@@ -34,11 +34,11 @@ class CommandPermissionTest extends BukkitTest {
 
     @Test
     void testCommandIsDeniedWithoutPermission() {
-        var platform = SpigotPlatform.configure(plugin)
+        var platform = SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init();
 
-        var definition = new PrismBukkitCommand("prism")
+        var definition = new PrismCommand("prism")
                 .withPermission(BukkitPermission.of("prism.use"))
                 .executesPlayer((sender, args) -> {})
                 .build();
@@ -56,11 +56,11 @@ class CommandPermissionTest extends BukkitTest {
 
     @Test
     void testCommandIsPermittedWithPermission() {
-        var platform = SpigotPlatform.configure(plugin)
+        var platform = SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init();
 
-        var definition = new PrismBukkitCommand("prism")
+        var definition = new PrismCommand("prism")
                 .withPermission(BukkitPermission.of("prism.use"))
                 .executesPlayer((sender, args) -> {})
                 .build();
@@ -80,11 +80,11 @@ class CommandPermissionTest extends BukkitTest {
 
     @Test
     void testCommandIsDeniedWhenRequirementFails() {
-        var platform = SpigotPlatform.configure(plugin)
+        var platform = SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init();
 
-        var definition = new PrismBukkitCommand("prism")
+        var definition = new PrismCommand("prism")
                 .withPlayerRequirement(player -> false)
                 .executesPlayer((sender, args) -> {})
                 .build();
@@ -101,11 +101,11 @@ class CommandPermissionTest extends BukkitTest {
 
     @Test
     void testCommandIsDeniedWhenRequirementFailsEvenWithPermission() {
-        var platform = SpigotPlatform.configure(plugin)
+        var platform = SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init();
 
-        var definition = new PrismBukkitCommand("prism")
+        var definition = new PrismCommand("prism")
                 .withPlayerRequirement(player -> false)
                 .withPermission(BukkitPermission.of("prism.use"))
                 .executesPlayer((sender, args) -> {})
@@ -126,11 +126,11 @@ class CommandPermissionTest extends BukkitTest {
 
     @Test
     void testCommandIsDeniedWhenPermissionFailsEvenWithRequirement() {
-        var platform = SpigotPlatform.configure(plugin)
+        var platform = SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init();
 
-        var definition = new PrismBukkitCommand("prism")
+        var definition = new PrismCommand("prism")
                 .withPlayerRequirement(player -> true)
                 .withPermission(BukkitPermission.of("prism.use"))
                 .executesPlayer((sender, args) -> {})

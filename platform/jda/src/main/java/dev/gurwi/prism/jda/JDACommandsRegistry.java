@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Set;
 
-public class JDACommandsRegistry implements CommandsRegistry<JDAPlatform, JDACommandDefinition> {
+public class JDACommandsRegistry implements CommandsRegistry<JDACommandPlatform, JDACommandDefinition> {
 
     @Override
     public void register(JDACommandDefinition definition) {
@@ -24,7 +24,7 @@ public class JDACommandsRegistry implements CommandsRegistry<JDAPlatform, JDACom
     }
 
     @Override
-    public JDAPlatform getPlatform() {
+    public JDACommandPlatform getPlatform() {
         return null;
     }
 

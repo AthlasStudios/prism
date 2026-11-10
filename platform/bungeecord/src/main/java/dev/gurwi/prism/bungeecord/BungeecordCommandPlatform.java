@@ -1,19 +1,19 @@
 package dev.gurwi.prism.bungeecord;
 
 import dev.gurwi.prism.Prism;
-import dev.gurwi.prism.platform.Platform;
+import dev.gurwi.prism.platform.CommandPlatform;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-public class BungeecordPlatform implements Platform<BungeecordCommandsRegistry> {
+public class BungeecordCommandPlatform implements CommandPlatform<BungeecordCommandsRegistry> {
 
     private final Plugin plugin;
-    private final BungeecordPlatformConfiguration configuration;
+    private final BungeecordCommandPlatformConfiguration configuration;
     private final BungeecordCommandsRegistry registry;
 
-    protected BungeecordPlatform(@NotNull Plugin plugin, @NotNull BungeecordPlatformConfiguration configuration) {
+    protected BungeecordCommandPlatform(@NotNull Plugin plugin, @NotNull BungeecordCommandPlatformConfiguration configuration) {
         this.plugin = plugin;
         this.configuration = configuration;
 
@@ -21,8 +21,8 @@ public class BungeecordPlatform implements Platform<BungeecordCommandsRegistry> 
     }
 
     @Contract(value = "_ -> new", pure = true)
-    public static @NotNull BungeecordPlatformConfiguration.Builder configure(@NotNull Plugin plugin) {
-        return new BungeecordPlatformConfiguration.Builder(plugin);
+    public static @NotNull BungeecordCommandPlatformConfiguration.Builder configure(@NotNull Plugin plugin) {
+        return new BungeecordCommandPlatformConfiguration.Builder(plugin);
     }
 
     @Override
@@ -43,7 +43,7 @@ public class BungeecordPlatform implements Platform<BungeecordCommandsRegistry> 
         return plugin.getProxy();
     }
 
-    public BungeecordPlatformConfiguration getConfiguration() {
+    public BungeecordCommandPlatformConfiguration getConfiguration() {
         return configuration;
     }
 

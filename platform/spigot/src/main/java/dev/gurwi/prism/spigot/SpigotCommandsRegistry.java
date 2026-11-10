@@ -8,12 +8,12 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Set;
 
-public class SpigotCommandsRegistry implements BukkitCommandsRegistry<SpigotPlatform> {
+public class SpigotCommandsRegistry implements BukkitCommandsRegistry<SpigotCommandPlatform> {
 
-    private final SpigotPlatform platform;
+    private final SpigotCommandPlatform platform;
     private final BukkitCommandRegistrar registrar;
 
-    public SpigotCommandsRegistry(@NotNull SpigotPlatform platform) {
+    public SpigotCommandsRegistry(@NotNull SpigotCommandPlatform platform) {
         this.platform = platform;
         this.registrar = createRegistrar(platform);
 
@@ -39,7 +39,7 @@ public class SpigotCommandsRegistry implements BukkitCommandsRegistry<SpigotPlat
     }
 
     @Override
-    public SpigotPlatform getPlatform() {
+    public SpigotCommandPlatform getPlatform() {
         return platform;
     }
 

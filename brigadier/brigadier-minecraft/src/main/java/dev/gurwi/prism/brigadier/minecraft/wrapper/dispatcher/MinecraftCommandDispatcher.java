@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,21 +47,23 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
     public abstract void unregister(@NotNull LiteralCommandNode<MinecraftCommandSource> node);
 
     public @NotNull LiteralCommandNode<SourceStack> mirror(@NotNull LiteralCommandNode<MinecraftCommandSource> node, @NotNull String label) {
-        return (LiteralCommandNode<SourceStack>) mapNode(node, label, Map.of());
+        return (LiteralCommandNode<SourceStack>) mapNode(node, label, Map.of(), List.of());
     }
 
-    private CommandNode<SourceStack> mapNode(@NotNull CommandNode<MinecraftCommandSource> node, @Nullable String label, @NotNull Map<String, NativeBackedArgumentType<?, ?>> converters) {
+    private CommandNode<SourceStack> mapNode(@NotNull CommandNode<MinecraftCommandSource> node, @Nullable String label, @NotNull Map<String, NativeBackedArgumentType<?, ?>> converters, @NotNull List<CommandNode<MinecraftCommandSource>> parents) {
         if (node.getRedirect() != null) {
             throw new UnsupportedOperationException("Redirects are not supported by the Minecraft mirror: " + node.getName());
         }
 
         Map<String, NativeBackedArgumentType<?, ?>> scope = scopeFor(node, converters);
+        List<CommandNode<MinecraftCommandSource>> chain = new ArrayList<>(parents);
+        chain.add(node);
         ArgumentBuilder<SourceStack, ?> builder;
 
         if (node instanceof LiteralCommandNode<MinecraftCommandSource> literalNode) {
             builder = LiteralArgumentBuilder.literal(label == null ? literalNode.getLiteral() : label);
         } else if (node instanceof ArgumentCommandNode<MinecraftCommandSource, ?> argumentNode) {
-            builder = mapArgument(argumentNode, scope);
+            builder = mapArgument(argumentNode, scope, chain);
         } else {
             throw new IllegalArgumentException("Unsupported node type: " + node.getClass());
         }
@@ -86,7 +89,7 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
         if (node.getCommand() != null) {
             builder.executes(context -> {
                 try {
-                    return node.getCommand().run(mapContext(context, scope));
+                    return node.getCommand().run(mapContext(context, scope, chain));
                 } catch (CommandSyntaxException exception) {
                     throw exception;
                 } catch (Throwable throwable) {
@@ -97,7 +100,7 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
         }
 
         for (CommandNode<MinecraftCommandSource> child : node.getChildren()) {
-            builder.then(mapNode(child, null, scope));
+            builder.then(mapNode(child, null, scope, chain));
         }
 
         return builder.build();
@@ -114,14 +117,14 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
         return converters;
     }
 
-    private @NotNull RequiredArgumentBuilder<SourceStack, ?> mapArgument(@NotNull ArgumentCommandNode<MinecraftCommandSource, ?> node, @NotNull Map<String, NativeBackedArgumentType<?, ?>> scope) {
+    private @NotNull RequiredArgumentBuilder<SourceStack, ?> mapArgument(@NotNull ArgumentCommandNode<MinecraftCommandSource, ?> node, @NotNull Map<String, NativeBackedArgumentType<?, ?>> scope, @NotNull List<CommandNode<MinecraftCommandSource>> chain) {
         ArgumentType<?> type = node.getType() instanceof NativeBackedArgumentType<?, ?> backed ? backed.getNativeType() : node.getType();
         RequiredArgumentBuilder<SourceStack, ?> builder = argument(node.getName(), type);
 
         if (node.getCustomSuggestions() != null) {
             builder.suggests((context, suggestions) -> {
                 try {
-                    return node.getCustomSuggestions().getSuggestions(mapContext(context, scope), suggestions);
+                    return node.getCustomSuggestions().getSuggestions(mapContext(context, scope, chain), suggestions);
                 } catch (Throwable throwable) {
                     report("suggestions " + node.getName(), throwable);
                     return suggestions.buildFuture();
@@ -137,10 +140,22 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
         return RequiredArgumentBuilder.argument(name, type);
     }
 
-    private @NotNull CommandContext<MinecraftCommandSource> mapContext(@NotNull CommandContext<SourceStack> context, @NotNull Map<String, NativeBackedArgumentType<?, ?>> converters) throws CommandSyntaxException {
+    private @NotNull CommandContext<MinecraftCommandSource> mapContext(@NotNull CommandContext<SourceStack> context, @NotNull Map<String, NativeBackedArgumentType<?, ?>> converters, @NotNull List<CommandNode<MinecraftCommandSource>> chain) throws CommandSyntaxException {
         Map<String, ParsedArgument<MinecraftCommandSource, ?>> arguments = new HashMap<>();
 
-        for (ParsedCommandNode<SourceStack> parsed : context.getNodes()) {
+        List<ParsedCommandNode<MinecraftCommandSource>> nodes = new ArrayList<>();
+        List<ParsedCommandNode<SourceStack>> parsedNodes = context.getNodes();
+
+        for (int index = 0; index < parsedNodes.size(); index++) {
+            ParsedCommandNode<SourceStack> parsedNode = parsedNodes.get(index);
+            CommandNode<MinecraftCommandSource> original = original(chain, parsedNode.getNode().getName(), index);
+
+            if (original != null) {
+                nodes.add(new ParsedCommandNode<>(original, parsedNode.getRange()));
+            }
+        }
+
+        for (ParsedCommandNode<SourceStack> parsed : parsedNodes) {
             if (parsed.getNode() instanceof ArgumentCommandNode<SourceStack, ?> argumentNode) {
                 String name = argumentNode.getName();
                 Object value = context.getArgument(name, Object.class);
@@ -170,12 +185,22 @@ public abstract class MinecraftCommandDispatcher<SourceStack> extends CommandDis
                 arguments,
                 null,
                 getRoot(),
-                List.of(),
+                nodes,
                 context.getRange(),
-                child == null ? null : mapContext(child, converters),
+                child == null ? null : mapContext(child, converters, chain),
                 null,
                 context.isForked()
         );
+    }
+
+    private static @Nullable CommandNode<MinecraftCommandSource> original(@NotNull List<CommandNode<MinecraftCommandSource>> chain, @NotNull String name, int index) {
+        for (CommandNode<MinecraftCommandSource> candidate : chain) {
+            if (candidate.getName().equals(name)) {
+                return candidate;
+            }
+        }
+
+        return index < chain.size() ? chain.get(index) : null;
     }
 
     private static @NotNull CommandSyntaxException withContext(@NotNull CommandSyntaxException exception, String input, int cursor) {

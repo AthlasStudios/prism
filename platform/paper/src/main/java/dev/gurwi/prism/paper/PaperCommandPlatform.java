@@ -1,19 +1,19 @@
 package dev.gurwi.prism.paper;
 
 import dev.gurwi.prism.Prism;
-import dev.gurwi.prism.bukkit.BukkitPlatform;
+import dev.gurwi.prism.bukkit.BukkitCommandPlatform;
 import dev.gurwi.prism.paper.listener.AsyncTabCompleter;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-public class PaperPlatform implements BukkitPlatform<PaperCommandsRegistry, PaperPlatformConfiguration> {
+public class PaperCommandPlatform implements BukkitCommandPlatform<PaperCommandsRegistry, PaperCommandPlatformConfiguration> {
 
     private final Plugin plugin;
-    private final PaperPlatformConfiguration configuration;
+    private final PaperCommandPlatformConfiguration configuration;
     private final PaperCommandsRegistry commandsRegistry;
 
-    protected PaperPlatform(@NotNull Plugin plugin, @NotNull PaperPlatformConfiguration configuration) {
+    protected PaperCommandPlatform(@NotNull Plugin plugin, @NotNull PaperCommandPlatformConfiguration configuration) {
         this.plugin = plugin;
         this.configuration = configuration;
         this.commandsRegistry = new PaperCommandsRegistry(this);
@@ -24,8 +24,8 @@ public class PaperPlatform implements BukkitPlatform<PaperCommandsRegistry, Pape
     }
 
     @Contract(value = "_ -> new", pure = true)
-    public static @NotNull PaperPlatformConfiguration.Builder configure(@NotNull Plugin plugin) {
-        return new PaperPlatformConfiguration.Builder(plugin);
+    public static @NotNull PaperCommandPlatformConfiguration.Builder configure(@NotNull Plugin plugin) {
+        return new PaperCommandPlatformConfiguration.Builder(plugin);
     }
 
     @Override
@@ -39,7 +39,7 @@ public class PaperPlatform implements BukkitPlatform<PaperCommandsRegistry, Pape
     }
 
     @Override
-    public PaperPlatformConfiguration getConfiguration() {
+    public PaperCommandPlatformConfiguration getConfiguration() {
         return configuration;
     }
 

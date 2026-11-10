@@ -10,7 +10,7 @@ import club.athlas.prism.manager.BasePluginRegistriesManager;
 import club.athlas.prism.manager.ProvidersManager;
 import dev.gurwi.confetti.Confetti;
 import dev.gurwi.prism.bukkit.BukkitCommandsRegistry;
-import dev.gurwi.prism.bukkit.BukkitPlatform;
+import dev.gurwi.prism.bukkit.BukkitCommandPlatform;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.ServicePriority;
@@ -22,7 +22,7 @@ public class PrismPlugin extends JavaPlugin implements PrismPluginAPI {
     private final ProvidersManager providersManager = new ProvidersManager();
     private final BasePluginRegistriesManager registriesManager = new BasePluginRegistriesManager(this);
 
-    private BukkitPlatform<?, ?> platform;
+    private BukkitCommandPlatform<?, ?> platform;
 
     @Override
     public void onEnable() {

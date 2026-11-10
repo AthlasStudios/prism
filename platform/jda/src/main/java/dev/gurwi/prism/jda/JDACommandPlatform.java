@@ -1,14 +1,14 @@
 package dev.gurwi.prism.jda;
 
 import dev.gurwi.prism.Prism;
-import dev.gurwi.prism.platform.Platform;
+import dev.gurwi.prism.platform.CommandPlatform;
 import net.dv8tion.jda.api.JDA;
 
-public class JDAPlatform implements Platform<JDACommandsRegistry> {
+public class JDACommandPlatform implements CommandPlatform<JDACommandsRegistry> {
 
     private final JDACommandsRegistry registry;
 
-    private JDAPlatform(JDA jda) {
+    private JDACommandPlatform(JDA jda) {
         this.registry = new JDACommandsRegistry();
     }
 

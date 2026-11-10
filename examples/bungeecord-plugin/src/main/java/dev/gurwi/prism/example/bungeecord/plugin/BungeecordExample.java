@@ -1,6 +1,6 @@
 package dev.gurwi.prism.example.bungeecord.plugin;
 
-import dev.gurwi.prism.bungeecord.BungeecordPlatform;
+import dev.gurwi.prism.bungeecord.BungeecordCommandPlatform;
 import dev.gurwi.prism.bungeecord.argument.IntegerArgument;
 import dev.gurwi.prism.bungeecord.command.BungeecordCommand;
 import net.md_5.bungee.api.plugin.Plugin;
@@ -9,7 +9,7 @@ public class BungeecordExample extends Plugin {
 
     @Override
     public void onEnable() {
-        BungeecordPlatform platform = BungeecordPlatform.configure(this)
+        BungeecordCommandPlatform platform = BungeecordCommandPlatform.configure(this)
                 .init();
 
         new BungeecordCommand("prism")

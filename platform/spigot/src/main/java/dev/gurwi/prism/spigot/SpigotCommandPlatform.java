@@ -1,27 +1,27 @@
 package dev.gurwi.prism.spigot;
 
 import dev.gurwi.prism.Prism;
-import dev.gurwi.prism.bukkit.BukkitPlatform;
+import dev.gurwi.prism.bukkit.BukkitCommandPlatform;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-public class SpigotPlatform implements BukkitPlatform<SpigotCommandsRegistry, SpigotPlatformConfiguration> {
+public class SpigotCommandPlatform implements BukkitCommandPlatform<SpigotCommandsRegistry, SpigotCommandPlatformConfiguration> {
 
     private final Plugin plugin;
-    private final SpigotPlatformConfiguration configuration;
+    private final SpigotCommandPlatformConfiguration configuration;
     private final SpigotCommandsRegistry commandsRegistry;
 
-    protected SpigotPlatform(Plugin plugin, SpigotPlatformConfiguration configuration) {
+    protected SpigotCommandPlatform(Plugin plugin, SpigotCommandPlatformConfiguration configuration) {
         this.plugin = plugin;
         this.configuration = configuration;
         this.commandsRegistry = new SpigotCommandsRegistry(this);
     }
 
     @Contract(value = "_ -> new", pure = true)
-    public static @NotNull SpigotPlatformConfiguration.Builder configure(JavaPlugin plugin) {
-        return new SpigotPlatformConfiguration.Builder(plugin);
+    public static @NotNull SpigotCommandPlatformConfiguration.Builder configure(JavaPlugin plugin) {
+        return new SpigotCommandPlatformConfiguration.Builder(plugin);
     }
 
     @Override
@@ -35,7 +35,7 @@ public class SpigotPlatform implements BukkitPlatform<SpigotCommandsRegistry, Sp
     }
 
     @Override
-    public SpigotPlatformConfiguration getConfiguration() {
+    public SpigotCommandPlatformConfiguration getConfiguration() {
         return configuration;
     }
 

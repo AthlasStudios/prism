@@ -3,11 +3,11 @@ package dev.gurwi.prism.bungeecord;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-public class BungeecordPlatformConfiguration {
+public class BungeecordCommandPlatformConfiguration {
 
     private final boolean commandTreeInjection;
 
-    private BungeecordPlatformConfiguration(@NotNull Builder builder) {
+    private BungeecordCommandPlatformConfiguration(@NotNull Builder builder) {
         this.commandTreeInjection = builder.commandTreeInjection;
     }
 
@@ -29,8 +29,8 @@ public class BungeecordPlatformConfiguration {
             return this;
         }
 
-        public @NotNull BungeecordPlatform init() {
-            return new BungeecordPlatform(plugin, new BungeecordPlatformConfiguration(this));
+        public @NotNull BungeecordCommandPlatform init() {
+            return new BungeecordCommandPlatform(plugin, new BungeecordCommandPlatformConfiguration(this));
         }
 
     }

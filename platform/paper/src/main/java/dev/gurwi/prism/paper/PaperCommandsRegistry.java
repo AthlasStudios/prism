@@ -11,12 +11,12 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Set;
 
-public class PaperCommandsRegistry implements BukkitCommandsRegistry<PaperPlatform> {
+public class PaperCommandsRegistry implements BukkitCommandsRegistry<PaperCommandPlatform> {
 
-    private final PaperPlatform platform;
+    private final PaperCommandPlatform platform;
     private final BukkitCommandRegistrar registrar;
 
-    public PaperCommandsRegistry(@NotNull PaperPlatform platform) {
+    public PaperCommandsRegistry(@NotNull PaperCommandPlatform platform) {
         this.platform = platform;
         this.registrar = initRegistrar();
 
@@ -42,7 +42,7 @@ public class PaperCommandsRegistry implements BukkitCommandsRegistry<PaperPlatfo
     }
 
     @Override
-    public PaperPlatform getPlatform() {
+    public PaperCommandPlatform getPlatform() {
         return platform;
     }
 

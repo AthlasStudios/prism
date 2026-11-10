@@ -4,9 +4,9 @@ import club.athlas.prism.PrismPlugin;
 import club.athlas.prism.api.PluginRegistriesManager;
 import club.athlas.prism.config.PrismConfiguration;
 import dev.gurwi.prism.bukkit.BukkitCommandsRegistry;
-import dev.gurwi.prism.bukkit.BukkitPlatform;
-import dev.gurwi.prism.paper.PaperPlatform;
-import dev.gurwi.prism.paper.PaperPlatformConfiguration;
+import dev.gurwi.prism.bukkit.BukkitCommandPlatform;
+import dev.gurwi.prism.paper.PaperCommandPlatform;
+import dev.gurwi.prism.paper.PaperCommandPlatformConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,7 +29,7 @@ public class BasePluginRegistriesManager implements PluginRegistriesManager {
     public BukkitCommandsRegistry<?> createRegistry(@NotNull Plugin plugin) {
         this.plugin.getLogger().info("Creating registry for " + plugin.getName());
 
-        BukkitPlatform<?, ?> platform = createPlatform(plugin);
+        BukkitCommandPlatform<?, ?> platform = createPlatform(plugin);
         registries.put(plugin, platform.getCommandsRegistry());
 
         return platform.getCommandsRegistry();
@@ -51,8 +51,8 @@ public class BasePluginRegistriesManager implements PluginRegistriesManager {
         return Optional.ofNullable(registries.get(plugin));
     }
 
-    public BukkitPlatform<?, ?> createPlatform(Plugin plugin) {
-        PaperPlatformConfiguration.Builder configure = PaperPlatform.configure(plugin);
+    public BukkitCommandPlatform<?, ?> createPlatform(Plugin plugin) {
+        PaperCommandPlatformConfiguration.Builder configure = PaperCommandPlatform.configure(plugin);
 
         if (PrismConfiguration.disableBrigadierRegistrar) configure.disableBrigadier();
         if (PrismConfiguration.disableLegacyRegistrar) configure.disableLegacyRegistrar();

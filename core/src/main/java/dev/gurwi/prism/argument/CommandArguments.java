@@ -5,23 +5,107 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class CommandArguments<Definition extends AbstractCommandDefinition<Definition, ? super Source, ?, ?, ?>, Source> {
 
     private final Definition definition;
-    private final Map<String, Object> requiredArgumentValues;
-    private final Map<String, Object> optionalArgumentValues;
+    private final Map<String, ParsedArgument<?>> requiredArgumentValues;
+    private final Map<String, ParsedArgument<?>> optionalArgumentValues;
     private final @Nullable CommandArguments<Definition, Source> parent;
+    private final String fullInput;
 
-    public CommandArguments(@NotNull Definition definition, @NotNull Map<String, Object> requiredArgumentValues, @NotNull Map<String, Object> optionalArgumentValues, @Nullable CommandArguments<Definition, Source> parent) {
+    public CommandArguments(@NotNull Definition definition, @NotNull Map<String, ParsedArgument<?>> requiredArgumentValues, @NotNull Map<String, ParsedArgument<?>> optionalArgumentValues, @NotNull String fullInput, @Nullable CommandArguments<Definition, Source> parent) {
         this.definition = definition;
         this.requiredArgumentValues = Map.copyOf(requiredArgumentValues);
         this.optionalArgumentValues = Map.copyOf(optionalArgumentValues);
+        this.fullInput = fullInput;
         this.parent = parent;
+    }
+
+    public CommandArguments(@NotNull Definition definition, @NotNull Map<String, ParsedArgument<?>> requiredArgumentValues, @NotNull Map<String, ParsedArgument<?>> optionalArgumentValues, @NotNull String fullInput) {
+        this(definition, requiredArgumentValues, optionalArgumentValues, fullInput, null);
+    }
+
+    public @NotNull String fullInput() {
+        return fullInput;
+    }
+
+    public int count() {
+        return requiredArgumentValues.size() + optionalArgumentValues.size();
+    }
+
+    public @NotNull Map<String, Object> argsMap() {
+        Map<String, Object> result = new LinkedHashMap<>();
+
+        for (Map.Entry<String, ParsedArgument<?>> entry : ordered()) {
+            result.put(entry.getKey(), entry.getValue().getParsed());
+        }
+
+        return Collections.unmodifiableMap(result);
+    }
+
+    public @NotNull Map<String, String> rawArgsMap() {
+        Map<String, String> result = new LinkedHashMap<>();
+
+        for (Map.Entry<String, ParsedArgument<?>> entry : ordered()) {
+            result.put(entry.getKey(), entry.getValue().getRaw());
+        }
+
+        return Collections.unmodifiableMap(result);
+    }
+
+    public @NotNull List<Object> args() {
+        List<Object> result = new ArrayList<>();
+
+        for (Map.Entry<String, ParsedArgument<?>> entry : ordered()) {
+            result.add(entry.getValue().getParsed());
+        }
+
+        return Collections.unmodifiableList(result);
+    }
+
+    public @NotNull String getRaw(@NotNull String key) {
+        return getRawOptional(key).orElseThrow(() -> new IllegalArgumentException("Unknown argument: " + key));
+    }
+
+    public @NotNull String getRaw(@NotNull AbstractArgument<?, ?, ? extends Source, ?> argument) {
+        return getRawOptional(argument).orElseThrow(() -> new IllegalArgumentException("Argument not present: " + argument.getName()));
+    }
+
+    public @NotNull String getRaw(int index) {
+        return getRawOptional(index).orElseThrow(() -> new IndexOutOfBoundsException("Argument index out of range: " + index));
+    }
+
+    public @NotNull Optional<String> getRawOptional(@NotNull String key) {
+        return localParsed(key).map(ParsedArgument::getRaw);
+    }
+
+    public @NotNull Optional<String> getRawOptional(@NotNull AbstractArgument<?, ?, ? extends Source, ?> argument) {
+        return findParsed(argument).map(ParsedArgument::getRaw);
+    }
+
+    public @NotNull Optional<String> getRawOptional(int index) {
+        return parsedAt(index).map(ParsedArgument::getRaw);
+    }
+
+    public @NotNull String getOrDefaultRaw(@NotNull String key, @NotNull String defaultValue) {
+        return getRawOptional(key).orElse(defaultValue);
+    }
+
+    public @NotNull String getOrDefaultRaw(@NotNull AbstractArgument<?, ?, ? extends Source, ?> argument, @NotNull String defaultValue) {
+        return getRawOptional(argument).orElse(defaultValue);
+    }
+
+    public @NotNull String getOrDefaultRaw(int index, @NotNull String defaultValue) {
+        return getRawOptional(index).orElse(defaultValue);
     }
 
     public @NotNull Definition getDefinition() {
@@ -197,6 +281,50 @@ public class CommandArguments<Definition extends AbstractCommandDefinition<Defin
         return find(argument);
     }
 
+    public <T> T get(int index) {
+        return this.<T>getOptional(index).orElseThrow(() -> new IndexOutOfBoundsException("Argument index out of range: " + index));
+    }
+
+    public <T> T get(@NotNull String key, @NotNull Class<T> type) {
+        return cast(this.<Object>get(key), type, key);
+    }
+
+    public <T> T get(int index, @NotNull Class<T> type) {
+        return cast(this.<Object>get(index), type, String.valueOf(index));
+    }
+
+    public <T> @NotNull Optional<T> getOptional(int index) {
+        return parsedAt(index).map(parsed -> {
+            @SuppressWarnings("unchecked")
+            T value = (T) parsed.getParsed();
+            return value;
+        });
+    }
+
+    public <T> @NotNull Optional<T> getOptional(@NotNull String key, @NotNull Class<T> type) {
+        return this.<Object>find(key).map(value -> cast(value, type, key));
+    }
+
+    public <T> @NotNull Optional<T> getOptional(int index, @NotNull Class<T> type) {
+        return this.<Object>getOptional(index).map(value -> cast(value, type, String.valueOf(index)));
+    }
+
+    public <T> T getOptional(int index, T defaultValue) {
+        return this.<T>getOptional(index).orElse(defaultValue);
+    }
+
+    public <T> T getOptional(@NotNull String key, @NotNull Supplier<? extends T> defaultSupplier) {
+        return this.<T>find(key).orElseGet(defaultSupplier);
+    }
+
+    public <T> T getOptional(@NotNull AbstractArgument<?, T, ? extends Source, ?> argument, @NotNull Supplier<? extends T> defaultSupplier) {
+        return find(argument).orElseGet(defaultSupplier);
+    }
+
+    public <T> T getOptional(int index, @NotNull Supplier<? extends T> defaultSupplier) {
+        return this.<T>getOptional(index).orElseGet(defaultSupplier);
+    }
+
     public <T> T getOptional(@NotNull String key, T defaultValue) {
         return this.<T>find(key).orElse(defaultValue);
     }
@@ -211,11 +339,87 @@ public class CommandArguments<Definition extends AbstractCommandDefinition<Defin
 
     @SuppressWarnings("unchecked")
     private <T> @NotNull Optional<T> local(@NotNull String key) {
-        if (requiredArgumentValues.containsKey(key)) {
-            return Optional.ofNullable((T) requiredArgumentValues.get(key));
+        return localParsed(key).map(parsed -> (T) parsed.getParsed());
+    }
+
+    private @NotNull Optional<ParsedArgument<?>> localParsed(@NotNull String key) {
+        ParsedArgument<?> parsed = requiredArgumentValues.get(key);
+
+        if (parsed == null) {
+            parsed = optionalArgumentValues.get(key);
         }
 
-        return Optional.ofNullable((T) optionalArgumentValues.get(key));
+        return Optional.ofNullable(parsed);
+    }
+
+    private @NotNull Optional<ParsedArgument<?>> findParsed(@NotNull AbstractArgument<?, ?, ? extends Source, ?> argument) {
+        CommandArguments<Definition, Source> current = this;
+
+        while (current != null) {
+            if (current.owns(argument)) {
+                return current.localParsed(argument.getName());
+            }
+
+            current = current.parent;
+        }
+
+        return Optional.empty();
+    }
+
+    private @NotNull List<Map.Entry<String, ParsedArgument<?>>> ordered() {
+        List<Map.Entry<String, ParsedArgument<?>>> result = new ArrayList<>();
+
+        for (AbstractArgument<?, ?, ?, ?> argument : definition.getRequiredArguments()) {
+            ParsedArgument<?> parsed = requiredArgumentValues.get(argument.getName());
+
+            if (parsed != null) {
+                result.add(Map.entry(argument.getName(), parsed));
+            }
+        }
+
+        for (AbstractArgument<?, ?, ?, ?> argument : definition.getOptionalArguments()) {
+            ParsedArgument<?> parsed = optionalArgumentValues.get(argument.getName());
+
+            if (parsed != null) {
+                result.add(Map.entry(argument.getName(), parsed));
+            }
+        }
+
+        for (Map.Entry<String, ParsedArgument<?>> entry : requiredArgumentValues.entrySet()) {
+            if (result.stream().noneMatch(existing -> existing.getKey().equals(entry.getKey()))) {
+                result.add(entry);
+            }
+        }
+
+        for (Map.Entry<String, ParsedArgument<?>> entry : optionalArgumentValues.entrySet()) {
+            if (result.stream().noneMatch(existing -> existing.getKey().equals(entry.getKey()))) {
+                result.add(entry);
+            }
+        }
+
+        return result;
+    }
+
+    private @NotNull Optional<ParsedArgument<?>> parsedAt(int index) {
+        List<Map.Entry<String, ParsedArgument<?>>> entries = ordered();
+
+        if (index < 0 || index >= entries.size()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(entries.get(index).getValue());
+    }
+
+    private static <T> T cast(Object value, @NotNull Class<T> type, @NotNull String key) {
+        if (value == null) {
+            return null;
+        }
+
+        if (!type.isInstance(value)) {
+            throw new IllegalArgumentException("Argument '" + key + "' is of type " + value.getClass().getName() + ", not " + type.getName());
+        }
+
+        return type.cast(value);
     }
 
     private boolean owns(@NotNull AbstractArgument<?, ?, ? extends Source, ?> argument) {

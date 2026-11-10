@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Set;
 
-public interface CommandsRegistry<PlatformType extends Platform<? extends CommandsRegistry<PlatformType, Definition>>, Definition extends AbstractCommandDefinition<Definition, ?, ?, ?, ?>> {
+public interface CommandsRegistry<PlatformType extends CommandPlatform<? extends CommandsRegistry<PlatformType, Definition>>, Definition extends AbstractCommandDefinition<Definition, ?, ?, ?, ?>> {
 
     void register(Definition definition);
 

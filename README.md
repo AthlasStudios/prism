@@ -79,7 +79,7 @@ Most command frameworks lean on annotations and reflection: you describe a comma
 - **One API, many platforms.** The core is platform-agnostic; Spigot, Paper (with native Brigadier support), Velocity, BungeeCord and others plug in on top.
 
 ```java
-new PrismBukkitCommand("heal")
+new PrismCommand("heal")
         .withDescription("Heal a player")
         .withPermission("myplugin.heal")
         .withArguments(new PlayerArgument("target"))
@@ -244,7 +244,7 @@ public class MyPlugin extends JavaPlugin {
     BukkitCommandsRegistry<?> registry = api.createRegistry(this);
 
     registry.register(
-            new PrismBukkitCommand("hello")
+            new PrismCommand("hello")
                     .executes((sender, args) -> sender.sendMessage("Hello!"))
                     .build()
     );
@@ -252,7 +252,7 @@ public class MyPlugin extends JavaPlugin {
 }
 ```
 
-Commands are built with the same `PrismBukkitCommand` API as in the [Guide](#guide). Instead of `.register(platform)` you pass the built definition to a registry.
+Commands are built with the same `PrismCommand` API as in the [Guide](#guide). Instead of `.register(platform)` you pass the built definition to a registry.
 
 | Method                                    | Description                                                              |
 |-------------------------------------------|--------------------------------------------------------------------------|
@@ -272,12 +272,12 @@ If you only want commands registered, implement `PrismCommandProvider` on your m
 public class MyPlugin extends JavaPlugin implements PrismCommandProvider {
 
   @Override
-  public Collection<? extends PrismBukkitCommand> getCommands() {
+  public Collection<? extends PrismCommand> getCommands() {
     return List.of(
-            new PrismBukkitCommand("hello")
+            new PrismCommand("hello")
                     .executes((sender, args) -> sender.sendMessage("Hello!")),
 
-            new PrismBukkitCommand("ping")
+            new PrismCommand("ping")
                     .executes((sender, args) -> sender.sendMessage("Pong!"))
     );
   }
@@ -299,7 +299,7 @@ A provider does not have to be your main class. Register any provider by hand wi
 
 ```java
 PrismPluginAPI.getAPI().registerProvider(this, () -> List.of(
-        new PrismBukkitCommand("hello")
+        new PrismCommand("hello")
                 .executes((sender, args) -> sender.sendMessage("Hello!"))
         ), null);
 ```
@@ -331,11 +331,11 @@ Do this once, in `onEnable`.
 ```java
 public class MyPlugin extends JavaPlugin {
 
-  private PaperPlatform platform;
+  private PaperCommandPlatform platform;
 
   @Override
   public void onEnable() {
-    this.platform = PaperPlatform.configure(this).init();
+    this.platform = PaperCommandPlatform.configure(this).init();
   }
 }
 ```
@@ -345,11 +345,11 @@ public class MyPlugin extends JavaPlugin {
 ```java
 public class MyPlugin extends JavaPlugin {
 
-  private SpigotPlatform platform;
+  private SpigotCommandPlatform platform;
 
   @Override
   public void onEnable() {
-    this.platform = SpigotPlatform.configure(this).init();
+    this.platform = SpigotCommandPlatform.configure(this).init();
   }
 }
 ```
@@ -359,7 +359,7 @@ public class MyPlugin extends JavaPlugin {
 ### 2. Build and register a command
 
 ```java
-new PrismBukkitCommand("teleport", "tp")
+new PrismCommand("teleport", "tp")
         .withDescription("Teleport yourself to a location")
         .withPermission("myplugin.teleport")
         .withArguments(new LocationArgument("location"))
@@ -375,14 +375,14 @@ That's it. The first argument is the command name; any further strings are alias
 
 ## Guide
 
-The guide uses the Bukkit API (`PrismBukkitCommand`). The builder methods (`withArguments`, `withOptionalArguments`, `withSubCommands`, `then`, `withPermission`, `withRequirement`, `register`) are inherited from the platform-agnostic core and work the same on every platform. Only the executors, senders, arguments and permission helpers differ.
+The guide uses the Bukkit API (`PrismCommand`). The builder methods (`withArguments`, `withOptionalArguments`, `withSubCommands`, `then`, `withPermission`, `withRequirement`, `register`) are inherited from the platform-agnostic core and work the same on every platform. Only the executors, senders, arguments and permission helpers differ.
 
 ### Arguments
 
 Required arguments are added with `withArguments(...)`. They are parsed in order, and values are read back by name from the `CommandArguments` object passed to your executor.
 
 ```java
-new PrismBukkitCommand("give")
+new PrismCommand("give")
         .withArguments(
                 new PlayerArgument("target"),
                 new MaterialArgument("material"),
@@ -411,7 +411,7 @@ int value = args.get(amount);
 Optional arguments are declared with `withOptionalArguments(...)` and always come after the required ones.
 
 ```java
-new PrismBukkitCommand("number")
+new PrismCommand("number")
         .withArguments(new IntegerArgument("number", 0, 10))
         .withOptionalArguments(new FloatArgument("float", 0.1f, 9.9f))
         .executes((sender, args) -> {
@@ -426,19 +426,19 @@ float scale = args.getOptional("float", 1.0f); // with a default
 
 ### Subcommands
 
-Nest commands with `withSubCommands(...)`. A subcommand is just another `PrismBukkitCommand`.
+Nest commands with `withSubCommands(...)`. A subcommand is just another `PrismCommand`.
 
 ```java
-new PrismBukkitCommand("team", "t")
+new PrismCommand("team", "t")
         .withDescription("Team management")
         .withSubCommands(
-                new PrismBukkitCommand("create")
+                new PrismCommand("create")
                         .withArguments(new StringArgument("name"))
         .executes((sender, args) -> {
         sender.sendMessage("Created team " + args.get("name"));
         }),
 
-        new PrismBukkitCommand("join")
+        new PrismCommand("join")
                         .withArguments(new StringArgument("name"))
         .executesPlayer((player, args) -> {
         player.sendMessage("Joined team " + args.get("name"));
@@ -450,10 +450,10 @@ new PrismBukkitCommand("team", "t")
 A subcommand can read arguments from its parents by path, using `getAt` with a `../`-style path:
 
 ```java
-new PrismBukkitCommand("paint")
+new PrismCommand("paint")
         .withArguments(new ColorArgument("color"))
         .withSubCommands(
-                new PrismBukkitCommand("call")
+                new PrismCommand("call")
                         .executes((sender, args) -> {
         // Read "color" from the parent command
         sender.sendMessage("Color: " + args.getAt("../", "color"));
@@ -469,7 +469,7 @@ new PrismBukkitCommand("paint")
 When a command needs different follow-up arguments depending on the path taken, use `then(...)`. Each branch can carry its own executor.
 
 ```java
-new PrismBukkitCommand("prism", "pri")
+new PrismCommand("prism", "pri")
         .withArguments(new ItemStackPredicateArgument("predicate"))
         .then(
                 new MaterialArgument("material")
@@ -508,7 +508,7 @@ Pick the executor that matches who may run the command. Prism only invokes the e
 You can register several executors on the same command, one per sender type:
 
 ```java
-new PrismBukkitCommand("whoami")
+new PrismCommand("whoami")
         .executesPlayer((player, args) -> player.sendMessage("You are " + player.getName()))
         .executesConsole((console, args) -> console.sendMessage("You are the console"))
         .register(platform);
@@ -523,7 +523,7 @@ A sender that has no matching executor gets "This command cannot be run by this 
 **Permissions** are checked against the sender (operators always pass on Bukkit platforms):
 
 ```java
-new PrismBukkitCommand("admin")
+new PrismCommand("admin")
         .withPermission("myplugin.admin", "myplugin.staff")
 // ...
 ```
@@ -533,7 +533,7 @@ For wildcard-style checks, `BukkitPermission.startsWith("myplugin.")` matches an
 **Requirements** are arbitrary predicates on the sender. Sender-specific shortcuts are available:
 
 ```java
-new PrismBukkitCommand("fly")
+new PrismCommand("fly")
         .withPlayerRequirement(player -> player.getWorld().getName().equals("lobby"))
         .executesPlayer((player, args) -> player.setAllowFlight(true))
         .register(platform);
@@ -583,7 +583,7 @@ On Brigadier platforms Prism also filters suggestions by the text already typed 
 `FlagArgument` parses `-x`-style flags in any order. Flags can carry a value (using any other argument type) or act as simple on/off switches.
 
 ```java
-new PrismBukkitCommand("flagger")
+new PrismCommand("flagger")
         .withArguments(
                 new FlagArgument("flags").flags(
         Flag.valued(new ColorArgument("color"), 'c'),
@@ -604,7 +604,7 @@ Optional<ChatColor> color = flags.get("color");
 `CommandHelp` renders a clickable usage list for the current command, including its subcommands and argument-tree branches. It only shows entries the sender is actually allowed to run.
 
 ```java
-new PrismBukkitCommand("myplugin")
+new PrismCommand("myplugin")
         .withSubCommands(/* ... */)
         .executesPlayer((player, args) -> CommandHelp.help(player, args))
         .register(platform);
@@ -618,12 +618,12 @@ A command can be registered in two equivalent ways:
 
 ```java
 // 1. Directly from the builder
-BukkitCommandDefinition definition = new PrismBukkitCommand("hello")
+BukkitCommandDefinition definition = new PrismCommand("hello")
                 .executes((sender, args) -> sender.sendMessage("Hello!"))
                 .register(platform);
 
 // 2. Build first, register later
-BukkitCommandDefinition built = new PrismBukkitCommand("hello")
+BukkitCommandDefinition built = new PrismCommand("hello")
         .executes((sender, args) -> sender.sendMessage("Hello!"))
         .build();
 
@@ -646,12 +646,12 @@ Create the platform in your plugin constructor and register commands from your `
 public class MyPlugin {
 
   private final ProxyServer server;
-  private final VelocityPlatform platform;
+  private final VelocityCommandPlatform platform;
 
   @Inject
   public MyPlugin(ProxyServer server) {
     this.server = server;
-    this.platform = VelocityPlatform.configure(this, server).init();
+    this.platform = VelocityCommandPlatform.configure(this, server).init();
   }
 
   @Subscribe
@@ -665,7 +665,7 @@ public class MyPlugin {
 }
 ```
 
-- `VelocityPlatform.configure(plugin, server)` takes your plugin instance as a plain `Object`. Velocity has no plugin handle: `@Plugin` is an annotation, and the instance of your main class is the plugin. The class must carry `@Plugin`, otherwise `configure` throws an `IllegalArgumentException`.
+- `VelocityCommandPlatform.configure(plugin, server)` takes your plugin instance as a plain `Object`. Velocity has no plugin handle: `@Plugin` is an annotation, and the instance of your main class is the plugin. The class must carry `@Plugin`, otherwise `configure` throws an `IllegalArgumentException`.
 - Prism does not register any Velocity event listener. `register(...)` talks to Velocity's `CommandManager` immediately, so calling it before `ProxyInitializeEvent` is your responsibility to avoid.
 - Velocity injects the SLF4J `Logger`, not `java.util.logging.Logger`.
 
@@ -692,7 +692,7 @@ VelocityPermission.startsWith("myplugin.admin.", knownPermissions);
 
 | Topic                   | Bukkit platforms              | Velocity                              |
 |-------------------------|-------------------------------|---------------------------------------|
-| Command class           | `PrismBukkitCommand`          | `VelocityCommand`                     |
+| Command class           | `PrismCommand`          | `VelocityCommand`                     |
 | Sender                  | `CommandSender`               | `CommandSource`                       |
 | Plugin handle           | `JavaPlugin`                  | `Object` (your plugin instance)       |
 | Registration timing     | `onEnable`                    | `ProxyInitializeEvent` or later       |
@@ -712,11 +712,11 @@ Create the platform in `onEnable` and register commands right after.
 ```java
 public class MyPlugin extends Plugin {
 
-  private BungeecordPlatform platform;
+  private BungeecordCommandPlatform platform;
 
   @Override
   public void onEnable() {
-    this.platform = BungeecordPlatform.configure(this).init();
+    this.platform = BungeecordCommandPlatform.configure(this).init();
 
     new BungeecordCommand("hello")
             .withOptionalArguments(new IntegerArgument("n", 0, 10))
@@ -737,7 +737,7 @@ BungeeCord's own tab completion does not know about Prism's argument types. To f
 This relies on BungeeCord internals. If the layout is not what Prism expects, it logs a message and carries on without injection: commands still run, and tab completion still works through the regular BungeeCord path. You can turn it off:
 
 ```java
-BungeecordPlatform platform = BungeecordPlatform.configure(this)
+BungeecordCommandPlatform platform = BungeecordCommandPlatform.configure(this)
         .disableCommandTreeInjection()
         .init();
 ```
@@ -760,7 +760,7 @@ BungeeCord cannot enumerate the permissions a player holds, so `BungeecordPermis
 
 | Topic                   | Bukkit platforms              | BungeeCord                            |
 |-------------------------|-------------------------------|---------------------------------------|
-| Command class           | `PrismBukkitCommand`          | `BungeecordCommand`                   |
+| Command class           | `PrismCommand`          | `BungeecordCommand`                   |
 | Sender                  | `CommandSender`               | `CommandSender` (BungeeCord's)        |
 | Plugin handle           | `JavaPlugin`                  | `Plugin`                              |
 | Executors               | Player, console, remote console, proxy, block | Generic, player, console |
@@ -773,7 +773,7 @@ BungeeCord cannot enumerate the permissions a player holds, so `BungeecordPermis
 
 ## Platform configuration
 
-Both `PaperPlatform.configure(plugin)` and `SpigotPlatform.configure(plugin)` return a builder. Finish with `.init()`. `VelocityPlatform.configure(plugin, server)` and `BungeecordPlatform.configure(plugin)` work the same way.
+Both `PaperCommandPlatform.configure(plugin)` and `SpigotCommandPlatform.configure(plugin)` return a builder. Finish with `.init()`. `VelocityCommandPlatform.configure(plugin, server)` and `BungeecordCommandPlatform.configure(plugin)` work the same way.
 
 | Option                                         | Platform      | Description                                                                      |
 |------------------------------------------------|---------------|----------------------------------------------------------------------------------|
@@ -785,7 +785,7 @@ Both `PaperPlatform.configure(plugin)` and `SpigotPlatform.configure(plugin)` re
 | `disableCommandTreeInjection()`                | BungeeCord    | Don't rewrite the command packet sent to clients. Enabled by default.            |
 
 ```java
-PaperPlatform platform = PaperPlatform.configure(this)
+PaperCommandPlatform platform = PaperCommandPlatform.configure(this)
         .disableAsyncSuggestions()
         .registerPermissions(false)
         .init();
@@ -957,7 +957,7 @@ public class AcmeCommandBuilder extends AbstractCommandBuilder<
 The platform identifies itself and exposes its registry. The registry is where the work happens: it stores definitions and connects them to your host.
 
 ```java
-public class AcmePlatform implements Platform<AcmeCommandsRegistry> {
+public class AcmeCommandPlatform implements CommandPlatform<AcmeCommandsRegistry> {
 
   private final AcmeCommandsRegistry registry = new AcmeCommandsRegistry(this);
 
@@ -972,12 +972,12 @@ public class AcmePlatform implements Platform<AcmeCommandsRegistry> {
   }
 }
 
-public class AcmeCommandsRegistry implements CommandsRegistry<AcmePlatform, AcmeCommandDefinition> {
+public class AcmeCommandsRegistry implements CommandsRegistry<AcmeCommandPlatform, AcmeCommandDefinition> {
 
-  private final AcmePlatform platform;
+  private final AcmeCommandPlatform platform;
   private final Set<AcmeCommandDefinition> commands = new HashSet<>();
 
-  public AcmeCommandsRegistry(AcmePlatform platform) {
+  public AcmeCommandsRegistry(AcmeCommandPlatform platform) {
     this.platform = platform;
   }
 
@@ -999,7 +999,7 @@ public class AcmeCommandsRegistry implements CommandsRegistry<AcmePlatform, Acme
   }
 
   @Override
-  public AcmePlatform getPlatform() {
+  public AcmeCommandPlatform getPlatform() {
     return platform;
   }
 }
@@ -1069,7 +1069,7 @@ Read `BukkitCommandDefinitionAdapter` (`brigadier/brigadier-minecraft`), `Veloci
 Once those pieces exist, users of your platform get the same fluent API as everyone else:
 
 ```java
-AcmePlatform platform = new AcmePlatform();
+AcmeCommandPlatform platform = new AcmeCommandPlatform();
 
 new AcmeCommandBuilder("greet")
         .withArguments(new AcmeIntegerArgument("times"))
@@ -1091,7 +1091,7 @@ prism
 ├── core/                  Platform-agnostic command model: builders, arguments, executors, permissions
 ├── reflection/            Small reflection helpers shared across platform modules
 ├── platform/
-│   ├── bukkit/            Shared Bukkit API layer: PrismBukkitCommand, arguments, executors, legacy registrar
+│   ├── bukkit/            Shared Bukkit API layer: PrismCommand, arguments, executors, legacy registrar
 │   ├── spigot/            Spigot platform and registry
 │   ├── paper/             Paper platform and registry (async suggestions, Paper-native Brigadier)
 │   ├── velocity/          Velocity platform and registry (VelocityCommand, VelocityPermission, Brigadier adapter)

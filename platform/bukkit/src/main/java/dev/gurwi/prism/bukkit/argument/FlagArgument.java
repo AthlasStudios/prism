@@ -3,7 +3,7 @@ package dev.gurwi.prism.bukkit.argument;
 import dev.gurwi.prism.argument.suggestion.SuggestionContext;
 import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import dev.gurwi.prism.bukkit.argument.base.GreedyArgument;
-import dev.gurwi.prism.bukkit.argument.parser.ParsedFlags;
+import dev.gurwi.prism.bukkit.argument.parser.FlagsContainer;
 import dev.gurwi.prism.bukkit.argument.suggestion.ArgumentSuggestion;
 import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.bukkit.argument.type.Flag;
@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
+public class FlagArgument extends GreedyArgument<FlagArgument, FlagsContainer> {
 
     private final Map<String, Flag<?>> byLong = new LinkedHashMap<>();
     private final Map<Character, Flag<?>> byShort = new HashMap<>();
@@ -51,7 +51,7 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
     }
 
     @Override
-    public ParsedFlags parse(@NotNull CommandSender sender, @NotNull String input) throws ArgumentParseException {
+    public FlagsContainer parse(@NotNull CommandSender sender, @NotNull String input) throws ArgumentParseException {
         try {
             Tokenized tokenized = tokenize(input);
             Map<String, List<Object>> out = new LinkedHashMap<>();
@@ -69,7 +69,7 @@ public class FlagArgument extends GreedyArgument<FlagArgument, ParsedFlags> {
                 }
             }
 
-            return out.isEmpty() ? ParsedFlags.empty() : new ParsedFlags(out);
+            return out.isEmpty() ? FlagsContainer.empty() : new FlagsContainer(out);
         } catch (FlagSyntaxException e) {
             throw new ArgumentParseException(this, input, e.getMessage());
         }

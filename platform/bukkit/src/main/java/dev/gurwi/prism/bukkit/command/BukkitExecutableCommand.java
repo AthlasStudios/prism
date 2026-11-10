@@ -61,9 +61,11 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
             }
         }
 
+        String fullInput = args.length == 0 ? label : label + " " + String.join(" ", args);
+
         for (Level level : levels) {
             try {
-                LegacyArgumentsParser.TreeParseResult result = LegacyArgumentsParser.parseTree(sender, level.definition(), level.args(), args, level.start(), parsed);
+                LegacyArgumentsParser.TreeParseResult result = LegacyArgumentsParser.parseTree(sender, level.definition(), level.args(), args, level.start(), parsed, fullInput);
 
                 parsed = result.arguments();
                 node = result.node();

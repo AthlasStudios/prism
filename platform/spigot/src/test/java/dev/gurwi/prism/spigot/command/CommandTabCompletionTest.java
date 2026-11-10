@@ -1,9 +1,9 @@
 package dev.gurwi.prism.spigot.command;
 
-import dev.gurwi.prism.bukkit.command.PrismBukkitCommand;
+import dev.gurwi.prism.bukkit.command.PrismCommand;
 import dev.gurwi.prism.bukkit.permission.BukkitPermission;
 import dev.gurwi.prism.bukkit.permission.CommandPermission;
-import dev.gurwi.prism.spigot.SpigotPlatform;
+import dev.gurwi.prism.spigot.SpigotCommandPlatform;
 import dev.gurwi.prism.test.bukkit.BukkitTest;
 import org.bukkit.command.Command;
 import org.junit.jupiter.api.Test;
@@ -18,12 +18,12 @@ class CommandTabCompletionTest extends BukkitTest {
         PlayerMock player = server.addPlayer();
         player.setOp(true);
 
-        SpigotPlatform.configure(plugin)
+        SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new PrismBukkitCommand(
+                        new PrismCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"
@@ -43,12 +43,12 @@ class CommandTabCompletionTest extends BukkitTest {
     void testCommandIsNotTabCompletedForNonOpPlayer() {
         PlayerMock player = server.addPlayer();
 
-        SpigotPlatform.configure(plugin)
+        SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new PrismBukkitCommand("prism")
+                        new PrismCommand("prism")
                                 .withPermission(CommandPermission.OP)
                                 .executesPlayer((sender, args) -> {})
                                 .build()
@@ -64,12 +64,12 @@ class CommandTabCompletionTest extends BukkitTest {
     void testCommandIsNotTabCompletedForDeniedPlayer() {
         PlayerMock player = server.addPlayer();
 
-        SpigotPlatform.configure(plugin)
+        SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new PrismBukkitCommand("prism")
+                        new PrismCommand("prism")
                                 .withPlayerRequirement(playerMock -> false)
                                 .executesPlayer((sender, args) -> {})
                                 .build()
@@ -85,12 +85,12 @@ class CommandTabCompletionTest extends BukkitTest {
     void testCommandIsNotTabCompletedForPlayerWithoutExecutor() {
         PlayerMock player = server.addPlayer();
 
-        SpigotPlatform.configure(plugin)
+        SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new PrismBukkitCommand("prism")
+                        new PrismCommand("prism")
                                 .executesConsole((sender, args) -> {})
                                 .build()
                 );
@@ -105,12 +105,12 @@ class CommandTabCompletionTest extends BukkitTest {
     void testCommandIsNotTabCompletedWithoutPermission() {
         PlayerMock player = server.addPlayer();
 
-        SpigotPlatform.configure(plugin)
+        SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new PrismBukkitCommand("prism")
+                        new PrismCommand("prism")
                                 .withPermission(
                                         BukkitPermission.of("prism.use")
                                 )
@@ -129,12 +129,12 @@ class CommandTabCompletionTest extends BukkitTest {
     void testCommandIsTabCompletedWithPermission() {
         PlayerMock player = server.addPlayer();
 
-        SpigotPlatform.configure(plugin)
+        SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new PrismBukkitCommand("prism")
+                        new PrismCommand("prism")
                                 .withPermission(
                                         BukkitPermission.of("prism.use")
                                 )
@@ -155,12 +155,12 @@ class CommandTabCompletionTest extends BukkitTest {
     void testCommandIsNotTabCompletedWhenRequirementFailsEvenWithPermission() {
         PlayerMock player = server.addPlayer();
 
-        SpigotPlatform.configure(plugin)
+        SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new PrismBukkitCommand("prism")
+                        new PrismCommand("prism")
                                 .withPlayerRequirement(playerMock -> false)
                                 .withPermission(
                                         BukkitPermission.of("prism.use")
@@ -180,12 +180,12 @@ class CommandTabCompletionTest extends BukkitTest {
 
     @Test
     void testPlayerRequirementDoesNotAffectConsole() {
-        SpigotPlatform.configure(plugin)
+        SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new PrismBukkitCommand(
+                        new PrismCommand(
                                 "prism",
                                 "Prism command",
                                 "pr"
@@ -203,12 +203,12 @@ class CommandTabCompletionTest extends BukkitTest {
 
     @Test
     void testConsoleIsNotTabCompletedForPlayerOnlyCommand() {
-        SpigotPlatform.configure(plugin)
+        SpigotCommandPlatform.configure(plugin)
                 .disableBrigadier()
                 .init()
                 .getCommandsRegistry()
                 .register(
-                        new PrismBukkitCommand("prism")
+                        new PrismCommand("prism")
                                 .executesPlayer((sender, args) -> {})
                                 .build()
                 );

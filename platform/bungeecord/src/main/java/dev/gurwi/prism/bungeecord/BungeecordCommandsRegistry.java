@@ -13,16 +13,16 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 
-public class BungeecordCommandsRegistry implements CommandsRegistry<BungeecordPlatform, BungeecordCommandDefinition> {
+public class BungeecordCommandsRegistry implements CommandsRegistry<BungeecordCommandPlatform, BungeecordCommandDefinition> {
 
     private final BungeecordCommandDefinitionAdapter adapter = new BungeecordCommandDefinitionAdapter();
     private final Map<BungeecordCommandDefinition, Map<String, BungeecordCommandShim>> registeredCommands = new LinkedHashMap<>();
     private final Map<String, LiteralCommandNode<CommandSender>> nodes = new LinkedHashMap<>();
 
-    private final BungeecordPlatform platform;
+    private final BungeecordCommandPlatform platform;
     private final BungeecordCommandTreeInjector injector;
 
-    public BungeecordCommandsRegistry(@NotNull BungeecordPlatform platform) {
+    public BungeecordCommandsRegistry(@NotNull BungeecordCommandPlatform platform) {
         this.platform = platform;
         this.injector = platform.getConfiguration().isCommandTreeInjectionEnabled()
                 ? BungeecordCommandTreeInjector.create(platform.getPlugin(), this::snapshot)
@@ -75,7 +75,7 @@ public class BungeecordCommandsRegistry implements CommandsRegistry<BungeecordPl
     }
 
     @Override
-    public BungeecordPlatform getPlatform() {
+    public BungeecordCommandPlatform getPlatform() {
         return platform;
     }
 

@@ -11,9 +11,9 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
 
-public interface BukkitCommandsRegistry<Platform extends BukkitPlatform<? extends BukkitCommandsRegistry<Platform>, ?>> extends CommandsRegistry<Platform, BukkitCommandDefinition> {
+public interface BukkitCommandsRegistry<CommandPlatform extends BukkitCommandPlatform<? extends BukkitCommandsRegistry<CommandPlatform>, ?>> extends CommandsRegistry<CommandPlatform, BukkitCommandDefinition> {
 
-    default @NotNull BukkitCommandRegistrar createRegistrar(@NotNull Platform platform) {
+    default @NotNull BukkitCommandRegistrar createRegistrar(@NotNull CommandPlatform platform) {
         try {
             if (!platform.getConfiguration().isBrigadierDisabled()) {
                 Optional<BukkitCommandRegistrar> brigadier = tryBrigadier(platform.getPlugin());

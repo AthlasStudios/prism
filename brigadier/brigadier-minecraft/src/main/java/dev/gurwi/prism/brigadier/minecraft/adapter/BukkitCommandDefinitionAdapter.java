@@ -10,10 +10,12 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import dev.gurwi.prism.argument.AbstractArgument;
 import dev.gurwi.prism.argument.CommandArguments;
+import dev.gurwi.prism.argument.ParsedArgument;
 import dev.gurwi.prism.argument.suggestion.SuggestionContext;
 import dev.gurwi.prism.brigadier.BrigadierAdapter;
 import dev.gurwi.prism.brigadier.BrigadierCompatibleArgument;
 import dev.gurwi.prism.brigadier.BrigadierTreeBuilder;
+import dev.gurwi.prism.brigadier.HierarchyArgumentsResolver;
 import dev.gurwi.prism.brigadier.NativeTypeHolder;
 import dev.gurwi.prism.brigadier.NodeSpec;
 import dev.gurwi.prism.brigadier.minecraft.argument.mapping.ArgumentMappings;
@@ -282,79 +284,27 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
         return Command.SINGLE_SUCCESS;
     }
 
-    private @Nullable CommandArguments<BukkitCommandDefinition, CommandSender> parseHierarchy(@NotNull BukkitCommandDefinition target, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {
-        Deque<BukkitCommandDefinition> hierarchy = new ArrayDeque<>();
-        BukkitCommandDefinition current = target;
-
-        while (current != null) {
-            hierarchy.addFirst(current);
-            current = current.getParent().orElse(null);
-        }
-
-        CommandArguments<BukkitCommandDefinition, CommandSender> parsed = null;
-
-        for (BukkitCommandDefinition level : hierarchy) {
-            parsed = parseLevel(level, context, source, sender, parsed, level == target ? path : List.of(), forced);
-        }
-
-        return parsed;
-    }
-
-    private @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parseLevel(@NotNull BukkitCommandDefinition level, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender, CommandArguments<BukkitCommandDefinition, CommandSender> parent, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {
-        Map<AbstractArgument<?, ?, ?, ?>, List<NodeSpec>> grouped = new LinkedHashMap<>();
-
-        for (NodeSpec spec : builder.specs(level)) {
-            grouped.computeIfAbsent(spec.argument(), key -> new ArrayList<>()).add(spec);
-        }
-
-        Map<String, Object> required = new HashMap<>();
-        Map<String, Object> optional = new HashMap<>();
-
-        for (Map.Entry<AbstractArgument<?, ?, ?, ?>, List<NodeSpec>> entry : grouped.entrySet()) {
-            BukkitArgument<?, ?> argument = (BukkitArgument<?, ?>) entry.getKey();
-            List<NodeSpec> specs = entry.getValue();
-
-            if (specs.get(0).literal() || !argument.isListed()) {
-                continue;
+    private @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parseHierarchy(@NotNull BukkitCommandDefinition target, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {
+        return HierarchyArgumentsResolver.resolve(builder, this, target, path, forced, context.getInput(), new HierarchyArgumentsResolver.Reader() {
+            @Override
+            public boolean present(@NotNull NodeSpec spec) {
+                return BukkitCommandDefinitionAdapter.this.present(context, spec.name());
             }
 
-            boolean isOptional = specs.get(0).optional();
-            String fixed = forced.get(argument);
+            @Override
+            public @NotNull ParsedArgument<?> read(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull List<NodeSpec> specs) throws CommandSyntaxException {
+                Object value = BukkitCommandDefinitionAdapter.this.read((BukkitArgument<?, ?>) argument, specs, context, source, sender);
 
-            if (fixed == null && isOptional && !present(context, specs.get(0).name())) {
-                continue;
+                return new ParsedArgument<>(HierarchyArgumentsResolver.raw(context, specs), value);
             }
 
-            Object value = fixed != null ? parseFixed(argument, sender, fixed) : read(argument, specs, context, source, sender);
+            @Override
+            public @NotNull ParsedArgument<?> parseFixed(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull String value) throws CommandSyntaxException {
+                Object parsed = BukkitCommandDefinitionAdapter.this.parseFixed((BukkitArgument<?, ?>) argument, sender, value);
 
-            if (isOptional) {
-                optional.put(argument.getName(), value);
-            } else {
-                required.put(argument.getName(), value);
+                return new ParsedArgument<>(value, parsed);
             }
-        }
-
-        for (int index = 0; index < path.size(); index++) {
-            BukkitArgument<?, ?> argument = (BukkitArgument<?, ?>) path.get(index);
-
-            if (literal(argument) || !argument.isListed()) {
-                continue;
-            }
-
-            String fixed = forced.get(argument);
-
-            if (fixed != null) {
-                required.put(argument.getName(), parseFixed(argument, sender, fixed));
-
-                continue;
-            }
-
-            List<NodeSpec> specs = builder.treeSpecs(level, path.subList(0, index + 1));
-
-            required.put(argument.getName(), read(argument, specs, context, source, sender));
-        }
-
-        return new CommandArguments<>(level, required, optional, parent);
+        });
     }
 
     private <T> @NotNull T parseFixed(@NotNull BukkitArgument<?, T> argument, @NotNull CommandSender sender, @NotNull String value) throws CommandSyntaxException {

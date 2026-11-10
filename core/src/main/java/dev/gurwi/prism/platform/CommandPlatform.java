@@ -1,6 +1,6 @@
 package dev.gurwi.prism.platform;
 
-public interface Platform<Registry extends CommandsRegistry<?, ?>> {
+public interface CommandPlatform<Registry extends CommandsRegistry<?, ?>> {
 
     String getIdentifier();
 
