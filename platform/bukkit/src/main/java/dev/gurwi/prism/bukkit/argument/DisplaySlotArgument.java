@@ -28,7 +28,7 @@ public class DisplaySlotArgument extends BukkitArgument<DisplaySlotArgument, Dis
         try {
             return DisplaySlot.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ArgumentParseException(this, value, "Expected a display slot got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a display slot got " + value);
         }
     }
 

@@ -23,10 +23,8 @@ public abstract class NumberRangeArgument<T extends Number & Comparable<T>> exte
         String[] parts = value.split("\\.\\.", -1);
 
         if (parts.length > 2) {
-            throw new ArgumentParseException(
-                    this,
-                    value,
-                    "Expected a range between two numbers"
+            throw ArgumentParseException.message(
+                    this, value, "Expected a range between two numbers"
             );
         }
 
@@ -42,10 +40,8 @@ public abstract class NumberRangeArgument<T extends Number & Comparable<T>> exte
             return new RangedNumber<>(min, max);
 
         } catch (IllegalArgumentException e) {
-            throw new ArgumentParseException(
-                    this,
-                    value,
-                    e.getMessage()
+            throw ArgumentParseException.message(
+                    this, value, e.getMessage()
             );
         }
     }

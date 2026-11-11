@@ -46,19 +46,19 @@ public abstract class PositionArgument<Impl extends PositionArgument<Impl>> exte
         String[] parts = value.trim().split("\\s+");
 
         if (parts.length != components) {
-            throw new ArgumentParseException(this, value, "Expected " + components + " coordinate components, got " + parts.length);
+            throw ArgumentParseException.message(this, value, "Expected " + components + " coordinate components, got " + parts.length);
         }
 
         boolean isLocal = parts[0].startsWith("^");
 
         for (String part : parts) {
             if (part.startsWith("^") != isLocal) {
-                throw new ArgumentParseException(this, value, "Cannot mix local (^) and non-local coordinates");
+                throw ArgumentParseException.message(this, value, "Cannot mix local (^) and non-local coordinates");
             }
         }
 
         if (isLocal && column) {
-            throw new ArgumentParseException(this, value, "Local coordinates are not supported here");
+            throw ArgumentParseException.message(this, value, "Local coordinates are not supported here");
         }
 
         Location base = getSenderLocation(sender);
@@ -72,7 +72,7 @@ public abstract class PositionArgument<Impl extends PositionArgument<Impl>> exte
         }
 
         if (usesRelativeOrLocal && base == null) {
-            throw new ArgumentParseException(this, value, "Cannot use relative or local coordinates from a sender without a position");
+            throw ArgumentParseException.message(this, value, "Cannot use relative or local coordinates from a sender without a position");
         }
 
         Location result;
@@ -204,7 +204,7 @@ public abstract class PositionArgument<Impl extends PositionArgument<Impl>> exte
 
             return parsed;
         } catch (NumberFormatException e) {
-            throw new ArgumentParseException(this, token, "Invalid numeric coordinate: " + token);
+            throw ArgumentParseException.message(this, token, "Invalid numeric coordinate: " + token);
         }
     }
 

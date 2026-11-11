@@ -30,12 +30,12 @@ public class LongArgument extends BoundedArgument<LongArgument, Long> {
         try {
             long parsedValue = Long.parseLong(value);
             if (parsedValue < min || parsedValue > max) {
-                throw new ArgumentParseException(this, value, "Expected a long between " + min + " and " + max + " got " + value);
+                throw ArgumentParseException.message(this, value, "Expected a long between " + min + " and " + max + " got " + value);
             }
 
             return parsedValue;
         } catch (NumberFormatException e) {
-            throw new ArgumentParseException(this, value, "Expected a long got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a long got " + value);
         }
     }
 

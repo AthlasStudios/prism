@@ -30,12 +30,12 @@ public class IntegerArgument extends BoundedArgument<IntegerArgument, Integer> {
         try {
             int parsedValue = Integer.parseInt(value);
             if (parsedValue < min || parsedValue > max) {
-                throw new ArgumentParseException(this, value, "Expected an integer between " + min + " and " + max + " got " + value);
+                throw ArgumentParseException.message(this, value, "Expected an integer between " + min + " and " + max + " got " + value);
             }
 
             return parsedValue;
         } catch (NumberFormatException e) {
-            throw new ArgumentParseException(this, value, "Expected an integer got " + value);
+            throw ArgumentParseException.message(this, value, "Expected an integer got " + value);
         }
     }
 

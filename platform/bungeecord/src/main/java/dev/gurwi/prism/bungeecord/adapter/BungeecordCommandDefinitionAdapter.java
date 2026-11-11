@@ -10,6 +10,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.chat.TextComponent;
 import dev.gurwi.prism.argument.AbstractArgument;
 import dev.gurwi.prism.argument.CommandArguments;
 import dev.gurwi.prism.argument.ParsedArgument;
@@ -24,6 +25,7 @@ import dev.gurwi.prism.bungeecord.argument.base.LiteralValues;
 import dev.gurwi.prism.bungeecord.argument.base.BungeecordArgument;
 import dev.gurwi.prism.bungeecord.argument.ArgumentSuggestion;
 import dev.gurwi.prism.bungeecord.command.BungeecordCommandDefinition;
+import dev.gurwi.prism.exception.CommandExecutionException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -223,7 +225,11 @@ public class BungeecordCommandDefinitionAdapter implements BrigadierAdapter<Comm
 
         CommandArguments<BungeecordCommandDefinition, CommandSender> parsed = parseHierarchy(target, context, List.of(), forced);
 
-        target.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
+        try {
+            target.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
+        } catch (CommandExecutionException e) {
+            handleCommandExecutionException(sender, e);
+        }
 
         return Command.SINGLE_SUCCESS;
     }
@@ -238,9 +244,28 @@ public class BungeecordCommandDefinitionAdapter implements BrigadierAdapter<Comm
 
         CommandArguments<BungeecordCommandDefinition, CommandSender> parsed = parseHierarchy(definition, context, path, forced);
 
-        last.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
+        try {
+            last.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
+        } catch (CommandExecutionException e) {
+            handleCommandExecutionException(sender, e);
+        }
 
         return Command.SINGLE_SUCCESS;
+    }
+
+    private void handleCommandExecutionException(@NotNull CommandSender sender, @NotNull CommandExecutionException e) {
+        if (e instanceof CommandExecutionException.Silent) {
+            e.printStackTrace();
+            return;
+        }
+
+        if (e instanceof CommandExecutionException.Message) {
+            sender.sendMessage(new TextComponent(e.getMessage()));
+            e.printStackTrace();
+            return;
+        }
+
+        throw e;
     }
 
     private @NotNull CommandArguments<BungeecordCommandDefinition, CommandSender> parseHierarchy(@NotNull BungeecordCommandDefinition target, @NotNull CommandContext<CommandSender> context, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {

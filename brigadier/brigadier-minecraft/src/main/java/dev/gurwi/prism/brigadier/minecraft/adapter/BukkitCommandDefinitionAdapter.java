@@ -30,6 +30,7 @@ import dev.gurwi.prism.bukkit.argument.suggestion.ArgumentSuggestion;
 import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.exception.ArgumentParseException;
+import dev.gurwi.prism.exception.CommandExecutionException;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -263,7 +264,11 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
 
         CommandArguments<BukkitCommandDefinition, CommandSender> parsed = parseHierarchy(target, context, source, sender, List.of(), forced);
 
-        target.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
+        try {
+            target.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
+        } catch (CommandExecutionException e) {
+            handleCommandExecutionException(sender, e);
+        }
 
         return Command.SINGLE_SUCCESS;
     }
@@ -279,9 +284,28 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
 
         CommandArguments<BukkitCommandDefinition, CommandSender> parsed = parseHierarchy(definition, context, source, sender, path, forced);
 
-        last.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
+        try {
+            last.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
+        } catch (CommandExecutionException e) {
+            handleCommandExecutionException(sender, e);
+        }
 
         return Command.SINGLE_SUCCESS;
+    }
+
+    private void handleCommandExecutionException(@NotNull CommandSender sender, @NotNull CommandExecutionException e) {
+        if (e instanceof CommandExecutionException.Silent) {
+            e.printStackTrace();
+            return;
+        }
+
+        if (e instanceof CommandExecutionException.Message) {
+            sender.sendMessage(e.getMessage());
+            e.printStackTrace();
+            return;
+        }
+
+        throw e;
     }
 
     private @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parseHierarchy(@NotNull BukkitCommandDefinition target, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {

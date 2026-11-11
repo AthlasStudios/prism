@@ -71,7 +71,7 @@ public class FlagArgument extends GreedyArgument<FlagArgument, FlagsContainer> {
 
             return out.isEmpty() ? FlagsContainer.empty() : new FlagsContainer(out);
         } catch (FlagSyntaxException e) {
-            throw new ArgumentParseException(this, input, e.getMessage());
+            throw ArgumentParseException.message(this, input, e.getMessage());
         }
     }
 

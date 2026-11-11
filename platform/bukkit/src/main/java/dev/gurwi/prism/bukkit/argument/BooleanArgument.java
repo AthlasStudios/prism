@@ -24,7 +24,7 @@ public class BooleanArgument extends BukkitArgument<BooleanArgument, Boolean> {
             return false;
         }
 
-        throw new ArgumentParseException(this, value, "Expected a boolean got " + value);
+        throw ArgumentParseException.message(this, value, "Expected a boolean got " + value);
     }
 
 }

@@ -19,7 +19,7 @@ public class RotationArgument extends MultiTokenArgument<RotationArgument, Rotat
         String[] tokens = RelativeValues.tokens(value);
 
         if (tokens.length != 2) {
-            throw new ArgumentParseException(this, value, "Expected a rotation got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a rotation got " + value);
         }
 
         Location origin = RelativeValues.origin(sender);
@@ -30,7 +30,7 @@ public class RotationArgument extends MultiTokenArgument<RotationArgument, Rotat
 
             return new Rotation(yaw, pitch);
         } catch (NumberFormatException e) {
-            throw new ArgumentParseException(this, value, "Expected a rotation got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a rotation got " + value);
         }
     }
 

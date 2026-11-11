@@ -28,7 +28,7 @@ public class MaterialArgument extends BukkitArgument<MaterialArgument, Material>
         Material material = Material.matchMaterial(value);
 
         if (material == null) {
-            throw new ArgumentParseException(this, value, "Material not found: " + value);
+            throw ArgumentParseException.message(this, value, "Material not found: " + value);
         }
 
         return material;

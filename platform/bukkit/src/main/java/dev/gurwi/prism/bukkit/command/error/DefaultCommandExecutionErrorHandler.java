@@ -1,7 +1,8 @@
 package dev.gurwi.prism.bukkit.command.error;
 
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
-import dev.gurwi.prism.bukkit.exception.BukkitArgumentsParseException;
+import dev.gurwi.prism.bukkit.exception.BukkitArgumentParseException;
+import dev.gurwi.prism.exception.CommandExecutionException;
 import dev.gurwi.prism.reflection.ReflectionUtil;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -27,42 +28,48 @@ public class DefaultCommandExecutionErrorHandler implements LegacyCommandExecuti
     }
 
     @Override
-    public void onArgumentsParseError(
-            @NotNull BukkitCommandDefinition command,
-            @NotNull CommandSender sender,
-            @NotNull BukkitArgumentsParseException exception
-    ) {
+    public void onArgumentsParseError(@NotNull BukkitCommandDefinition command, @NotNull CommandSender sender, @NotNull BukkitArgumentParseException exception) {
         if (sender instanceof ConsoleCommandSender) {
             consoleHandler.onArgumentsParseError(command, sender, exception);
             return;
         }
 
+        if (exception instanceof BukkitArgumentParseException.Silent) {
+            exception.printStackTrace();
+            return;
+        }
+
+        if (exception instanceof BukkitArgumentParseException.Message) {
+            sender.sendMessage(org.bukkit.ChatColor.RED + exception.getMessage());
+            exception.printStackTrace();
+            return;
+        }
+
+        if (exception instanceof BukkitArgumentParseException.Panic) {
+            throw exception;
+        }
+
         sender.sendMessage("");
 
-        switch (exception.getType()) {
-            case INVALID_ARGUMENT:
-                sendError(sender, "Invalid argument", command, exception, false);
-                break;
-            case MISSING_ARGUMENT:
-                sendError(sender, "Missing argument", command, exception, true);
-                break;
-            case UNKNOWN_ARGUMENT:
-                sendError(sender, "Unknown argument", command, exception, false);
-                break;
-            default:
-                throw new IllegalStateException("Unexpected type: " + exception.getType());
+        if (exception instanceof BukkitArgumentParseException.Invalid) {
+            sendError(sender, "Invalid argument", command, exception, false);
+        } else if (exception instanceof BukkitArgumentParseException.Missing) {
+            sendError(sender, "Missing argument", command, exception, true);
+        } else if (exception instanceof BukkitArgumentParseException.Unknown) {
+            sendError(sender, "Unknown argument", command, exception, false);
+        } else {
+            throw new IllegalStateException("Unexpected type: " + exception.getClass().getSimpleName());
         }
 
         sender.sendMessage("");
     }
 
-    private void sendError(
-            @NotNull CommandSender sender,
-            @NotNull String title,
-            @NotNull BukkitCommandDefinition command,
-            @NotNull BukkitArgumentsParseException exception,
-            boolean missing
-    ) {
+    @Override
+    public void onCommandExecutionError(@NotNull BukkitCommandDefinition command, @NotNull CommandSender sender, @NotNull CommandExecutionException exception) {
+        consoleHandler.onCommandExecutionError(command, sender, exception);
+    }
+
+    private void sendError(@NotNull CommandSender sender, @NotNull String title, @NotNull BukkitCommandDefinition command, @NotNull BukkitArgumentParseException exception, boolean missing) {
         String errorMessage = exception.getMessage();
         String displayTitle = (errorMessage != null && !errorMessage.isEmpty())
                 ? title + ": " + errorMessage

@@ -28,7 +28,7 @@ public class SoundArgument extends BukkitArgument<SoundArgument, Sound> {
         try {
             return Sound.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ArgumentParseException(this, value, "Expected a sound got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a sound got " + value);
         }
     }
 

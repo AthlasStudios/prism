@@ -1,13 +1,14 @@
 package dev.gurwi.prism.command;
 
 import dev.gurwi.prism.argument.CommandArguments;
+import dev.gurwi.prism.exception.CommandExecutionException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 @FunctionalInterface
 public interface CommandExecutor<Source, Definition extends AbstractCommandDefinition<Definition, ? super Source, ?, ?, ?>> {
 
-    void run(Source source, CommandArguments<Definition, ? super Source> args);
+    void run(Source source, CommandArguments<Definition, ? super Source> args) throws CommandExecutionException;
 
     @Contract(pure = true)
     static <Source, Definition extends AbstractCommandDefinition<Definition, Source, ?, ?, ?>> @NotNull CommandExecutor<Source, Definition> empty() {

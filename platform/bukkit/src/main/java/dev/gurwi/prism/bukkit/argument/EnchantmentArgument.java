@@ -29,7 +29,7 @@ public class EnchantmentArgument extends BukkitArgument<EnchantmentArgument, Enc
         Enchantment enchantment = Enchantment.getByName(value.toUpperCase());
 
         if (enchantment == null) {
-            throw new ArgumentParseException(this, value, "Enchantment not found: " + value);
+            throw ArgumentParseException.message(this, value, "Enchantment not found: " + value);
         }
 
         return enchantment;

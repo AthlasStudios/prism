@@ -32,12 +32,12 @@ public class FloatArgument extends BoundedArgument<FloatArgument, Float> {
         try {
             float parsedValue = Float.parseFloat(value);
             if (parsedValue < min || parsedValue > max) {
-                throw new ArgumentParseException(this, value, "Expected a float between " + min + " and " + max + " got " + value);
+                throw ArgumentParseException.message(this, value, "Expected a float between " + min + " and " + max + " got " + value);
             }
 
             return parsedValue;
         } catch (NumberFormatException e) {
-            throw new ArgumentParseException(this, value, "Expected a float got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a float got " + value);
         }
     }
 

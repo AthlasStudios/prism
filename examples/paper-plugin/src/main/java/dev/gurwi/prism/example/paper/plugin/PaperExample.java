@@ -11,6 +11,7 @@ import dev.gurwi.prism.bukkit.argument.type.RangedNumber;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.command.PrismCommand;
 import dev.gurwi.prism.bukkit.util.CommandHelp;
+import dev.gurwi.prism.exception.CommandExecutionException;
 import dev.gurwi.prism.paper.PaperCommandPlatform;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
@@ -28,6 +29,7 @@ public class PaperExample extends JavaPlugin {
     @Override
     public void onEnable() {
         PaperCommandPlatform platform = PaperCommandPlatform.configure(this)
+                .disableBrigadier()
                 .init();
 
         BukkitCommandDefinition build = new PrismCommand("testa", "pr")
@@ -201,6 +203,8 @@ public class PaperExample extends JavaPlugin {
                     player.sendMessage(args.fullInput());
                     player.sendMessage(args.getRaw("flags"));
                     color.ifPresent(c -> player.sendMessage("Color: " + c.name()));
+
+                    throw CommandExecutionException.message("Si è verificato un errore");
                 })
                 .register(platform);
 

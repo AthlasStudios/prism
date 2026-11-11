@@ -28,7 +28,7 @@ public class EntityTypeArgument extends BukkitArgument<EntityTypeArgument, Entit
         try {
             return EntityType.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ArgumentParseException(this, value, "Expected an entity type got " + value);
+            throw ArgumentParseException.message(this, value, "Expected an entity type got " + value);
         }
     }
 

@@ -30,12 +30,12 @@ public class ShortArgument extends BukkitArgument<ShortArgument, Short> {
         try {
             short parsedValue = Short.parseShort(value);
             if (parsedValue < min || parsedValue > max) {
-                throw new ArgumentParseException(this, value, "Expected a short between " + min + " and " + max + " got " + value);
+                throw ArgumentParseException.message(this, value, "Expected a short between " + min + " and " + max + " got " + value);
             }
 
             return parsedValue;
         } catch (NumberFormatException e) {
-            throw new ArgumentParseException(this, value, "Expected a short got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a short got " + value);
         }
     }
 

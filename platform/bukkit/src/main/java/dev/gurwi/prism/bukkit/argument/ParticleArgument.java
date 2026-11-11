@@ -28,7 +28,7 @@ public class ParticleArgument extends BukkitArgument<ParticleArgument, Particle>
         try {
             return Particle.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ArgumentParseException(this, value, "Particle not found: " + value);
+            throw ArgumentParseException.message(this, value, "Particle not found: " + value);
         }
     }
 

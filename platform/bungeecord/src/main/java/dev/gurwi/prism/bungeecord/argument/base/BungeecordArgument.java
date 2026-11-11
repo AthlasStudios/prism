@@ -25,7 +25,7 @@ public abstract class BungeecordArgument<Impl extends BungeecordArgument<Impl, T
         T,
         BungeecordCommandDefinition,
         CommandSender,
-        BungeecordCommandExecutor<?>,
+        BungeecordCommandExecutor<? extends CommandSender>,
         BungeecordArgument<?, ?>,
         BungeecordPermission,
         SuggestionsSupplier<CommandSender, CompletableFuture<Collection<ArgumentSuggestion>>>

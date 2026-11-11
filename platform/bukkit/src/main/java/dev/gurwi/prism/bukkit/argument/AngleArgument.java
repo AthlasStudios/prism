@@ -17,7 +17,7 @@ public class AngleArgument extends BukkitArgument<AngleArgument, Float> {
         try {
             return (float) RelativeValues.parse(value, RelativeValues.origin(sender).getYaw());
         } catch (NumberFormatException e) {
-            throw new ArgumentParseException(this, value, "Expected an angle got " + value);
+            throw ArgumentParseException.message(this, value, "Expected an angle got " + value);
         }
     }
 

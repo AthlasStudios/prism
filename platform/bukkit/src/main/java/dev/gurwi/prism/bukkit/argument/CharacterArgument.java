@@ -14,7 +14,7 @@ public class CharacterArgument extends BukkitArgument<CharacterArgument, Charact
     @Override
     public Character parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
         if (value.length() != 1) {
-            throw new ArgumentParseException(this, value, "Expected a character got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a character got " + value);
         }
 
         return value.charAt(0);

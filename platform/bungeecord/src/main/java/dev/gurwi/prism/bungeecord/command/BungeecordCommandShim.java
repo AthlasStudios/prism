@@ -10,6 +10,7 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
+import dev.gurwi.prism.exception.CommandExecutionException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedHashSet;
@@ -44,10 +45,27 @@ public class BungeecordCommandShim extends Command implements TabExecutor {
             dispatcher.execute(input, sender);
         } catch (CommandSyntaxException exception) {
             sender.sendMessage(new TextComponent(ChatColor.RED + exception.getMessage()));
+        } catch (CommandExecutionException exception) {
+            handleCommandExecutionException(sender, exception);
         } catch (Throwable throwable) {
             sender.sendMessage(new TextComponent(ChatColor.RED + "An internal error occurred."));
             logger.log(Level.SEVERE, "Prism failed to execute /" + input, throwable);
         }
+    }
+
+    private void handleCommandExecutionException(@NotNull CommandSender sender, @NotNull CommandExecutionException e) {
+        if (e instanceof CommandExecutionException.Silent) {
+            e.printStackTrace();
+            return;
+        }
+
+        if (e instanceof CommandExecutionException.Message) {
+            sender.sendMessage(new TextComponent(e.getMessage()));
+            e.printStackTrace();
+            return;
+        }
+
+        throw e;
     }
 
     @Override

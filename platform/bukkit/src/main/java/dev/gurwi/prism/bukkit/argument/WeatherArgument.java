@@ -28,7 +28,7 @@ public class WeatherArgument extends BukkitArgument<WeatherArgument, WeatherType
         try {
             return WeatherType.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ArgumentParseException(this, value, "Expected a weather type got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a weather type got " + value);
         }
     }
 

@@ -32,7 +32,7 @@ public class StructureRotationArgument extends BukkitArgument<StructureRotationA
         try {
             return StructureRotation.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ArgumentParseException(this, value, "Expected a structure rotation got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a structure rotation got " + value);
         }
     }
 

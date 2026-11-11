@@ -18,8 +18,7 @@ public class NodeSpec {
     private final int parts;
     private final boolean literal;
 
-    public NodeSpec(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull String name, @NotNull ArgumentType<?> type,
-                    boolean terminal, boolean greedy, boolean optional, int part, int parts, boolean literal) {
+    public NodeSpec(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull String name, @NotNull ArgumentType<?> type, boolean terminal, boolean greedy, boolean optional, int part, int parts, boolean literal) {
         this.argument = argument;
         this.name = name;
         this.type = type;

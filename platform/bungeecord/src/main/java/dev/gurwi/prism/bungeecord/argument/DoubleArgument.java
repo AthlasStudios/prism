@@ -32,12 +32,12 @@ public class DoubleArgument extends BoundedArgument<DoubleArgument, Double> {
         try {
             double parsedValue = Double.parseDouble(value);
             if (parsedValue < min || parsedValue > max) {
-                throw new ArgumentParseException(this, value, "Expected a double between " + min + " and " + max + " got " + value);
+                throw ArgumentParseException.message(this, value, "Expected a double between " + min + " and " + max + " got " + value);
             }
 
             return parsedValue;
         } catch (NumberFormatException e) {
-            throw new ArgumentParseException(this, value, "Expected a double got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a double got " + value);
         }
     }
 

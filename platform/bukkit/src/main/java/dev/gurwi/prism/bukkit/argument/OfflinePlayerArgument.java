@@ -37,7 +37,7 @@ public class OfflinePlayerArgument extends BukkitArgument<OfflinePlayerArgument,
         OfflinePlayer player = Bukkit.getOfflinePlayer(value);
 
         if (!player.hasPlayedBefore() && !player.isOnline()) {
-            throw new ArgumentParseException(this, value, "Offline player not found: " + value);
+            throw ArgumentParseException.message(this, value, "Offline player not found: " + value);
         }
 
         return player;

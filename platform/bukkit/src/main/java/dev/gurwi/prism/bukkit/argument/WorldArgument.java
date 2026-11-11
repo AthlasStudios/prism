@@ -28,7 +28,7 @@ public class WorldArgument extends BukkitArgument<WorldArgument, World> {
         World world = Bukkit.getWorld(value);
 
         if (world == null) {
-            throw new ArgumentParseException(this, value, "World not found: " + value);
+            throw ArgumentParseException.message(this, value, "World not found: " + value);
         }
 
         return world;

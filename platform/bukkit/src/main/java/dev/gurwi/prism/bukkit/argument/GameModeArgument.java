@@ -28,7 +28,7 @@ public class GameModeArgument extends BukkitArgument<GameModeArgument, GameMode>
         try {
             return GameMode.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ArgumentParseException(this, value, "Expected a game mode got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a game mode got " + value);
         }
     }
 

@@ -230,7 +230,7 @@ public abstract class EntitySelectorArgument<Impl extends EntitySelectorArgument
             Entity entity = parseEntity(this, sender, value);
 
             if (!(entity instanceof Player)) {
-                throw new ArgumentParseException(this, value, "Expected a player");
+                throw ArgumentParseException.message(this, value, "Expected a player");
             }
 
             return (Player) entity;
@@ -251,7 +251,7 @@ public abstract class EntitySelectorArgument<Impl extends EntitySelectorArgument
 
             for (Entity entity : entities) {
                 if (!(entity instanceof Player)) {
-                    throw new ArgumentParseException(this, value, "Expected only players");
+                    throw ArgumentParseException.message(this, value, "Expected only players");
                 }
 
                 players.add((Player) entity);
@@ -265,7 +265,7 @@ public abstract class EntitySelectorArgument<Impl extends EntitySelectorArgument
         Collection<Entity> entities = parseEntities(argument, sender, value);
 
         if (entities.size() != 1) {
-            throw new ArgumentParseException(argument, value, "Expected exactly one entity");
+            throw ArgumentParseException.message(argument, value, "Expected exactly one entity");
         }
 
         return entities.iterator().next();
@@ -276,12 +276,12 @@ public abstract class EntitySelectorArgument<Impl extends EntitySelectorArgument
             Collection<Entity> entities = Bukkit.selectEntities(sender, value);
 
             if (entities.isEmpty()) {
-                throw new ArgumentParseException(argument, value, "No entities matched");
+                throw ArgumentParseException.message(argument, value, "No entities matched");
             }
 
             return entities;
         } catch (IllegalArgumentException e) {
-            throw new ArgumentParseException(argument, value, e.getMessage() != null ? e.getMessage() : "Invalid entity selector");
+            throw ArgumentParseException.message(argument, value, e.getMessage() != null ? e.getMessage() : "Invalid entity selector");
         }
     }
 

@@ -18,7 +18,7 @@ public class UUIDArgument extends BukkitArgument<UUIDArgument, UUID> {
         try {
             return UUID.fromString(value);
         } catch (IllegalArgumentException e) {
-            throw new ArgumentParseException(this, value, "Expected a UUID got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a UUID got " + value);
         }
     }
 

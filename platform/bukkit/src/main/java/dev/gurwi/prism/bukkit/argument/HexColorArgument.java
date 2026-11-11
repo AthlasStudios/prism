@@ -21,12 +21,12 @@ public class HexColorArgument extends BukkitArgument<HexColorArgument, Color> {
         }
 
         if (hex.length() != 3 && hex.length() != 6) {
-            throw new ArgumentParseException(this, value, "Incorrect hex format, should be 3 or 6 digits, got '" + value + "'");
+            throw ArgumentParseException.message(this, value, "Incorrect hex format, should be 3 or 6 digits, got '" + value + "'");
         }
 
         for (int i = 0; i < hex.length(); i++) {
             if (Character.digit(hex.charAt(i), 16) == -1) {
-                throw new ArgumentParseException(this, value, "Invalid hex digit '" + hex.charAt(i) + "' in '" + value + "'");
+                throw ArgumentParseException.message(this, value, "Invalid hex digit '" + hex.charAt(i) + "' in '" + value + "'");
             }
         }
 

@@ -28,7 +28,7 @@ public class BiomeArgument extends BukkitArgument<BiomeArgument, Biome> {
         try {
             return Biome.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ArgumentParseException(this, value, "Expected a biome got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a biome got " + value);
         }
     }
 

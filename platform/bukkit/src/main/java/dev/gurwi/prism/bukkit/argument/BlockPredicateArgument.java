@@ -14,7 +14,7 @@ public class BlockPredicateArgument extends BukkitArgument<BlockPredicateArgumen
 
     @Override
     public BlockInWorldPredicate parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
-        throw new ArgumentParseException(this, value, "Block predicates require Brigadier");
+        throw ArgumentParseException.message(this, value, "Block predicates require Brigadier");
     }
 
 }

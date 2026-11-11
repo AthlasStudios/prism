@@ -6,7 +6,7 @@ import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import dev.gurwi.prism.bukkit.argument.base.GreedyArgument;
 import dev.gurwi.prism.bukkit.argument.LiteralArgument;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
-import dev.gurwi.prism.bukkit.exception.BukkitArgumentsParseException;
+import dev.gurwi.prism.bukkit.exception.BukkitArgumentParseException;
 import dev.gurwi.prism.bukkit.exception.GreedyArgumentException;
 import dev.gurwi.prism.bukkit.exception.UnavailableArgumentException;
 import dev.gurwi.prism.exception.ArgumentParseException;
@@ -111,11 +111,11 @@ public final class LegacyArgumentsParser {
 
     }
 
-    public static @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parse(@NotNull CommandSender sender, @NotNull BukkitCommandDefinition definition, @NotNull String @NotNull [] rawArgs) throws BukkitArgumentsParseException {
+    public static @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parse(@NotNull CommandSender sender, @NotNull BukkitCommandDefinition definition, @NotNull String @NotNull [] rawArgs) throws BukkitArgumentParseException {
         return parse(sender, definition, rawArgs, rawArgs, 0, null);
     }
 
-    public static @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parse(@NotNull CommandSender sender, @NotNull BukkitCommandDefinition definition, @NotNull String @NotNull [] rawArgs, @NotNull String @NotNull [] originalArgs, int offset, @Nullable CommandArguments<BukkitCommandDefinition, CommandSender> parent) throws BukkitArgumentsParseException {
+    public static @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parse(@NotNull CommandSender sender, @NotNull BukkitCommandDefinition definition, @NotNull String @NotNull [] rawArgs, @NotNull String @NotNull [] originalArgs, int offset, @Nullable CommandArguments<BukkitCommandDefinition, CommandSender> parent) throws BukkitArgumentParseException {
         if (!definition.getArgumentTreeBranches().isEmpty()) {
             throw new IllegalStateException("Definition '" + definition.getName() + "' has argument tree branches, use parseTree");
         }
@@ -123,11 +123,11 @@ public final class LegacyArgumentsParser {
         return parseTree(sender, definition, rawArgs, originalArgs, offset, parent).arguments();
     }
 
-    public static @NotNull TreeParseResult parseTree(@NotNull CommandSender sender, @NotNull BukkitCommandDefinition definition, @NotNull String @NotNull [] rawArgs, @NotNull String @NotNull [] originalArgs, int offset, @Nullable CommandArguments<BukkitCommandDefinition, CommandSender> parent) throws BukkitArgumentsParseException {
+    public static @NotNull TreeParseResult parseTree(@NotNull CommandSender sender, @NotNull BukkitCommandDefinition definition, @NotNull String @NotNull [] rawArgs, @NotNull String @NotNull [] originalArgs, int offset, @Nullable CommandArguments<BukkitCommandDefinition, CommandSender> parent) throws BukkitArgumentParseException {
         return parseTree(sender, definition, rawArgs, originalArgs, offset, parent, String.join(" ", originalArgs));
     }
 
-    public static @NotNull TreeParseResult parseTree(@NotNull CommandSender sender, @NotNull BukkitCommandDefinition definition, @NotNull String @NotNull [] rawArgs, @NotNull String @NotNull [] originalArgs, int offset, @Nullable CommandArguments<BukkitCommandDefinition, CommandSender> parent, @NotNull String fullInput) throws BukkitArgumentsParseException {
+    public static @NotNull TreeParseResult parseTree(@NotNull CommandSender sender, @NotNull BukkitCommandDefinition definition, @NotNull String @NotNull [] rawArgs, @NotNull String @NotNull [] originalArgs, int offset, @Nullable CommandArguments<BukkitCommandDefinition, CommandSender> parent, @NotNull String fullInput) throws BukkitArgumentParseException {
         validateArguments(definition);
 
         Map<String, ParsedArgument<?>> required = new HashMap<>();
@@ -157,7 +157,7 @@ public final class LegacyArgumentsParser {
         return new TreeParseResult(new CommandArguments<>(definition, required, optional, fullInput, parent), attempt.node());
     }
 
-    private static @NotNull Attempt attempt(@NotNull CommandSender sender, @NotNull List<BukkitArgument<?, ?>> candidates, @NotNull String @NotNull [] rawArgs, int position, @NotNull String @NotNull [] originalArgs, int offset) throws BukkitArgumentsParseException {
+    private static @NotNull Attempt attempt(@NotNull CommandSender sender, @NotNull List<BukkitArgument<?, ?>> candidates, @NotNull String @NotNull [] rawArgs, int position, @NotNull String @NotNull [] originalArgs, int offset) throws BukkitArgumentParseException {
         List<BukkitArgument<?, ?>> ordered = new ArrayList<>();
 
         for (BukkitArgument<?, ?> candidate : candidates) {
@@ -189,7 +189,7 @@ public final class LegacyArgumentsParser {
         return Objects.requireNonNull(deepest);
     }
 
-    private static @NotNull Attempt attemptNode(@NotNull CommandSender sender, @NotNull BukkitArgument<?, ?> node, @NotNull String @NotNull [] rawArgs, int position, @NotNull String @NotNull [] originalArgs, int offset) throws BukkitArgumentsParseException {
+    private static @NotNull Attempt attemptNode(@NotNull CommandSender sender, @NotNull BukkitArgument<?, ?> node, @NotNull String @NotNull [] rawArgs, int position, @NotNull String @NotNull [] originalArgs, int offset) throws BukkitArgumentParseException {
         List<BukkitArgument<?, ?>> children = nodes(node.getArguments());
 
         if (node instanceof GreedyArgument && !children.isEmpty()) {
@@ -223,8 +223,10 @@ public final class LegacyArgumentsParser {
                 value = new ParsedArgument<>(input, node.parse(sender, input));
             } catch (ArgumentParseException e) {
                 int from = inputStart(originalArgs, offset + position);
+                String fullInput = String.join(" ", originalArgs);
+                int to = from + input.length();
 
-                return Attempt.fail(BukkitArgumentsParseException.invalid(e, String.join(" ", originalArgs), from, from + input.length()), position);
+                return Attempt.fail(wrapParseException(e, fullInput, from, to), position);
             }
         }
 
@@ -254,7 +256,7 @@ public final class LegacyArgumentsParser {
         return Attempt.ok(Objects.requireNonNull(child.node()), merged);
     }
 
-    private static int parseInto(@NotNull Map<String, ParsedArgument<?>> target, @NotNull CommandSender sender, @NotNull List<BukkitArgument<?, ?>> arguments, @NotNull String @NotNull [] rawArgs, int start, @NotNull String @NotNull [] originalArgs, int offset, boolean required) throws BukkitArgumentsParseException {
+    private static int parseInto(@NotNull Map<String, ParsedArgument<?>> target, @NotNull CommandSender sender, @NotNull List<BukkitArgument<?, ?>> arguments, @NotNull String @NotNull [] rawArgs, int start, @NotNull String @NotNull [] originalArgs, int offset, boolean required) throws BukkitArgumentParseException {
         int position = start;
 
         for (BukkitArgument<?, ?> argument : arguments) {
@@ -299,8 +301,10 @@ public final class LegacyArgumentsParser {
                 }
             } catch (ArgumentParseException e) {
                 int from = inputStart(originalArgs, offset + position);
+                String fullInput = String.join(" ", originalArgs);
+                int to = from + input.length();
 
-                throw BukkitArgumentsParseException.invalid(e, String.join(" ", originalArgs), from, from + input.length());
+                throw wrapParseException(e, fullInput, from, to);
             }
 
             position = end;
@@ -320,21 +324,21 @@ public final class LegacyArgumentsParser {
         }
     }
 
-    private static @NotNull BukkitArgumentsParseException missingAt(@NotNull BukkitArgument<?, ?> argument, @NotNull String @NotNull [] originalArgs) {
+    private static @NotNull BukkitArgumentParseException missingAt(@NotNull BukkitArgument<?, ?> argument, @NotNull String @NotNull [] originalArgs) {
         String input = String.join(" ", originalArgs);
 
-        return BukkitArgumentsParseException.missing(argument, input, input.length(), input.length());
+        return BukkitArgumentParseException.missing(argument, input, input.length(), input.length());
     }
 
-    private static @NotNull BukkitArgumentsParseException unknownAt(@NotNull String @NotNull [] originalArgs, int offset, @NotNull String @NotNull [] rawArgs, int position) {
+    private static @NotNull BukkitArgumentParseException unknownAt(@NotNull String @NotNull [] originalArgs, int offset, @NotNull String @NotNull [] rawArgs, int position) {
         int start = inputStart(originalArgs, offset + position);
 
-        return BukkitArgumentsParseException.unknown(String.join(" ", originalArgs), start, start + rawArgs[position].length());
+        return BukkitArgumentParseException.unknown(String.join(" ", originalArgs), start, start + rawArgs[position].length());
     }
 
-    private static @NotNull BukkitArgumentsParseException rethrow(@NotNull Exception failure) {
-        if (failure instanceof BukkitArgumentsParseException) {
-            return (BukkitArgumentsParseException) failure;
+    private static @NotNull BukkitArgumentParseException rethrow(@NotNull Exception failure) {
+        if (failure instanceof BukkitArgumentParseException) {
+            return (BukkitArgumentParseException) failure;
         }
 
         if (failure instanceof RuntimeException) {
@@ -344,7 +348,23 @@ public final class LegacyArgumentsParser {
         throw new IllegalStateException(failure);
     }
 
-    private static @NotNull List<BukkitArgument<?, ?>> nodes(@NotNull Collection<?> source) {
+    private static @NotNull BukkitArgumentParseException wrapParseException(@NotNull ArgumentParseException e, @NotNull String input, int start, int end) {
+        if (e instanceof ArgumentParseException.Silent) {
+            return BukkitArgumentParseException.silent(e.getArgument(), input, start, end);
+        }
+
+        if (e instanceof ArgumentParseException.Message) {
+            return BukkitArgumentParseException.message(e.getArgument(), input, start, end, e.getMessage());
+        }
+
+        if (e instanceof ArgumentParseException.Panic) {
+            return BukkitArgumentParseException.panic(e.getArgument(), input, start, end, e.getMessage());
+        }
+
+        return BukkitArgumentParseException.invalid(e.getArgument(), input, start, end, e.getMessage());
+    }
+
+    public static @NotNull List<BukkitArgument<?, ?>> nodes(@NotNull Collection<?> source) {
         List<BukkitArgument<?, ?>> result = new ArrayList<>();
 
         for (Object item : source) {

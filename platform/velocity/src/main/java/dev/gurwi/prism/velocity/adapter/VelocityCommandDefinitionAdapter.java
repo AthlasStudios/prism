@@ -23,8 +23,10 @@ import dev.gurwi.prism.brigadier.NodeSpec;
 import dev.gurwi.prism.velocity.argument.LiteralArgument;
 import dev.gurwi.prism.velocity.argument.base.LiteralValues;
 import dev.gurwi.prism.velocity.argument.base.VelocityArgument;
+import dev.gurwi.prism.exception.CommandExecutionException;
 import dev.gurwi.prism.velocity.argument.ArgumentSuggestion;
 import dev.gurwi.prism.velocity.command.VelocityCommandDefinition;
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -223,7 +225,11 @@ public class VelocityCommandDefinitionAdapter implements BrigadierAdapter<Comman
 
         CommandArguments<VelocityCommandDefinition, CommandSource> parsed = parseHierarchy(target, context, List.of(), forced);
 
-        target.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
+        try {
+            target.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
+        } catch (CommandExecutionException e) {
+            handleCommandExecutionException(sender, e);
+        }
 
         return Command.SINGLE_SUCCESS;
     }
@@ -238,9 +244,28 @@ public class VelocityCommandDefinitionAdapter implements BrigadierAdapter<Comman
 
         CommandArguments<VelocityCommandDefinition, CommandSource> parsed = parseHierarchy(definition, context, path, forced);
 
-        last.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
+        try {
+            last.getExecutors().forEach(executor -> executor.tryInvoke(sender, parsed));
+        } catch (CommandExecutionException e) {
+            handleCommandExecutionException(sender, e);
+        }
 
         return Command.SINGLE_SUCCESS;
+    }
+
+    private void handleCommandExecutionException(@NotNull CommandSource sender, @NotNull CommandExecutionException e) {
+        if (e instanceof CommandExecutionException.Silent) {
+            e.printStackTrace();
+            return;
+        }
+
+        if (e instanceof CommandExecutionException.Message) {
+            sender.sendMessage(Component.text(e.getMessage()));
+            e.printStackTrace();
+            return;
+        }
+
+        throw e;
     }
 
     private @NotNull CommandArguments<VelocityCommandDefinition, CommandSource> parseHierarchy(@NotNull VelocityCommandDefinition target, @NotNull CommandContext<CommandSource> context, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {

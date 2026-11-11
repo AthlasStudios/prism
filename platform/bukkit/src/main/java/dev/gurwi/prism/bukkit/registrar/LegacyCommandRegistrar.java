@@ -61,21 +61,21 @@ public class LegacyCommandRegistrar implements BukkitCommandRegistrar {
     }
 
     private @NotNull Map<String, Map<String, Object>> getPluginCommands() throws NoSuchFieldException, IllegalAccessException {
-        Map<String, Map<String, Object>> commands = new HashMap<>(
-                ReflectionUtil.accessFieldFromType(
-                        PluginDescriptionFile.class,
-                        plugin.getDescription(),
-                        "commands"
-                )
+        Map<String, Map<String, Object>> commands = ReflectionUtil.accessFieldFromType(
+                PluginDescriptionFile.class,
+                plugin.getDescription(),
+                "commands"
         );
+
+        Map<String, Map<String, Object>> mutableCommandMap = commands != null ? new HashMap<>(commands) : new HashMap<>();
 
         ReflectionUtil.setField(
                 plugin.getDescription(),
                 "commands",
-                commands
+                mutableCommandMap
         );
 
-        return commands;
+        return mutableCommandMap;
     }
 
     @Override

@@ -28,7 +28,7 @@ public class DifficultyArgument extends BukkitArgument<DifficultyArgument, Diffi
         try {
             return Difficulty.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ArgumentParseException(this, value, "Expected a difficulty got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a difficulty got " + value);
         }
     }
 

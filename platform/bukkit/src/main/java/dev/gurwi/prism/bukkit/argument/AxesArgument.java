@@ -22,7 +22,7 @@ public class AxesArgument extends BukkitArgument<AxesArgument, Set<Axis>> {
         Set<Axis> axes = EnumSet.noneOf(Axis.class);
 
         if (value.isEmpty()) {
-            throw new ArgumentParseException(this, value, "Expected axes got an empty value");
+            throw ArgumentParseException.message(this, value, "Expected axes got an empty value");
         }
 
         for (char c : value.toLowerCase().toCharArray()) {
@@ -30,10 +30,10 @@ public class AxesArgument extends BukkitArgument<AxesArgument, Set<Axis>> {
                 Axis axis = Axis.valueOf(String.valueOf(c).toUpperCase());
 
                 if (!axes.add(axis)) {
-                    throw new ArgumentParseException(this, value, "Duplicate axis in " + value);
+                    throw ArgumentParseException.message(this, value, "Duplicate axis in " + value);
                 }
             } catch (IllegalArgumentException e) {
-                throw new ArgumentParseException(this, value, "Expected axes got " + value);
+                throw ArgumentParseException.message(this, value, "Expected axes got " + value);
             }
         }
 

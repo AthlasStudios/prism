@@ -18,7 +18,7 @@ public class BlockStateArgument extends BukkitArgument<BlockStateArgument, Block
         try {
             return Bukkit.createBlockData(value);
         } catch (IllegalArgumentException e) {
-            throw new ArgumentParseException(this, value, "Expected a block state got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a block state got " + value);
         }
     }
 

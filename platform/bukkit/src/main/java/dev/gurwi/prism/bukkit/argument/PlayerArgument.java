@@ -28,7 +28,7 @@ public class PlayerArgument extends BukkitArgument<PlayerArgument, Player> {
         Player player = Bukkit.getPlayerExact(value);
 
         if (player == null) {
-            throw new ArgumentParseException(this, value, "Player not found: " + value);
+            throw ArgumentParseException.message(this, value, "Player not found: " + value);
         }
 
         return player;

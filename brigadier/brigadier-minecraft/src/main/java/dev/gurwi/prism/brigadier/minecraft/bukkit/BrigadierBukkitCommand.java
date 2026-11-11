@@ -5,6 +5,7 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
+import dev.gurwi.prism.exception.CommandExecutionException;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -31,9 +32,26 @@ public final class BrigadierBukkitCommand<SourceStack> extends Command {
             run(own.parse(input(args), source(sender)));
         } catch (CommandSyntaxException exception) {
             sender.sendMessage(describe(exception));
+        } catch (CommandExecutionException exception) {
+            handleCommandExecutionException(sender, exception);
         }
 
         return true;
+    }
+
+    private void handleCommandExecutionException(@NotNull CommandSender sender, @NotNull CommandExecutionException e) {
+        if (e instanceof CommandExecutionException.Silent) {
+            e.printStackTrace();
+            return;
+        }
+
+        if (e instanceof CommandExecutionException.Message) {
+            sender.sendMessage(e.getMessage());
+            e.printStackTrace();
+            return;
+        }
+
+        throw e;
     }
 
     private void run(@NotNull ParseResults<MinecraftCommandSource> parsed) throws CommandSyntaxException {

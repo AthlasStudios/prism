@@ -29,7 +29,7 @@ public class ColorArgument extends BukkitArgument<ColorArgument, ChatColor> {
         } catch (IllegalArgumentException ignored) {
         }
 
-        throw new ArgumentParseException(this, value, "Invalid color '" + value + "'. Use a name like dark_red, gold, aqua.");
+        throw ArgumentParseException.message(this, value, "Invalid color '" + value + "'. Use a name like dark_red, gold, aqua.");
     }
 
 }

@@ -11,9 +11,11 @@ import dev.gurwi.prism.bukkit.argument.parser.LegacyArgumentsParser;
 import dev.gurwi.prism.bukkit.argument.suggestion.ArgumentSuggestion;
 import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.bukkit.event.AsyncCommandSuggestEvent;
-import dev.gurwi.prism.bukkit.exception.BukkitArgumentsParseException;
+import dev.gurwi.prism.bukkit.exception.BukkitArgumentParseException;
+import dev.gurwi.prism.bukkit.command.executor.BukkitCommandExecutor;
 import dev.gurwi.prism.command.AbstractCommandDefinition;
 import dev.gurwi.prism.exception.ArgumentParseException;
+import dev.gurwi.prism.exception.CommandExecutionException;
 import dev.gurwi.prism.exception.NoExecutorException;
 import org.bukkit.command.*;
 import org.bukkit.command.defaults.BukkitCommand;
@@ -53,7 +55,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         BukkitArgument<?, ?> node = null;
 
         for (Level level : levels) {
-            BukkitArgumentsParseException invalid = checkFixedValues(sender, level, args);
+            BukkitArgumentParseException invalid = checkFixedValues(sender, level, args);
 
             if (invalid != null) {
                 level.definition().getLegacyCommandErrorHandler().onArgumentsParseError(level.definition(), sender, invalid);
@@ -69,7 +71,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
 
                 parsed = result.arguments();
                 node = result.node();
-            } catch (BukkitArgumentsParseException e) {
+            } catch (BukkitArgumentParseException e) {
                 level.definition().getLegacyCommandErrorHandler().onArgumentsParseError(level.definition(), sender, e);
                 return false;
             }
@@ -78,21 +80,27 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         BukkitCommandDefinition target = levels.get(levels.size() - 1).definition();
         CommandArguments<BukkitCommandDefinition, CommandSender> finalArguments = parsed;
 
+        Collection<BukkitCommandExecutor<? extends CommandSender>> executors;
+
         if (node == null) {
             if (!target.hasExecutor(sender)) {
                 throw new NoExecutorException(sender.getClass());
             }
 
-            target.getExecutors().forEach(executor -> executor.tryInvoke(sender, finalArguments));
+            executors = target.getExecutors();
+        } else {
+            if (!node.hasExecutor(sender)) {
+                throw new NoExecutorException(sender.getClass());
+            }
 
-            return true;
+            executors = node.getExecutors();
         }
 
-        if (!node.hasExecutor(sender)) {
-            throw new NoExecutorException(sender.getClass());
+        try {
+            executors.forEach(executor -> executor.tryInvoke(sender, finalArguments));
+        } catch (CommandExecutionException e) {
+            target.getLegacyCommandErrorHandler().onCommandExecutionError(target, sender, e);
         }
-
-        node.getExecutors().forEach(executor -> executor.tryInvoke(sender, finalArguments));
 
         return true;
     }
@@ -216,7 +224,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
                 .filter(candidate -> candidate.canExecute(sender));
     }
 
-    private @Nullable BukkitArgumentsParseException checkFixedValues(@NotNull CommandSender sender, @NotNull Level level, @NotNull String @NotNull [] all) {
+    private @Nullable BukkitArgumentParseException checkFixedValues(@NotNull CommandSender sender, @NotNull Level level, @NotNull String @NotNull [] all) {
         String[] tokens = level.args();
         List<BukkitArgument<?, ?>> arguments = new ArrayList<>(level.definition().getRequiredArguments());
         arguments.addAll(level.definition().getOptionalArguments());
@@ -251,7 +259,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
             return null;
         }
 
-        FixedValueFailure failure = checkBranches(sender, nodes(level.definition().getArgumentTreeBranches()), tokens, position, level.start());
+        FixedValueFailure failure = checkBranches(sender, LegacyArgumentsParser.nodes(level.definition().getArgumentTreeBranches()), tokens, position, level.start());
 
         return failure == null ? null : invalidFixedValue(failure, all);
     }
@@ -291,7 +299,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
                 }
             }
 
-            FixedValueFailure child = checkBranches(sender, nodes(candidate.getArguments()), tokens, end, base);
+            FixedValueFailure child = checkBranches(sender, LegacyArgumentsParser.nodes(candidate.getArguments()), tokens, end, base);
 
             if (child == null) {
                 return null;
@@ -327,7 +335,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         return false;
     }
 
-    private @NotNull BukkitArgumentsParseException invalidFixedValue(@NotNull FixedValueFailure failure, @NotNull String @NotNull [] all) {
+    private @NotNull BukkitArgumentParseException invalidFixedValue(@NotNull FixedValueFailure failure, @NotNull String @NotNull [] all) {
         List<String> values = failure.argument.getFixedValues().map(LiteralValues::get).orElse(List.of());
         String expected = values.size() <= 10
                 ? String.join(", ", values)
@@ -339,9 +347,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
             from += all[i].length() + 1;
         }
 
-        ArgumentParseException cause = new ArgumentParseException(failure.argument, failure.input, "Expected one of " + expected + " got " + failure.input);
-
-        return BukkitArgumentsParseException.invalid(cause, String.join(" ", all), from, from + failure.input.length());
+        return BukkitArgumentParseException.invalid(failure.argument, String.join(" ", all), from, from + failure.input.length(), "Expected one of " + expected + " got " + failure.input);
     }
 
     private @Nullable Located locate(@NotNull List<BukkitArgument<?, ?>> arguments, int cursor) {
@@ -367,7 +373,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
     private @NotNull List<String> complete(@NotNull BukkitCommandDefinition current, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int offset) {
         List<BukkitArgument<?, ?>> required = current.getRequiredArguments();
         List<BukkitArgument<?, ?>> optional = current.getOptionalArguments();
-        List<BukkitArgument<?, ?>> branches = nodes(current.getArgumentTreeBranches());
+        List<BukkitArgument<?, ?>> branches = LegacyArgumentsParser.nodes(current.getArgumentTreeBranches());
 
         int last = args.length - 1;
         String input = args[last];
@@ -466,7 +472,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
             }
         }
 
-        return completeBranches(nodes(node.getArguments()), sender, args, end, last);
+        return completeBranches(LegacyArgumentsParser.nodes(node.getArguments()), sender, args, end, last);
     }
 
     private @NotNull List<String> suggestNode(@NotNull BukkitArgument<?, ?> node, @NotNull CommandSender sender, @NotNull String input) {
@@ -561,16 +567,6 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
                 .map(AbstractCommandDefinition::getName)
                 .filter(name -> name.toLowerCase().startsWith(prefix))
                 .collect(Collectors.toUnmodifiableList());
-    }
-
-    private static @NotNull List<BukkitArgument<?, ?>> nodes(@NotNull Collection<?> source) {
-        List<BukkitArgument<?, ?>> result = new ArrayList<>();
-
-        for (Object item : source) {
-            result.add((BukkitArgument<?, ?>) item);
-        }
-
-        return result;
     }
 
     private static final class Level {

@@ -39,11 +39,11 @@ public class TimeArgument extends BukkitArgument<TimeArgument, Integer> {
         try {
             ticks = Math.round(Float.parseFloat(number) * multiplier);
         } catch (NumberFormatException e) {
-            throw new ArgumentParseException(this, value, "Expected a time got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a time got " + value);
         }
 
         if (ticks < min) {
-            throw new ArgumentParseException(this, value, "Expected a time of at least " + min + " ticks got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a time of at least " + min + " ticks got " + value);
         }
 
         return ticks;

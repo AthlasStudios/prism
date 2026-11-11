@@ -16,7 +16,7 @@ public class ItemStackPredicateArgument extends BukkitArgument<ItemStackPredicat
 
     @Override
     public Predicate<ItemStack> parse(@NotNull CommandSender sender, @NotNull String value) throws ArgumentParseException {
-        throw new ArgumentParseException(this, value, "Item predicates require Brigadier");
+        throw ArgumentParseException.message(this, value, "Item predicates require Brigadier");
     }
 
 }

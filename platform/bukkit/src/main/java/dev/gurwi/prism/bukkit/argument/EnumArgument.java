@@ -30,7 +30,7 @@ public class EnumArgument<E extends Enum<E>> extends BukkitArgument<EnumArgument
         try {
             return Enum.valueOf(enumClass, value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ArgumentParseException(this, value, "Expected " + enumClass.getSimpleName() + " got " + value);
+            throw ArgumentParseException.message(this, value, "Expected " + enumClass.getSimpleName() + " got " + value);
         }
     }
 

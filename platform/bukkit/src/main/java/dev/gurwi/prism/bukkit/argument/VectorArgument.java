@@ -17,7 +17,7 @@ public class VectorArgument extends BukkitArgument<VectorArgument, Vector> {
         String[] parts = value.split(",");
 
         if (parts.length != 3) {
-            throw new ArgumentParseException(this, value, "Expected a vector in format x,y,z got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a vector in format x,y,z got " + value);
         }
 
         try {
@@ -27,7 +27,7 @@ public class VectorArgument extends BukkitArgument<VectorArgument, Vector> {
 
             return new Vector(x, y, z);
         } catch (NumberFormatException e) {
-            throw new ArgumentParseException(this, value, "Expected numeric vector coordinates got " + value);
+            throw ArgumentParseException.message(this, value, "Expected numeric vector coordinates got " + value);
         }
     }
 

@@ -30,7 +30,7 @@ public class PotionEffectTypeArgument extends BukkitArgument<PotionEffectTypeArg
         PotionEffectType type = PotionEffectType.getByName(value.toUpperCase());
 
         if (type == null) {
-            throw new ArgumentParseException(this, value, "Potion effect type not found: " + value);
+            throw ArgumentParseException.message(this, value, "Potion effect type not found: " + value);
         }
 
         return type;

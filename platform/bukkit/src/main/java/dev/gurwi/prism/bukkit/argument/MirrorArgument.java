@@ -28,7 +28,7 @@ public class MirrorArgument extends BukkitArgument<MirrorArgument, Mirror> {
         try {
             return Mirror.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ArgumentParseException(this, value, "Expected a mirror got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a mirror got " + value);
         }
     }
 

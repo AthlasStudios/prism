@@ -30,12 +30,12 @@ public class ByteArgument extends BoundedArgument<ByteArgument, Byte> {
         try {
             byte parsedValue = Byte.parseByte(value);
             if (parsedValue < min || parsedValue > max) {
-                throw new ArgumentParseException(this, value, "Expected a byte between " + min + " and " + max + " got " + value);
+                throw ArgumentParseException.message(this, value, "Expected a byte between " + min + " and " + max + " got " + value);
             }
 
             return parsedValue;
         } catch (NumberFormatException e) {
-            throw new ArgumentParseException(this, value, "Expected a byte got " + value);
+            throw ArgumentParseException.message(this, value, "Expected a byte got " + value);
         }
     }
 
