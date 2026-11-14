@@ -33,6 +33,43 @@ public class BukkitCommandDefinition extends AbstractTreeCommandDefinition<Bukki
         this.legacyCommandErrorHandler = legacyCommandErrorHandler;
     }
 
+    public void visitArguments(@NotNull ArgumentVisitor visitor) {
+        for (BukkitArgument<?, ?> argument : getRequiredArguments()) {
+            visitArgument(argument, false, visitor);
+        }
+
+        for (BukkitArgument<?, ?> argument : getOptionalArguments()) {
+            visitArgument(argument, false, visitor);
+        }
+
+        for (Object branch : getArgumentTreeBranches()) {
+            visitArgument((BukkitArgument<?, ?>) branch, false, visitor);
+        }
+
+        for (BukkitCommandDefinition child : getChildren()) {
+            child.visitArguments(visitor);
+        }
+    }
+
+    private static void visitArgument(@NotNull BukkitArgument<?, ?> argument, boolean embedded, @NotNull ArgumentVisitor visitor) {
+        visitor.visit(argument, embedded);
+
+        for (Object child : argument.getArguments()) {
+            visitArgument((BukkitArgument<?, ?>) child, false, visitor);
+        }
+
+        for (BukkitArgument<?, ?> nested : argument.getNestedArguments()) {
+            visitArgument(nested, true, visitor);
+        }
+    }
+
+    @FunctionalInterface
+    public interface ArgumentVisitor {
+
+        void visit(@NotNull BukkitArgument<?, ?> argument, boolean embedded);
+
+    }
+
     public boolean hasExecutor(CommandSender sender) {
         return getExecutors().stream()
                 .anyMatch(executor ->

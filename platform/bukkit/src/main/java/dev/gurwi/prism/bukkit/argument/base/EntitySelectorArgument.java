@@ -27,7 +27,15 @@ public abstract class EntitySelectorArgument<Impl extends EntitySelectorArgument
     protected EntitySelectorArgument(@NotNull String name) {
         super(name);
 
-        includeSuggestions(BukkitSuggestionsSupplier.unlessNative(ctx -> ArgumentSuggestion.of(getSuggestions(ctx.getSource(), ctx.getCurrentRawArg()))));
+        BukkitSuggestionsSupplier.Sync suggestions = BukkitSuggestionsSupplier.sync(ctx -> ArgumentSuggestion.of(getSuggestions(ctx.getSource(), ctx.getCurrentRawArg())));
+
+        whenBrigadier(ctx -> {
+            if (!ctx.hasNativeSuggestions()) {
+                ctx.getArgument().includeSuggestions(suggestions);
+            }
+        });
+
+        whenLegacy(ctx -> ctx.getArgument().includeSuggestions(suggestions));
     }
 
     private static @NotNull List<String> getSuggestions(@NotNull CommandSender sender, @NotNull String input) {

@@ -578,6 +578,35 @@ On Brigadier platforms Prism also filters suggestions by the text already typed 
 
 > On Paper, async suggestions are handled through a dedicated listener. You can turn this off with `disableAsyncSuggestions()` (see [Platform configuration](#platform-configuration)).
 
+**Different behavior on Brigadier and Legacy**
+
+On Brigadier platforms many arguments are sent to the client with a native type (players, materials, colors...) and the client suggests values on its own. Legacy has no native types. `whenBrigadier(...)` and `whenLegacy(...)` edit the argument only for the platform the command ends up registered on. They run once, at registration, after everything else configured on the argument, so the argument's defaults are already in place.
+
+```java
+new StringArgument("kit")
+        // Brigadier: only add our suggestions if the client has none of its own
+        .whenBrigadier(ctx -> {
+            if (!ctx.hasNativeSuggestions()) {
+                ctx.getArgument().includeSuggestions("starter", "vip");
+            }
+        })
+        // Legacy: always add them
+        .whenLegacy(ctx -> ctx.getArgument().includeSuggestions("starter", "vip"));
+```
+
+`BrigadierContext` tells you if the argument has a native type (`hasNativeType()`, `getNativeType()`) and if that type suggests values (`hasNativeSuggestions()`).
+
+To read what Brigadier itself would suggest, use `ctx.getNativeSuggestions()` on the `SuggestionContext` of a supplier. They are already filtered by what was typed, and the list is empty on Legacy. This allows filtering them:
+
+```java
+new PlayerArgument("target")
+        .whenBrigadier(ctx -> ctx.getArgument().replaceSuggestions(BukkitSuggestionsSupplier.sync(suggestion ->
+                ArgumentSuggestion.of(suggestion.getNativeSuggestions().stream()
+                        .filter(name -> !name.equals(suggestion.getSource().getName()))
+                        .collect(Collectors.toList()))
+        )));
+```
+
 ### Flags
 
 `FlagArgument` parses `-x`-style flags in any order. Flags can carry a value (using any other argument type) or act as simple on/off switches.

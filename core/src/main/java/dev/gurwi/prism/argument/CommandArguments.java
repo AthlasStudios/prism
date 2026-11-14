@@ -286,11 +286,11 @@ public class CommandArguments<Definition extends AbstractCommandDefinition<Defin
     }
 
     public <T> T get(@NotNull String key, @NotNull Class<T> type) {
-        return cast(this.<Object>get(key), type, key);
+        return cast(this.get(key), type, key);
     }
 
     public <T> T get(int index, @NotNull Class<T> type) {
-        return cast(this.<Object>get(index), type, String.valueOf(index));
+        return cast(this.get(index), type, String.valueOf(index));
     }
 
     public <T> @NotNull Optional<T> getOptional(int index) {
@@ -302,11 +302,11 @@ public class CommandArguments<Definition extends AbstractCommandDefinition<Defin
     }
 
     public <T> @NotNull Optional<T> getOptional(@NotNull String key, @NotNull Class<T> type) {
-        return this.<Object>find(key).map(value -> cast(value, type, key));
+        return this.find(key).map(value -> cast(value, type, key));
     }
 
     public <T> @NotNull Optional<T> getOptional(int index, @NotNull Class<T> type) {
-        return this.<Object>getOptional(index).map(value -> cast(value, type, String.valueOf(index)));
+        return this.getOptional(index).map(value -> cast(value, type, String.valueOf(index)));
     }
 
     public <T> T getOptional(int index, T defaultValue) {

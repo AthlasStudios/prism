@@ -18,11 +18,19 @@ public class OfflinePlayerArgument extends BukkitArgument<OfflinePlayerArgument,
     public OfflinePlayerArgument(String name) {
         super(name);
 
-        includeSuggestions(BukkitSuggestionsSupplier.unlessNative(ctx -> ArgumentSuggestion.of(Bukkit.getOnlinePlayers()
+        BukkitSuggestionsSupplier.Sync suggestions = BukkitSuggestionsSupplier.sync(ctx -> ArgumentSuggestion.of(Bukkit.getOnlinePlayers()
                 .stream()
                 .map(Player::getName)
                 .collect(Collectors.toUnmodifiableList())
-        )));
+        ));
+
+        whenBrigadier(ctx -> {
+            if (!ctx.hasNativeSuggestions()) {
+                ctx.getArgument().includeSuggestions(suggestions);
+            }
+        });
+
+        whenLegacy(ctx -> ctx.getArgument().includeSuggestions(suggestions));
 
         includeSuggestions(BukkitSuggestionsSupplier.sync(ctx -> Arrays.stream(Bukkit.getOfflinePlayers())
                 .filter(offlinePlayer -> offlinePlayer.hasPlayedBefore() && offlinePlayer.getName() != null)

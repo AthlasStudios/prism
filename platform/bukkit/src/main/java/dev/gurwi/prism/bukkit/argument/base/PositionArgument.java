@@ -38,7 +38,15 @@ public abstract class PositionArgument<Impl extends PositionArgument<Impl>> exte
         this.centerIntegers = centerIntegers;
         this.components = column ? 2 : 3;
 
-        includeSuggestions(BukkitSuggestionsSupplier.unlessNative(ctx -> ArgumentSuggestion.of(suggest(ctx.getSource(), ctx.getCurrentRawArg()))));
+        BukkitSuggestionsSupplier.Sync suggestions = BukkitSuggestionsSupplier.sync(ctx -> ArgumentSuggestion.of(suggest(ctx.getSource(), ctx.getCurrentRawArg())));
+
+        whenBrigadier(ctx -> {
+            if (!ctx.hasNativeSuggestions()) {
+                ctx.getArgument().includeSuggestions(suggestions);
+            }
+        });
+
+        whenLegacy(ctx -> ctx.getArgument().includeSuggestions(suggestions));
     }
 
     @Override

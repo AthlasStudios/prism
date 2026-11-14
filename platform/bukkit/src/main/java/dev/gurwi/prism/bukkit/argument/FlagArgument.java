@@ -253,6 +253,17 @@ public class FlagArgument extends GreedyArgument<FlagArgument, FlagsContainer> {
         return result;
     }
 
+    @Override
+    public @NotNull Collection<BukkitArgument<?, ?>> getNestedArguments() {
+        List<BukkitArgument<?, ?>> nested = new ArrayList<>();
+
+        for (Flag<?> flag : byLong.values()) {
+            flag.getValue().ifPresent(nested::add);
+        }
+
+        return nested;
+    }
+
     private @NotNull CompletableFuture<Collection<ArgumentSuggestion>> innerSuggestions(@NotNull SuggestionContext<CommandSender> context, @NotNull Flag<?> flag, String partial) {
         BukkitArgument<?, ?> inner = flag.getValue().orElse(null);
 
@@ -260,7 +271,15 @@ public class FlagArgument extends GreedyArgument<FlagArgument, FlagsContainer> {
             return CompletableFuture.completedFuture(List.of());
         }
 
-        SuggestionContext<CommandSender> innerContext = context.withCurrentRawArg(partial);
+        SuggestionContext<CommandSender> innerContext = SuggestionContext.lazy(
+                context.getSource(),
+                context.getCurrentInput(),
+                partial,
+                context::getPreviousArgs,
+                context.hasNativeSuggestions(),
+                context::getNativeSuggestions
+        );
+
         String lowered = partial.toLowerCase(Locale.ROOT);
 
         if (inner.getFixedValues().isPresent()) {

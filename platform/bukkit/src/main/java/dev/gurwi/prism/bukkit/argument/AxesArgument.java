@@ -7,6 +7,7 @@ import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 public class AxesArgument extends BukkitArgument<AxesArgument, Set<Axis>> {
@@ -14,7 +15,15 @@ public class AxesArgument extends BukkitArgument<AxesArgument, Set<Axis>> {
     public AxesArgument(String name) {
         super(name);
 
-        includeSuggestionsUnlessNative("x", "y", "z", "xy", "xz", "yz", "xyz");
+        List<String> values = List.of("x", "y", "z", "xy", "xz", "yz", "xyz");
+
+        whenBrigadier(ctx -> {
+            if (!ctx.hasNativeSuggestions()) {
+                ctx.getArgument().includeSuggestions(values);
+            }
+        });
+
+        whenLegacy(ctx -> ctx.getArgument().includeSuggestions(values));
     }
 
     @Override

@@ -5,13 +5,32 @@ import dev.gurwi.prism.exception.ArgumentParseException;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+
 public class BooleanArgument extends BukkitArgument<BooleanArgument, Boolean> {
 
     public BooleanArgument(String name) {
         super(name);
 
-        includeSuggestionsUnlessNative("true", "false");
-        withFixedValuesUnlessNative("true", "false");
+        List<String> values = List.of("true", "false");
+
+        whenBrigadier(ctx -> {
+            if (!ctx.hasNativeType() && ctx.getArgument().getFixedValues().isEmpty()) {
+                ctx.getArgument().withFixedValues(values);
+            }
+
+            if (!ctx.hasNativeSuggestions()) {
+                ctx.getArgument().includeSuggestions(values);
+            }
+        });
+
+        whenLegacy(ctx -> {
+            if (ctx.getArgument().getFixedValues().isEmpty()) {
+                ctx.getArgument().withFixedValues(values);
+            }
+
+            ctx.getArgument().includeSuggestions(values);
+        });
     }
 
     @Override

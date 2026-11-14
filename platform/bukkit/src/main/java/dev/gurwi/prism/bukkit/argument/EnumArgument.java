@@ -21,8 +21,23 @@ public class EnumArgument<E extends Enum<E>> extends BukkitArgument<EnumArgument
                 .map(value -> value.name().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        includeSuggestionsUnlessNative(values);
-        withFixedValuesUnlessNative(values);
+        whenBrigadier(ctx -> {
+            if (!ctx.hasNativeType() && ctx.getArgument().getFixedValues().isEmpty()) {
+                ctx.getArgument().withFixedValues(values);
+            }
+
+            if (!ctx.hasNativeSuggestions()) {
+                ctx.getArgument().includeSuggestions(values);
+            }
+        });
+
+        whenLegacy(ctx -> {
+            if (ctx.getArgument().getFixedValues().isEmpty()) {
+                ctx.getArgument().withFixedValues(values);
+            }
+
+            ctx.getArgument().includeSuggestions(values);
+        });
     }
 
     @Override

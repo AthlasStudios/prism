@@ -17,7 +17,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -43,7 +42,7 @@ public class PaperExample extends JavaPlugin {
                         new EntitySelectorArgument.OnePlayer("idk"),
                         new ColorArgument("color")
                                 .replaceSuggestions(
-                                        ctx -> ctx.getPreviousArgs().get("color", Player.class).getName()
+                                        ctx -> "asd"
                                 )
                 )
                 .executes((sender, args) -> {
@@ -198,6 +197,8 @@ public class PaperExample extends JavaPlugin {
                                         Flag.valued(new ColorArgument("color"), 'c'),
                                         Flag.presence("enable", 'e')
                                 )
+                                .whenBrigadier(ctx -> {
+                                })
 //                                .whenBrigadier(ctx -> ctx.getArgument().replaceSuggestions(""))
 //                                .whenLegacy(ctx -> ctx.getArgument().replaceSuggestions(""))
                 )

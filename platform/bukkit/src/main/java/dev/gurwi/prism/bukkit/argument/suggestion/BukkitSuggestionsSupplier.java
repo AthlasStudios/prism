@@ -40,14 +40,6 @@ public interface BukkitSuggestionsSupplier<Result> extends SuggestionsSupplier<C
         return ctx -> suggestionsFuture.thenApply(ArgumentSuggestion::of);
     }
 
-    static @NotNull Sync unlessNative(@NotNull Sync suggestions) {
-        return new UnlessNativeSync(suggestions);
-    }
-
-    static @NotNull Async unlessNativeAsync(@NotNull Async suggestions) {
-        return new UnlessNativeAsync(suggestions);
-    }
-
     static @NotNull CompletableFuture<Collection<ArgumentSuggestion>> resolve(@NotNull BukkitSuggestionsSupplier<?> supplier, @NotNull SuggestionContext<CommandSender> context) {
         return resolveRaw(supplier, context).thenApply(suggestions -> suggestions != null ? suggestions : Collections.emptyList());
     }
@@ -64,48 +56,6 @@ public interface BukkitSuggestionsSupplier<Result> extends SuggestionsSupplier<C
         }
 
         return CompletableFuture.completedFuture(Collections.emptyList());
-    }
-
-    interface UnlessNative {
-
-    }
-
-    final class UnlessNativeSync implements Sync, UnlessNative {
-
-        private final Sync delegate;
-
-        private UnlessNativeSync(Sync delegate) {
-            this.delegate = delegate;
-        }
-
-        @Override
-        public Collection<ArgumentSuggestion> getSuggestions(SuggestionContext<CommandSender> ctx) {
-            if (ctx.hasNativeSuggestions()) {
-                return null;
-            }
-
-            return delegate.getSuggestions(ctx);
-        }
-
-    }
-
-    final class UnlessNativeAsync implements Async, UnlessNative {
-
-        private final Async delegate;
-
-        private UnlessNativeAsync(Async delegate) {
-            this.delegate = delegate;
-        }
-
-        @Override
-        public CompletableFuture<Collection<ArgumentSuggestion>> getSuggestions(SuggestionContext<CommandSender> ctx) {
-            if (ctx.hasNativeSuggestions()) {
-                return CompletableFuture.completedFuture(null);
-            }
-
-            return delegate.getSuggestions(ctx);
-        }
-
     }
 
     @FunctionalInterface

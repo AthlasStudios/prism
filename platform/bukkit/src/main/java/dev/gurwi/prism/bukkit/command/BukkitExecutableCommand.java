@@ -43,6 +43,8 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         this.plugin = plugin;
         this.definition = definition;
 
+        definition.visitArguments((argument, embedded) -> argument.applyLegacy());
+
         setAliases(definition.getAliases());
         setDescription(definition.getDescription());
     }

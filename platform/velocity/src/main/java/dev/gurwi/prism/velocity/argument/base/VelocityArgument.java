@@ -82,17 +82,6 @@ public abstract class VelocityArgument<Impl extends VelocityArgument<Impl, T>, T
         return includeSuggestions(List.of(suggestions));
     }
 
-    public Impl includeSuggestionsUnlessNative(Collection<String> suggestions) {
-        Collection<ArgumentSuggestion> mapped = ArgumentSuggestion.of(suggestions);
-        Collection<ArgumentSuggestion> none = List.of();
-
-        return includeSuggestions(ctx -> CompletableFuture.completedFuture(ctx.hasNativeSuggestions() ? none : mapped));
-    }
-
-    public Impl includeSuggestionsUnlessNative(String... suggestions) {
-        return includeSuggestionsUnlessNative(List.of(suggestions));
-    }
-
     public boolean hasExecutor(@NotNull CommandSource source) {
         return executors.values().stream().anyMatch(executor -> executor.getSourceType().isInstance(source));
     }

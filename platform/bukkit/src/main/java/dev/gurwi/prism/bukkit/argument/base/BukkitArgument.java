@@ -14,8 +14,10 @@ import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -23,8 +25,12 @@ import java.util.function.Consumer;
 
 public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> extends AbstractTreeArgument<Impl, T, BukkitCommandDefinition, CommandSender, BukkitCommandExecutor<? extends CommandSender>, BukkitArgument<?, ?>, BukkitPermission, BukkitSuggestionsSupplier<?>> implements BukkitExecutorContainerBuilder<Impl>, BukkitRequirementContainerBuilder<Impl> {
 
+    private final List<Consumer<BrigadierContext<Impl>>> brigadierConfigurations = new ArrayList<>();
+    private final List<Consumer<ArgumentContext<Impl>>> legacyConfigurations = new ArrayList<>();
+
     private @Nullable LiteralValues fixedValues;
-    private boolean fixedValuesUnlessNative;
+    private boolean brigadierConfigured;
+    private boolean legacyConfigured;
 
     public BukkitArgument(String name) {
         super(name);
@@ -32,22 +38,7 @@ public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> ex
 
     public Impl withFixedValues(LiteralValues values) {
         this.fixedValues = Objects.requireNonNull(values, "values");
-        this.fixedValuesUnlessNative = false;
         return self();
-    }
-
-    public Impl withFixedValuesUnlessNative(LiteralValues values) {
-        this.fixedValues = Objects.requireNonNull(values, "values");
-        this.fixedValuesUnlessNative = true;
-        return self();
-    }
-
-    public Impl withFixedValuesUnlessNative(String... values) {
-        return withFixedValuesUnlessNative(LiteralValues.of(values));
-    }
-
-    public Impl withFixedValuesUnlessNative(Collection<String> values) {
-        return withFixedValuesUnlessNative(LiteralValues.of(values));
     }
 
     public Impl withFixedValues(String... values) {
@@ -98,14 +89,6 @@ public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> ex
         return includeSuggestions(BukkitSuggestionsSupplier.stringsAsync(suggestions));
     }
 
-    public Impl includeSuggestionsUnlessNative(Collection<String> suggestions) {
-        return includeSuggestions(BukkitSuggestionsSupplier.unlessNative(BukkitSuggestionsSupplier.strings(suggestions)));
-    }
-
-    public Impl includeSuggestionsUnlessNative(String... suggestions) {
-        return includeSuggestionsUnlessNative(Arrays.asList(suggestions));
-    }
-
     public Impl withPermissions(Collection<BukkitPermission> permissions) {
         return withRequirement(BukkitUsageRequirement.permission(permissions));
     }
@@ -119,11 +102,45 @@ public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> ex
     }
 
     public Impl whenBrigadier(Consumer<BrigadierContext<Impl>> configuration) {
-        return null;
+        this.brigadierConfigurations.add(Objects.requireNonNull(configuration, "configuration"));
+        return self();
     }
 
     public Impl whenLegacy(Consumer<ArgumentContext<Impl>> configuration) {
-        return null;
+        this.legacyConfigurations.add(Objects.requireNonNull(configuration, "configuration"));
+        return self();
+    }
+
+    public synchronized void applyBrigadier(@Nullable Object nativeType, boolean nativeSuggestions) {
+        if (brigadierConfigured) {
+            return;
+        }
+
+        brigadierConfigured = true;
+
+        BrigadierContext<Impl> context = new BrigadierContext<>(self(), nativeType, nativeSuggestions);
+
+        for (Consumer<BrigadierContext<Impl>> configuration : new ArrayList<>(brigadierConfigurations)) {
+            configuration.accept(context);
+        }
+    }
+
+    public synchronized void applyLegacy() {
+        if (legacyConfigured) {
+            return;
+        }
+
+        legacyConfigured = true;
+
+        ArgumentContext<Impl> context = new ArgumentContext<>(self());
+
+        for (Consumer<ArgumentContext<Impl>> configuration : new ArrayList<>(legacyConfigurations)) {
+            configuration.accept(context);
+        }
+    }
+
+    public @NotNull Collection<BukkitArgument<?, ?>> getNestedArguments() {
+        return List.of();
     }
 
     public boolean hasExecutor(@NotNull CommandSender sender) {
@@ -132,10 +149,6 @@ public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> ex
 
     public Optional<LiteralValues> getFixedValues() {
         return Optional.ofNullable(fixedValues);
-    }
-
-    public boolean isFixedValuesUnlessNative() {
-        return fixedValuesUnlessNative;
     }
 
     private static boolean isBlank(Collection<String> suggestions) {

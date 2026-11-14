@@ -23,6 +23,8 @@ public class BrigadierCommandRegistrar implements BukkitCommandRegistrar {
 
     @Override
     public void register(BukkitCommandDefinition definition) {
+        adapter.configure(definition);
+
         for (String label : adapter.getBuilder().labels(definition)) {
             LiteralCommandNode<MinecraftCommandSource> brigadierCommand = adapter.getBuilder().build(definition, label);
             dispatcher.register(brigadierCommand, definition.getDescription(), definition.getAliases());

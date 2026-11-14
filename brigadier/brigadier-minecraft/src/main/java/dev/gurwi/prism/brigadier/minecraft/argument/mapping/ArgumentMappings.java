@@ -90,7 +90,7 @@ public class ArgumentMappings {
 //                (argument, source, resolver) -> resolver.resolve(source)
 //        ));
 
-        register(LocationArgument.class, ArgumentMapper.<Location, FinePositionResolver, LocationArgument>create(
+        register(LocationArgument.class, ArgumentMapper.create(
                 argument -> MinecraftArgumentType.finePosition(argument.isCenterIntegers()),
                 (argument, source, resolver) -> resolver.resolve(source).toLocation(source.getLocation().getWorld())
         ));
@@ -133,7 +133,7 @@ public class ArgumentMappings {
                 (argument, source, predicate) -> predicate.toBukkit()
         ));
 
-        register(ColumnLocationArgument.class, ArgumentMapper.<Location, ColumnFinePositionResolver, ColumnLocationArgument>create(
+        register(ColumnLocationArgument.class, ArgumentMapper.create(
                 argument -> MinecraftArgumentType.columnFinePosition(argument.isCenterIntegers()),
                 (argument, source, resolver) -> {
                     WrappedColumnFinePosition position = resolver.resolve(source);

@@ -16,11 +16,19 @@ public class WorldArgument extends BukkitArgument<WorldArgument, World> {
     public WorldArgument(String name) {
         super(name);
 
-        includeSuggestions(BukkitSuggestionsSupplier.unlessNative(ctx -> ArgumentSuggestion.of(Bukkit.getWorlds()
+        BukkitSuggestionsSupplier.Sync suggestions = BukkitSuggestionsSupplier.sync(ctx -> ArgumentSuggestion.of(Bukkit.getWorlds()
                 .stream()
                 .map(World::getName)
                 .collect(Collectors.toUnmodifiableList())
-        )));
+        ));
+
+        whenBrigadier(ctx -> {
+            if (!ctx.hasNativeSuggestions()) {
+                ctx.getArgument().includeSuggestions(suggestions);
+            }
+        });
+
+        whenLegacy(ctx -> ctx.getArgument().includeSuggestions(suggestions));
     }
 
     @Override
