@@ -195,6 +195,8 @@ public class PaperExample extends JavaPlugin {
                                         Flag.valued(new ColorArgument("color"), 'c'),
                                         Flag.presence("enable", 'e')
                                 )
+                                .whenBrigadier(ctx -> ctx.getArgument().replaceSuggestions(""))
+                                .whenLegacy(ctx -> ctx.getArgument().replaceSuggestions(""))
                 )
                 .executesPlayer((player, args) -> {
                     FlagsContainer flags = args.get("flags");

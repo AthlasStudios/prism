@@ -3,6 +3,7 @@ package dev.gurwi.prism.bukkit.argument.base;
 import dev.gurwi.prism.argument.AbstractTreeArgument;
 import dev.gurwi.prism.bukkit.argument.suggestion.BukkitSuggestionsSupplier;
 import dev.gurwi.prism.bukkit.argument.suggestion.ArgumentSuggestion;
+import dev.gurwi.prism.bukkit.brigadier.BrigadierContext;
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
 import dev.gurwi.prism.bukkit.command.executor.BukkitCommandExecutor;
 import dev.gurwi.prism.bukkit.command.executor.BukkitExecutorContainerBuilder;
@@ -18,6 +19,7 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> extends AbstractTreeArgument<Impl, T, BukkitCommandDefinition, CommandSender, BukkitCommandExecutor<? extends CommandSender>, BukkitArgument<?, ?>, BukkitPermission, BukkitSuggestionsSupplier<?>> implements BukkitExecutorContainerBuilder<Impl>, BukkitRequirementContainerBuilder<Impl> {
 
@@ -114,6 +116,14 @@ public abstract class BukkitArgument<Impl extends BukkitArgument<Impl, T>, T> ex
 
     public Impl withPermissions(String... permissions) {
         return withRequirement(BukkitUsageRequirement.permissions(permissions));
+    }
+
+    public Impl whenBrigadier(Consumer<BrigadierContext<Impl>> configuration) {
+        return null;
+    }
+
+    public Impl whenLegacy(Consumer<ArgumentContext<Impl>> configuration) {
+        return null;
     }
 
     public boolean hasExecutor(@NotNull CommandSender sender) {

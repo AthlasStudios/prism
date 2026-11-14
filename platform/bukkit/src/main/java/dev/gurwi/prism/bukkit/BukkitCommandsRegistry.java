@@ -13,6 +13,8 @@ import java.util.Optional;
 
 public interface BukkitCommandsRegistry<CommandPlatform extends BukkitCommandPlatform<? extends BukkitCommandsRegistry<CommandPlatform>, ?>> extends CommandsRegistry<CommandPlatform, BukkitCommandDefinition> {
 
+    BukkitCommandRegistrar.Type getRegistrarType();
+
     default @NotNull BukkitCommandRegistrar createRegistrar(@NotNull CommandPlatform platform) {
         try {
             if (!platform.getConfiguration().isBrigadierDisabled()) {

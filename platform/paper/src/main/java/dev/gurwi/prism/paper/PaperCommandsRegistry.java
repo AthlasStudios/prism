@@ -42,6 +42,11 @@ public class PaperCommandsRegistry implements BukkitCommandsRegistry<PaperComman
     }
 
     @Override
+    public BukkitCommandRegistrar.Type getRegistrarType() {
+        return registrar.getType();
+    }
+
+    @Override
     public PaperCommandPlatform getPlatform() {
         return platform;
     }
