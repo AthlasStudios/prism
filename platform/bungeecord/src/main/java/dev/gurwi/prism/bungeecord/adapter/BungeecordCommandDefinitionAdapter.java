@@ -20,6 +20,7 @@ import dev.gurwi.prism.brigadier.BrigadierAdapter;
 import dev.gurwi.prism.brigadier.BrigadierTreeBuilder;
 import dev.gurwi.prism.brigadier.HierarchyArgumentsResolver;
 import dev.gurwi.prism.brigadier.NodeSpec;
+import dev.gurwi.prism.brigadier.SuggestionScope;
 import dev.gurwi.prism.bungeecord.argument.LiteralArgument;
 import dev.gurwi.prism.bungeecord.argument.base.LiteralValues;
 import dev.gurwi.prism.bungeecord.argument.base.BungeecordArgument;
@@ -154,7 +155,7 @@ public class BungeecordCommandDefinitionAdapter implements BrigadierAdapter<Comm
     }
 
     @Override
-    public @Nullable SuggestionProvider<CommandSender> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType) {
+    public @Nullable SuggestionProvider<CommandSender> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType, @NotNull SuggestionScope<BungeecordCommandDefinition> scope) {
         if (!(argument instanceof BungeecordArgument<?, ?>) || argument instanceof LiteralArgument) {
             return null;
         }
@@ -173,8 +174,13 @@ public class BungeecordCommandDefinitionAdapter implements BrigadierAdapter<Comm
             String remaining = suggestionsBuilder.getRemaining();
             String lowered = remaining.toLowerCase(Locale.ROOT);
 
-            SuggestionContext<CommandSender> suggestionContext =
-                    new SuggestionContext<>(context.getSource(), suggestionsBuilder.getInput(), remaining, nativeProvided);
+            SuggestionContext<CommandSender> suggestionContext = SuggestionContext.lazy(
+                    context.getSource(),
+                    suggestionsBuilder.getInput(),
+                    remaining,
+                    () -> previousArguments(scope, context, suggestionsBuilder.getStart()),
+                    nativeProvided
+            );
 
             List<CompletableFuture<Collection<ArgumentSuggestion>>> parts = new ArrayList<>(suppliers.size());
 
@@ -269,7 +275,15 @@ public class BungeecordCommandDefinitionAdapter implements BrigadierAdapter<Comm
     }
 
     private @NotNull CommandArguments<BungeecordCommandDefinition, CommandSender> parseHierarchy(@NotNull BungeecordCommandDefinition target, @NotNull CommandContext<CommandSender> context, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {
-        return HierarchyArgumentsResolver.resolve(builder, this, target, path, forced, context.getInput(), new HierarchyArgumentsResolver.Reader() {
+        return HierarchyArgumentsResolver.resolve(builder, this, target, path, forced, context.getInput(), reader(context));
+    }
+
+    private @NotNull CommandArguments<BungeecordCommandDefinition, CommandSender> previousArguments(@NotNull SuggestionScope<BungeecordCommandDefinition> scope, @NotNull CommandContext<CommandSender> context, int start) {
+        return HierarchyArgumentsResolver.resolvePrevious(builder, this, scope, context, start, reader(context));
+    }
+
+    private @NotNull HierarchyArgumentsResolver.Reader reader(@NotNull CommandContext<CommandSender> context) {
+        return new HierarchyArgumentsResolver.Reader() {
             @Override
             public boolean present(@NotNull NodeSpec spec) {
                 return BungeecordCommandDefinitionAdapter.this.present(context, spec.name());
@@ -286,7 +300,7 @@ public class BungeecordCommandDefinitionAdapter implements BrigadierAdapter<Comm
             public @NotNull ParsedArgument<?> parseFixed(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull String value) throws CommandSyntaxException {
                 return new ParsedArgument<>(value, BungeecordCommandDefinitionAdapter.this.parseFixed((BungeecordArgument<?, ?>) argument, value));
             }
-        });
+        };
     }
 
     private @NotNull Object parseFixed(@NotNull BungeecordArgument<?, ?> argument, @NotNull String value) throws CommandSyntaxException {

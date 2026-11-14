@@ -92,7 +92,7 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         AbstractArgument<?, ?, ?, ?> argument = nodeSpec.argument();
 
         if (nodeSpec.literal() || !forcing(argument)) {
-            ArgumentBuilder<S, ?> builder = node(nodeSpec);
+            ArgumentBuilder<S, ?> builder = node(nodeSpec, new SuggestionScope<>(definition, List.of(), forced));
 
             finishSpec(builder, definition, nodeSpecs, index, forced, children);
 
@@ -312,13 +312,15 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
             return false;
         });
 
+        SuggestionScope<Definition> scope = new SuggestionScope<>(definition, ancestors, forced);
+
         builder.suggests((context, suggestions) -> {
             for (AbstractArgument<?, ?, ?, ?> argument : group) {
                 if (!adapter.available(argument, context.getSource())) {
                     continue;
                 }
 
-                SuggestionProvider<S> provider = adapter.suggestions(argument, null);
+                SuggestionProvider<S> provider = adapter.suggestions(argument, null, scope);
 
                 if (provider != null) {
                     provider.getSuggestions(context, suggestions);
@@ -396,11 +398,12 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         requireUnique(argument.getName(), children);
 
         Command<S> command = adapter.command(definition, List.copyOf(path), forced);
+        SuggestionScope<Definition> scope = new SuggestionScope<>(definition, ancestors, forced);
         CommandNode<S> next = null;
 
         for (int i = nodeSpecs.size() - 1; i >= 0; i--) {
             NodeSpec nodeSpec = nodeSpecs.get(i);
-            ArgumentBuilder<S, ?> builder = node(nodeSpec);
+            ArgumentBuilder<S, ?> builder = node(nodeSpec, scope);
 
             if (nodeSpec.terminal()) {
                 if (command != null) {
@@ -422,7 +425,7 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         return next;
     }
 
-    private @NotNull ArgumentBuilder<S, ?> node(@NotNull NodeSpec nodeSpec) {
+    private @NotNull ArgumentBuilder<S, ?> node(@NotNull NodeSpec nodeSpec, @NotNull SuggestionScope<Definition> scope) {
         if (nodeSpec.literal()) {
             LiteralArgumentBuilder<S> literal = LiteralArgumentBuilder.literal(nodeSpec.name());
             literal.requires(source -> adapter.available(nodeSpec.argument(), source));
@@ -433,7 +436,7 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         RequiredArgumentBuilder<S, ?> builder = RequiredArgumentBuilder.argument(nodeSpec.name(), nodeSpec.type());
         builder.requires(source -> adapter.available(nodeSpec.argument(), source));
 
-        SuggestionProvider<S> suggestions = suggestionsFor(nodeSpec);
+        SuggestionProvider<S> suggestions = suggestionsFor(nodeSpec, scope);
 
         if (suggestions != null) {
             builder.suggests(suggestions);
@@ -442,9 +445,9 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
         return builder;
     }
 
-    private @Nullable SuggestionProvider<S> suggestionsFor(@NotNull NodeSpec nodeSpec) {
+    private @Nullable SuggestionProvider<S> suggestionsFor(@NotNull NodeSpec nodeSpec, @NotNull SuggestionScope<Definition> scope) {
         ArgumentType<?> resolved = resolveType(nodeSpec.argument());
-        SuggestionProvider<S> user = adapter.suggestions(nodeSpec.argument(), resolved);
+        SuggestionProvider<S> user = adapter.suggestions(nodeSpec.argument(), resolved, scope);
 
         if (user == null) {
             return null;

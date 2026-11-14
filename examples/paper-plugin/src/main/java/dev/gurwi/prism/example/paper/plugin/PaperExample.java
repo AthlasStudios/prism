@@ -13,8 +13,11 @@ import dev.gurwi.prism.bukkit.command.PrismCommand;
 import dev.gurwi.prism.bukkit.util.CommandHelp;
 import dev.gurwi.prism.exception.CommandExecutionException;
 import dev.gurwi.prism.paper.PaperCommandPlatform;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -29,7 +32,7 @@ public class PaperExample extends JavaPlugin {
     @Override
     public void onEnable() {
         PaperCommandPlatform platform = PaperCommandPlatform.configure(this)
-                .disableBrigadier()
+//                .disableBrigadier()
                 .init();
 
         BukkitCommandDefinition build = new PrismCommand("testa", "pr")
@@ -40,7 +43,7 @@ public class PaperExample extends JavaPlugin {
                         new EntitySelectorArgument.OnePlayer("idk"),
                         new ColorArgument("color")
                                 .replaceSuggestions(
-                                        "ciano"
+                                        ctx -> ctx.getPreviousArgs().get("color", Player.class).getName()
                                 )
                 )
                 .executes((sender, args) -> {
@@ -107,8 +110,8 @@ public class PaperExample extends JavaPlugin {
                                 .executes((sender, args) -> {
                                     Color color = args.get("hex");
 
-                                    net.kyori.adventure.text.Component message = net.kyori.adventure.text.Component.text("This message is custom colored!")
-                                            .color(net.kyori.adventure.text.format.TextColor.color(color.asRGB()));
+                                    Component message = Component.text("This message is custom colored!")
+                                            .color(TextColor.color(color.asRGB()));
 
                                     sender.sendMessage(message);
                                 }),
@@ -195,8 +198,8 @@ public class PaperExample extends JavaPlugin {
                                         Flag.valued(new ColorArgument("color"), 'c'),
                                         Flag.presence("enable", 'e')
                                 )
-                                .whenBrigadier(ctx -> ctx.getArgument().replaceSuggestions(""))
-                                .whenLegacy(ctx -> ctx.getArgument().replaceSuggestions(""))
+//                                .whenBrigadier(ctx -> ctx.getArgument().replaceSuggestions(""))
+//                                .whenLegacy(ctx -> ctx.getArgument().replaceSuggestions(""))
                 )
                 .executesPlayer((player, args) -> {
                     FlagsContainer flags = args.get("flags");

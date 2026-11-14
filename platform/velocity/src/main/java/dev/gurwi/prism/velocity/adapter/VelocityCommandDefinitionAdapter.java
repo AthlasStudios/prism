@@ -20,6 +20,7 @@ import dev.gurwi.prism.brigadier.BrigadierAdapter;
 import dev.gurwi.prism.brigadier.BrigadierTreeBuilder;
 import dev.gurwi.prism.brigadier.HierarchyArgumentsResolver;
 import dev.gurwi.prism.brigadier.NodeSpec;
+import dev.gurwi.prism.brigadier.SuggestionScope;
 import dev.gurwi.prism.velocity.argument.LiteralArgument;
 import dev.gurwi.prism.velocity.argument.base.LiteralValues;
 import dev.gurwi.prism.velocity.argument.base.VelocityArgument;
@@ -153,7 +154,7 @@ public class VelocityCommandDefinitionAdapter implements BrigadierAdapter<Comman
     }
 
     @Override
-    public @Nullable SuggestionProvider<CommandSource> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType) {
+    public @Nullable SuggestionProvider<CommandSource> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType, @NotNull SuggestionScope<VelocityCommandDefinition> scope) {
         if (!(argument instanceof VelocityArgument<?, ?> velocityArgument) || argument instanceof LiteralArgument) {
             return null;
         }
@@ -170,8 +171,13 @@ public class VelocityCommandDefinitionAdapter implements BrigadierAdapter<Comman
             String remaining = suggestionsBuilder.getRemaining();
             String lowered = remaining.toLowerCase(Locale.ROOT);
 
-            SuggestionContext<CommandSource> suggestionContext =
-                    new SuggestionContext<>(context.getSource(), suggestionsBuilder.getInput(), remaining, nativeProvided);
+            SuggestionContext<CommandSource> suggestionContext = SuggestionContext.lazy(
+                    context.getSource(),
+                    suggestionsBuilder.getInput(),
+                    remaining,
+                    () -> previousArguments(scope, context, suggestionsBuilder.getStart()),
+                    nativeProvided
+            );
 
             List<CompletableFuture<Collection<ArgumentSuggestion>>> parts = new ArrayList<>(suppliers.size());
 
@@ -269,7 +275,15 @@ public class VelocityCommandDefinitionAdapter implements BrigadierAdapter<Comman
     }
 
     private @NotNull CommandArguments<VelocityCommandDefinition, CommandSource> parseHierarchy(@NotNull VelocityCommandDefinition target, @NotNull CommandContext<CommandSource> context, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {
-        return HierarchyArgumentsResolver.resolve(builder, this, target, path, forced, context.getInput(), new HierarchyArgumentsResolver.Reader() {
+        return HierarchyArgumentsResolver.resolve(builder, this, target, path, forced, context.getInput(), reader(context));
+    }
+
+    private @NotNull CommandArguments<VelocityCommandDefinition, CommandSource> previousArguments(@NotNull SuggestionScope<VelocityCommandDefinition> scope, @NotNull CommandContext<CommandSource> context, int start) {
+        return HierarchyArgumentsResolver.resolvePrevious(builder, this, scope, context, start, reader(context));
+    }
+
+    private @NotNull HierarchyArgumentsResolver.Reader reader(@NotNull CommandContext<CommandSource> context) {
+        return new HierarchyArgumentsResolver.Reader() {
             @Override
             public boolean present(@NotNull NodeSpec spec) {
                 return VelocityCommandDefinitionAdapter.this.present(context, spec.name());
@@ -286,7 +300,7 @@ public class VelocityCommandDefinitionAdapter implements BrigadierAdapter<Comman
             public @NotNull ParsedArgument<?> parseFixed(@NotNull AbstractArgument<?, ?, ?, ?> argument, @NotNull String value) throws CommandSyntaxException {
                 return new ParsedArgument<>(value, VelocityCommandDefinitionAdapter.this.parseFixed((VelocityArgument<?, ?>) argument, value));
             }
-        });
+        };
     }
 
     private @NotNull Object parseFixed(@NotNull VelocityArgument<?, ?> argument, @NotNull String value) throws CommandSyntaxException {

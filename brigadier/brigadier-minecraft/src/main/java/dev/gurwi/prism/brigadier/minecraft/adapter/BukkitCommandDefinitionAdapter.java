@@ -18,6 +18,7 @@ import dev.gurwi.prism.brigadier.BrigadierTreeBuilder;
 import dev.gurwi.prism.brigadier.HierarchyArgumentsResolver;
 import dev.gurwi.prism.brigadier.NativeTypeHolder;
 import dev.gurwi.prism.brigadier.NodeSpec;
+import dev.gurwi.prism.brigadier.SuggestionScope;
 import dev.gurwi.prism.brigadier.minecraft.argument.mapping.ArgumentMappings;
 import dev.gurwi.prism.brigadier.minecraft.argument.mapping.BoundArgumentMapper;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
@@ -167,7 +168,7 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
     }
 
     @Override
-    public @Nullable SuggestionProvider<MinecraftCommandSource> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType) {
+    public @Nullable SuggestionProvider<MinecraftCommandSource> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType, @NotNull SuggestionScope<BukkitCommandDefinition> scope) {
         BukkitArgument<?, ?> bukkitArgument = (BukkitArgument<?, ?>) argument;
 
         Optional<BukkitSuggestionsSupplier<?>> replaced = bukkitArgument.getSuggestionsSupplier();
@@ -193,8 +194,17 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
             CommandSender sender = senderOf(context.getSource());
             String remaining = suggestionsBuilder.getRemaining();
 
-            SuggestionContext<CommandSender> suggestionContext =
-                    new SuggestionContext<>(sender, suggestionsBuilder.getInput(), remaining, nativeProvided);
+            SuggestionContext<CommandSender> suggestionContext = SuggestionContext.lazy(
+                    sender,
+                    suggestionsBuilder.getInput(),
+                    remaining,
+                    () -> previousArguments(scope, context, suggestionsBuilder.getStart()),
+                    nativeProvided
+            );
+
+            if (replaced.filter(BukkitSuggestionsSupplier.Async.class::isInstance).isPresent() || suppliers.stream().anyMatch(BukkitSuggestionsSupplier.Async.class::isInstance)) {
+                suggestionContext.getPreviousArgs();
+            }
 
             CompletableFuture<Collection<ArgumentSuggestion>> replacedPart = replaced
                     .map(supplier -> BukkitSuggestionsSupplier.resolveRaw(supplier, suggestionContext))
@@ -309,7 +319,17 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
     }
 
     private @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parseHierarchy(@NotNull BukkitCommandDefinition target, @NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender, @NotNull List<AbstractArgument<?, ?, ?, ?>> path, @NotNull Map<AbstractArgument<?, ?, ?, ?>, String> forced) throws CommandSyntaxException {
-        return HierarchyArgumentsResolver.resolve(builder, this, target, path, forced, context.getInput(), new HierarchyArgumentsResolver.Reader() {
+        return HierarchyArgumentsResolver.resolve(builder, this, target, path, forced, context.getInput(), reader(context, source, sender));
+    }
+
+    private @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> previousArguments(@NotNull SuggestionScope<BukkitCommandDefinition> scope, @NotNull CommandContext<MinecraftCommandSource> context, int start) {
+        MinecraftCommandSource source = context.getSource();
+
+        return HierarchyArgumentsResolver.resolvePrevious(builder, this, scope, context, start, reader(context, source, senderOf(source)));
+    }
+
+    private @NotNull HierarchyArgumentsResolver.Reader reader(@NotNull CommandContext<MinecraftCommandSource> context, @NotNull MinecraftCommandSource source, @NotNull CommandSender sender) {
+        return new HierarchyArgumentsResolver.Reader() {
             @Override
             public boolean present(@NotNull NodeSpec spec) {
                 return BukkitCommandDefinitionAdapter.this.present(context, spec.name());
@@ -328,7 +348,7 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
 
                 return new ParsedArgument<>(value, parsed);
             }
-        });
+        };
     }
 
     private <T> @NotNull T parseFixed(@NotNull BukkitArgument<?, T> argument, @NotNull CommandSender sender, @NotNull String value) throws CommandSyntaxException {

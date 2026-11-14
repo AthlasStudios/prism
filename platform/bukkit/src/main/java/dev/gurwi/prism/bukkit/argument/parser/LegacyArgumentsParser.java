@@ -157,6 +157,62 @@ public final class LegacyArgumentsParser {
         return new TreeParseResult(new CommandArguments<>(definition, required, optional, fullInput, parent), attempt.node());
     }
 
+    public static @NotNull CommandArguments<BukkitCommandDefinition, CommandSender> parsePartial(@NotNull CommandSender sender, @NotNull BukkitCommandDefinition definition, @NotNull String @NotNull [] args, int offset, int end, @NotNull Map<String, ParsedArgument<?>> branchValues, @Nullable CommandArguments<BukkitCommandDefinition, CommandSender> parent, @NotNull String fullInput) {
+        Map<String, ParsedArgument<?>> required = new HashMap<>();
+        Map<String, ParsedArgument<?>> optional = new HashMap<>();
+
+        int position = parseLenient(required, sender, definition.getRequiredArguments(), args, offset, end);
+
+        if (position >= 0) {
+            parseLenient(optional, sender, definition.getOptionalArguments(), args, position, end);
+        }
+
+        required.putAll(branchValues);
+
+        return new CommandArguments<>(definition, required, optional, fullInput, parent);
+    }
+
+    private static int parseLenient(@NotNull Map<String, ParsedArgument<?>> target, @NotNull CommandSender sender, @NotNull List<BukkitArgument<?, ?>> arguments, @NotNull String @NotNull [] args, int start, int end) {
+        int position = start;
+
+        for (BukkitArgument<?, ?> argument : arguments) {
+            if (position >= end || !argument.canUse(sender)) {
+                return -1;
+            }
+
+            if (argument instanceof LiteralArgument) {
+                if (!args[position].equals(argument.getName())) {
+                    return -1;
+                }
+
+                position++;
+                continue;
+            }
+
+            int next = ArgumentTokens.advance(argument, position, end);
+
+            if (next > end) {
+                return -1;
+            }
+
+            String input = String.join(" ", Arrays.copyOfRange(args, position, next));
+
+            try {
+                Object value = argument.parse(sender, input);
+
+                if (argument.isListed()) {
+                    target.put(argument.getName(), new ParsedArgument<>(input, value));
+                }
+            } catch (ArgumentParseException e) {
+                return -1;
+            }
+
+            position = next;
+        }
+
+        return position;
+    }
+
     private static @NotNull Attempt attempt(@NotNull CommandSender sender, @NotNull List<BukkitArgument<?, ?>> candidates, @NotNull String @NotNull [] rawArgs, int position, @NotNull String @NotNull [] originalArgs, int offset) throws BukkitArgumentParseException {
         List<BukkitArgument<?, ?>> ordered = new ArrayList<>();
 

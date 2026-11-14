@@ -1,6 +1,7 @@
 package dev.gurwi.prism.bukkit.command;
 
 import dev.gurwi.prism.argument.CommandArguments;
+import dev.gurwi.prism.argument.ParsedArgument;
 import dev.gurwi.prism.argument.suggestion.SuggestionContext;
 import dev.gurwi.prism.bukkit.argument.base.BukkitArgument;
 import dev.gurwi.prism.bukkit.argument.base.LiteralValues;
@@ -26,6 +27,7 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class BukkitExecutableCommand extends BukkitCommand implements CommandExecutor, TabCompleter, PluginIdentifiableCommand {
@@ -113,7 +115,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
     @Override
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String @NotNull [] args) {
         if (args.length == 0 || !testPermission(sender)) return List.of();
-        return complete(definition, sender, args, 0);
+        return complete(definition, sender, args, 0, null, input(alias, args));
     }
 
     @Override
@@ -130,7 +132,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         ASYNC.set(futures);
 
         try {
-            immediate = complete(definition, sender, args, 0);
+            immediate = complete(definition, sender, args, 0, null, input(definition.getName(), args));
         } finally {
             ASYNC.remove();
         }
@@ -370,7 +372,11 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         return String.join(" ", Arrays.copyOfRange(args, from, to + 1));
     }
 
-    private @NotNull List<String> complete(@NotNull BukkitCommandDefinition current, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int offset) {
+    private static @NotNull String input(@NotNull String label, @NotNull String @NotNull [] args) {
+        return args.length == 0 ? label : label + " " + String.join(" ", args);
+    }
+
+    private @NotNull List<String> complete(@NotNull BukkitCommandDefinition current, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int offset, @Nullable CommandArguments<BukkitCommandDefinition, CommandSender> parent, @NotNull String fullInput) {
         List<BukkitArgument<?, ?>> required = current.getRequiredArguments();
         List<BukkitArgument<?, ?>> optional = current.getOptionalArguments();
         List<BukkitArgument<?, ?>> branches = LegacyArgumentsParser.nodes(current.getArgumentTreeBranches());
@@ -381,7 +387,9 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         Located located = locate(required, last - offset);
 
         if (located != null) {
-            return suggestFrom(located.argument(), sender, args, offset + located.start(), last);
+            int start = offset + located.start();
+
+            return suggestFrom(located.argument(), sender, args, start, last, new Trail(current, sender, args, offset, start, parent, fullInput).arguments());
         }
 
         int position = offset;
@@ -396,18 +404,18 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
             Optional<BukkitCommandDefinition> child = findChild(current, sender, args[position]);
 
             if (child.isPresent()) {
-                return complete(child.get(), sender, args, position + 1);
+                return complete(child.get(), sender, args, position + 1, new Trail(current, sender, args, offset, position, parent, fullInput).arguments().get(), fullInput);
             }
 
             if (optionalIndex >= optional.size()) {
-                return completeBranches(branches, sender, args, position, last);
+                return completeBranches(branches, sender, args, position, last, new Trail(current, sender, args, offset, position, parent, fullInput));
             }
 
             BukkitArgument<?, ?> next = optional.get(optionalIndex);
             int end = ArgumentTokens.advance(next, position, Integer.MAX_VALUE);
 
             if (last < end) {
-                return suggestFrom(next, sender, args, position, last);
+                return suggestFrom(next, sender, args, position, last, new Trail(current, sender, args, offset, position, parent, fullInput).arguments());
             }
 
             position = end;
@@ -416,10 +424,12 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
 
         Set<String> suggestions = new LinkedHashSet<>();
 
+        Trail trail = new Trail(current, sender, args, offset, position, parent, fullInput);
+
         if (optionalIndex < optional.size()) {
-            suggestions.addAll(suggest(optional.get(optionalIndex), sender, input));
+            suggestions.addAll(suggest(optional.get(optionalIndex), sender, input, trail.arguments()));
         } else {
-            suggestions.addAll(completeBranches(branches, sender, args, last, last));
+            suggestions.addAll(completeBranches(branches, sender, args, last, last, trail));
         }
 
         suggestions.addAll(suggestChildren(current, sender, input));
@@ -427,7 +437,7 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
         return List.copyOf(suggestions);
     }
 
-    private @NotNull @Unmodifiable List<String> completeBranches(@NotNull List<BukkitArgument<?, ?>> candidates, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int from, int last) {
+    private @NotNull @Unmodifiable List<String> completeBranches(@NotNull List<BukkitArgument<?, ?>> candidates, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int from, int last, @NotNull Trail trail) {
         Set<String> result = new LinkedHashSet<>();
 
         for (BukkitArgument<?, ?> candidate : candidates) {
@@ -436,17 +446,18 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
             }
 
             if (from == last) {
-                result.addAll(suggestNode(candidate, sender, args[last]));
+                result.addAll(suggest(candidate, sender, args[last], trail.arguments()));
             } else {
-                result.addAll(completeNode(candidate, sender, args, from, last));
+                result.addAll(completeNode(candidate, sender, args, from, last, trail));
             }
         }
 
         return List.copyOf(result);
     }
 
-    private @NotNull List<String> completeNode(@NotNull BukkitArgument<?, ?> node, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int from, int last) {
+    private @NotNull List<String> completeNode(@NotNull BukkitArgument<?, ?> node, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int from, int last, @NotNull Trail trail) {
         int end;
+        Trail next = trail;
 
         if (node instanceof LiteralArgument) {
             if (!args[from].equals(node.getName())) {
@@ -458,38 +469,40 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
             end = ArgumentTokens.advance(node, from, Integer.MAX_VALUE);
 
             if (last < end) {
-                return suggestFrom(node, sender, args, from, last);
+                return suggestFrom(node, sender, args, from, last, trail.arguments());
             }
 
-            if (!allowsFixedValue(node, joined(args, from, end - 1))) {
+            String input = joined(args, from, end - 1);
+
+            if (!allowsFixedValue(node, input)) {
                 return List.of();
             }
 
             try {
-                node.parse(sender, joined(args, from, end - 1));
+                Object value = node.parse(sender, input);
+
+                if (node.isListed()) {
+                    next = trail.with(node.getName(), new ParsedArgument<>(input, value));
+                }
             } catch (ArgumentParseException e) {
                 return List.of();
             }
         }
 
-        return completeBranches(LegacyArgumentsParser.nodes(node.getArguments()), sender, args, end, last);
+        return completeBranches(LegacyArgumentsParser.nodes(node.getArguments()), sender, args, end, last, next);
     }
 
-    private @NotNull List<String> suggestNode(@NotNull BukkitArgument<?, ?> node, @NotNull CommandSender sender, @NotNull String input) {
-        return suggest(node, sender, input);
-    }
-
-    private @NotNull List<String> suggestFrom(@NotNull BukkitArgument<?, ?> argument, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int from, int last) {
+    private @NotNull List<String> suggestFrom(@NotNull BukkitArgument<?, ?> argument, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int from, int last, @NotNull Supplier<CommandArguments<BukkitCommandDefinition, CommandSender>> previous) {
         String prefix = from == last ? "" : joined(args, from, last - 1) + " ";
 
-        return suggest(argument, sender, joined(args, from, last), prefix);
+        return suggest(argument, sender, joined(args, from, last), prefix, previous);
     }
 
-    private @NotNull List<String> suggest(@NotNull BukkitArgument<?, ?> argument, @NotNull CommandSender sender, @NotNull String input) {
-        return suggest(argument, sender, input, "");
+    private @NotNull List<String> suggest(@NotNull BukkitArgument<?, ?> argument, @NotNull CommandSender sender, @NotNull String input, @NotNull Supplier<CommandArguments<BukkitCommandDefinition, CommandSender>> previous) {
+        return suggest(argument, sender, input, "", previous);
     }
 
-    private @NotNull List<String> suggest(@NotNull BukkitArgument<?, ?> argument, @NotNull CommandSender sender, @NotNull String input, @NotNull String prefix) {
+    private @NotNull List<String> suggest(@NotNull BukkitArgument<?, ?> argument, @NotNull CommandSender sender, @NotNull String input, @NotNull String prefix, @NotNull Supplier<CommandArguments<BukkitCommandDefinition, CommandSender>> previous) {
         if (!argument.canUse(sender)) {
             return List.of();
         }
@@ -508,8 +521,12 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
                     .collect(Collectors.toList()), prefix);
         }
 
-        SuggestionContext<CommandSender> context = new SuggestionContext<>(sender, null, input);
+        SuggestionContext<CommandSender> context = SuggestionContext.lazy(sender, null, input, previous, false);
         Set<String> immediate = new LinkedHashSet<>();
+
+        if (argument.getCustomSuggestions().stream().anyMatch(BukkitSuggestionsSupplier.Async.class::isInstance)) {
+            context.getPreviousArgs();
+        }
 
         for (BukkitSuggestionsSupplier<?> suggestions : argument.getCustomSuggestions()) {
             if (suggestions instanceof BukkitSuggestionsSupplier.Async) {
@@ -567,6 +584,45 @@ public class BukkitExecutableCommand extends BukkitCommand implements CommandExe
                 .map(AbstractCommandDefinition::getName)
                 .filter(name -> name.toLowerCase().startsWith(prefix))
                 .collect(Collectors.toUnmodifiableList());
+    }
+
+    private static final class Trail {
+
+        private final BukkitCommandDefinition definition;
+        private final CommandSender sender;
+        private final String[] args;
+        private final int offset;
+        private final int end;
+        private final CommandArguments<BukkitCommandDefinition, CommandSender> parent;
+        private final String fullInput;
+        private final Map<String, ParsedArgument<?>> branchValues;
+
+        private Trail(@NotNull BukkitCommandDefinition definition, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int offset, int end, @Nullable CommandArguments<BukkitCommandDefinition, CommandSender> parent, @NotNull String fullInput) {
+            this(definition, sender, args, offset, end, parent, fullInput, Map.of());
+        }
+
+        private Trail(@NotNull BukkitCommandDefinition definition, @NotNull CommandSender sender, @NotNull String @NotNull [] args, int offset, int end, @Nullable CommandArguments<BukkitCommandDefinition, CommandSender> parent, @NotNull String fullInput, @NotNull Map<String, ParsedArgument<?>> branchValues) {
+            this.definition = definition;
+            this.sender = sender;
+            this.args = args;
+            this.offset = offset;
+            this.end = end;
+            this.parent = parent;
+            this.fullInput = fullInput;
+            this.branchValues = branchValues;
+        }
+
+        @NotNull Trail with(@NotNull String name, @NotNull ParsedArgument<?> value) {
+            Map<String, ParsedArgument<?>> values = new HashMap<>(branchValues);
+            values.put(name, value);
+
+            return new Trail(definition, sender, args, offset, end, parent, fullInput, values);
+        }
+
+        @NotNull Supplier<CommandArguments<BukkitCommandDefinition, CommandSender>> arguments() {
+            return () -> LegacyArgumentsParser.parsePartial(sender, definition, args, offset, end, branchValues, parent, fullInput);
+        }
+
     }
 
     private static final class Level {

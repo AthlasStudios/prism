@@ -260,7 +260,7 @@ public class FlagArgument extends GreedyArgument<FlagArgument, FlagsContainer> {
             return CompletableFuture.completedFuture(List.of());
         }
 
-        SuggestionContext<CommandSender> innerContext = new SuggestionContext<>(context.getSource(), context.getCurrentInput(), partial, context.getPreviousArgs());
+        SuggestionContext<CommandSender> innerContext = context.withCurrentRawArg(partial);
         String lowered = partial.toLowerCase(Locale.ROOT);
 
         if (inner.getFixedValues().isPresent()) {
