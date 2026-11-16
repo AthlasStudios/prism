@@ -17,6 +17,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -31,7 +32,6 @@ public class PaperExample extends JavaPlugin {
     @Override
     public void onEnable() {
         PaperCommandPlatform platform = PaperCommandPlatform.configure(this)
-//                .disableBrigadier()
                 .init();
 
         BukkitCommandDefinition build = new PrismCommand("testa", "pr")
@@ -41,9 +41,14 @@ public class PaperExample extends JavaPlugin {
                         new OfflinePlayerArgument("offlinePlayer"),
                         new EntitySelectorArgument.OnePlayer("idk"),
                         new ColorArgument("color")
-                                .replaceSuggestions(
-                                        ctx -> "asd"
-                                )
+                                .replaceSuggestions(ctx -> ctx.getPreviousArgs().get("player", Player.class).getName())
+//                                .replaceSuggestions(
+//                                        BukkitSuggestionsSupplier.sync(ctx -> {
+//                                            return Collections.singleton(
+//                                                    ArgumentSuggestion.of(ctx.getPreviousArgs().get("player", Player.class).getName())
+//                                            );
+//                                        })
+//                                )
                 )
                 .executes((sender, args) -> {
                     sender.sendMessage("This works");

@@ -1,7 +1,7 @@
 package dev.gurwi.prism.bukkit.registrar;
 
 import dev.gurwi.prism.bukkit.command.BukkitCommandDefinition;
-import dev.gurwi.prism.bukkit.command.BukkitExecutableCommand;
+import dev.gurwi.prism.bukkit.command.legacy.BukkitExecutableCommand;
 import dev.gurwi.prism.bukkit.wrapper.WrappedCommandMap;
 import dev.gurwi.prism.reflection.ReflectionUtil;
 import org.bukkit.command.Command;

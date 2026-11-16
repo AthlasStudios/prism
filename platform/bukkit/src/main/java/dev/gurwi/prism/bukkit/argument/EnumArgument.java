@@ -15,29 +15,14 @@ public class EnumArgument<E extends Enum<E>> extends BukkitArgument<EnumArgument
 
     public EnumArgument(String name, @NotNull Class<E> enumClass) {
         super(name);
-
         this.enumClass = enumClass;
+
         List<String> values = Arrays.stream(enumClass.getEnumConstants())
                 .map(value -> value.name().toLowerCase())
                 .collect(Collectors.toUnmodifiableList());
 
-        whenBrigadier(ctx -> {
-            if (!ctx.hasNativeType() && ctx.getArgument().getFixedValues().isEmpty()) {
-                ctx.getArgument().withFixedValues(values);
-            }
-
-            if (!ctx.hasNativeSuggestions()) {
-                ctx.getArgument().includeSuggestions(values);
-            }
-        });
-
-        whenLegacy(ctx -> {
-            if (ctx.getArgument().getFixedValues().isEmpty()) {
-                ctx.getArgument().withFixedValues(values);
-            }
-
-            ctx.getArgument().includeSuggestions(values);
-        });
+        replaceSuggestions(values);
+        withFixedValues(values);
     }
 
     @Override

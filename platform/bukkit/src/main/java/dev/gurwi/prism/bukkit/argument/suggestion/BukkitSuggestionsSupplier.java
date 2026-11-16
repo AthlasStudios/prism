@@ -5,9 +5,12 @@ import dev.gurwi.prism.argument.suggestion.SuggestionsSupplier;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public interface BukkitSuggestionsSupplier<Result> extends SuggestionsSupplier<CommandSender, Result> {
@@ -55,7 +58,45 @@ public interface BukkitSuggestionsSupplier<Result> extends SuggestionsSupplier<C
             return CompletableFuture.completedFuture(((Sync) supplier).getSuggestions(context));
         }
 
-        return CompletableFuture.completedFuture(Collections.emptyList());
+        Object result = supplier.getSuggestions(context);
+
+        if (result instanceof CompletableFuture) {
+            return ((CompletableFuture<?>) result).thenApply(BukkitSuggestionsSupplier::normalize);
+        }
+
+        return CompletableFuture.completedFuture(normalize(result));
+    }
+
+    private static @Nullable Collection<ArgumentSuggestion> normalize(@Nullable Object result) {
+        if (result == null) {
+            return null;
+        }
+
+        if (result instanceof ArgumentSuggestion) {
+            return List.of((ArgumentSuggestion) result);
+        }
+
+        if (result instanceof String) {
+            return List.of(ArgumentSuggestion.of((String) result));
+        }
+
+        if (result instanceof Collection) {
+            List<ArgumentSuggestion> normalized = new ArrayList<>();
+
+            for (Object item : (Collection<?>) result) {
+                if (item instanceof ArgumentSuggestion) {
+                    normalized.add((ArgumentSuggestion) item);
+                } else if (item instanceof String) {
+                    normalized.add(ArgumentSuggestion.of((String) item));
+                } else {
+                    throw new IllegalStateException("Unsupported suggestion " + item + ", expected a String or an ArgumentSuggestion");
+                }
+            }
+
+            return normalized;
+        }
+
+        throw new IllegalStateException("Unsupported suggestions result " + result.getClass().getName() + ", expected a String, an ArgumentSuggestion or a collection of them");
     }
 
     @FunctionalInterface

@@ -57,7 +57,7 @@ public abstract class AbstractArgument<Impl extends AbstractArgument<Impl, T, So
         return listed;
     }
 
-    public @NotNull Optional<Suggestions> getSuggestionsSupplier() {
+    public @NotNull Optional<Suggestions> getSuggestionsSupplierReplacer() {
         return Optional.ofNullable(replacedSuggestions);
     }
 
@@ -66,14 +66,11 @@ public abstract class AbstractArgument<Impl extends AbstractArgument<Impl, T, So
     }
 
     public @NotNull @Unmodifiable List<Suggestions> getCustomSuggestions() {
-        List<Suggestions> all = new ArrayList<>(includedSuggestions.size() + 1);
-
         if (replacedSuggestions != null) {
-            all.add(replacedSuggestions);
+            return List.of(replacedSuggestions);
         }
 
-        all.addAll(includedSuggestions);
-        return Collections.unmodifiableList(all);
+        return Collections.unmodifiableList(includedSuggestions);
     }
 
     public UsageRequirement<Source> getRequirement() {

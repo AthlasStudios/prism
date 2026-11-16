@@ -1,6 +1,6 @@
 package dev.gurwi.prism.bukkit.listener;
 
-import dev.gurwi.prism.bukkit.command.BukkitExecutableCommand;
+import dev.gurwi.prism.bukkit.command.legacy.BukkitExecutableCommand;
 import dev.gurwi.prism.bukkit.event.AsyncCommandSuggestEvent;
 import dev.gurwi.prism.bukkit.registrar.LegacyCommandRegistrar;
 import org.bukkit.command.Command;

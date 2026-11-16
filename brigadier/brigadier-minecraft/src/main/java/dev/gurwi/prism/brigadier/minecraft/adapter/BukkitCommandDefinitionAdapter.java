@@ -75,7 +75,7 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
             return values;
         }
 
-        if (bukkitArgument.getSuggestionsSupplier().isPresent()) {
+        if (bukkitArgument.getSuggestionsSupplierReplacer().isPresent()) {
             return List.of();
         }
 
@@ -166,7 +166,7 @@ public class BukkitCommandDefinitionAdapter implements BrigadierAdapter<Minecraf
     public @Nullable SuggestionProvider<MinecraftCommandSource> suggestions(@NotNull AbstractArgument<?, ?, ?, ?> argument, @Nullable ArgumentType<?> nativeType, @NotNull SuggestionScope<BukkitCommandDefinition> scope) {
         BukkitArgument<?, ?> bukkitArgument = (BukkitArgument<?, ?>) argument;
 
-        Optional<BukkitSuggestionsSupplier<?>> replaced = bukkitArgument.getSuggestionsSupplier();
+        Optional<BukkitSuggestionsSupplier<?>> replaced = bukkitArgument.getSuggestionsSupplierReplacer();
 
         boolean nativeProvided = BrigadierAdapter.providesSuggestions(nativeType);
         ArgumentType<?> nativeSuggester = nativeType instanceof NativeTypeHolder ? ((NativeTypeHolder) nativeType).getNativeType() : nativeType;

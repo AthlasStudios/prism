@@ -453,7 +453,7 @@ public final class BrigadierTreeBuilder<S, Definition extends AbstractCommandDef
             return null;
         }
 
-        if (resolved == null || nodeSpec.argument().getSuggestionsSupplier().isPresent()) {
+        if (resolved == null || nodeSpec.argument().getSuggestionsSupplierReplacer().isPresent()) {
             return user;
         }
 

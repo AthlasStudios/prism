@@ -4,8 +4,6 @@ import com.mojang.brigadier.arguments.*;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.gurwi.prism.brigadier.minecraft.argument.MinecraftArgumentType;
-import dev.gurwi.prism.brigadier.minecraft.argument.resolver.ColumnFinePositionResolver;
-import dev.gurwi.prism.brigadier.minecraft.argument.resolver.FinePositionResolver;
 import dev.gurwi.prism.brigadier.minecraft.exception.UnsupportedArgumentTypeException;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.MinecraftCommandSource;
 import dev.gurwi.prism.brigadier.minecraft.wrapper.position.WrappedColumnBlockPosition;

@@ -1,6 +1,6 @@
 package dev.gurwi.prism.spigot.command;
 
-import dev.gurwi.prism.bukkit.command.BukkitExecutableCommand;
+import dev.gurwi.prism.bukkit.command.legacy.BukkitExecutableCommand;
 import dev.gurwi.prism.bukkit.command.PrismCommand;
 import dev.gurwi.prism.spigot.SpigotCommandPlatform;
 import dev.gurwi.prism.test.bukkit.BukkitTest;
